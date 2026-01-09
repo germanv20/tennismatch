@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "619706153138",
+    "project_id": "tennismatch-3c79c",
+    "storage_bucket": "tennismatch-3c79c.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:619706153138:android:901c8cfe94c40c6e3331ab",
+        "android_client_info": {
+          "package_name": "com.example.tennismatch"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "619706153138-p8qp8ghdj21rfbaehbpmo8e15t7ca6sm.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.tennismatch",
+            "certificate_hash": "6c79f4ec837692689d2ce038faa9926ec5b96e34"
+          }
+        },
+        {
+          "client_id": "619706153138-vbhd2pmm4desced8n8n63trhq3s1glfg.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBJztqfbWH1RXDoMW52tJNhGRT6xZPHS30"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "619706153138-vbhd2pmm4desced8n8n63trhq3s1glfg.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "619706153138-bve3laa0chimn1mjro9b1rsr3tbl1fot.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.tennismatch"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

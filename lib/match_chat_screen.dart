@@ -1,0 +1,277 @@
+import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
+class MatchChatScreen extends StatefulWidget {
+  final String matchId;
+  final String otherPlayerUid;
+  final String otherPlayerName;
+  final String otherPlayerPhotoUrl;
+
+  const MatchChatScreen({
+    super.key,
+    required this.matchId,
+    required this.otherPlayerUid,
+    required this.otherPlayerName,
+    required this.otherPlayerPhotoUrl,
+  });
+
+  @override
+  State<MatchChatScreen> createState() => _MatchChatScreenState();
+}
+
+
+class _MatchChatScreenState extends State<MatchChatScreen> {
+  final TextEditingController _messageController = TextEditingController();
+  final String currentUid = FirebaseAuth.instance.currentUser!.uid;
+
+  Future<void> sendMessage() async {
+    final text = _messageController.text.trim();
+    if (text.isEmpty) return;
+
+    await FirebaseFirestore.instance
+        .collection('matches')
+        .doc(widget.matchId)
+        .collection('messages')
+        .add({
+      'text': text,
+      'senderUid': currentUid,
+      'createdAt': FieldValue.serverTimestamp(),
+    });
+
+    _messageController.clear();
+  }
+
+  String formatTime(DateTime dateTime) {
+    final hour = dateTime.hour.toString().padLeft(2, '0');
+    final minute = dateTime.minute.toString().padLeft(2, '0');
+    return '$hour:$minute';
+  }
+
+  bool isSameDay(DateTime a, DateTime b) {
+    return a.year == b.year &&
+        a.month == b.month &&
+        a.day == b.day;
+  }
+
+  String formatDateLabel(DateTime date) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final yesterday = today.subtract(const Duration(days: 1));
+
+    final messageDate = DateTime(date.year, date.month, date.day);
+
+    if (messageDate == today) {
+      return 'Today';
+    } else if (messageDate == yesterday) {
+      return 'Yesterday';
+    } else {
+      return '${date.day}/${date.month}/${date.year}';
+    }
+  }
+
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Row(
+          children: [
+            CircleAvatar(
+              radius: 18,
+              backgroundImage: widget.otherPlayerPhotoUrl.isNotEmpty
+                  ? NetworkImage(widget.otherPlayerPhotoUrl)
+                  : null,
+              child: widget.otherPlayerPhotoUrl.isEmpty
+                  ? const Icon(Icons.person)
+                  : null,
+            ),
+            const SizedBox(width: 8),
+            Text(
+              widget.otherPlayerName,
+              style: const TextStyle(fontSize: 16),
+            ),
+          ],
+        ),
+      ),
+      body: Column(
+        children: [
+          // Messages list
+          Expanded(
+            child: StreamBuilder<QuerySnapshot>(
+              stream: FirebaseFirestore.instance
+                  .collection('matches')
+                  .doc(widget.matchId)
+                  .collection('messages')
+                  .orderBy('createdAt', descending: true)
+                  .snapshots(),
+              builder: (context, snapshot) {
+                if (!snapshot.hasData) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+
+                final messages = snapshot.data!.docs;
+
+                if (messages.isEmpty) {
+                  return const Center(
+                    child: Text('No messages yet 👋'),
+                  );
+                }
+
+                return ListView.builder(
+                  reverse: true,
+                  itemCount: messages.length,
+                  itemBuilder: (context, index) {
+                    final data =
+                        messages[index].data() as Map<String, dynamic>;
+                    final isMe = data['senderUid'] == currentUid;
+                    final Timestamp? timestamp = data['createdAt'] as Timestamp?;
+                    final DateTime? dateTime = timestamp?.toDate();
+
+                    bool showDateSeparator = false;
+
+                    if (dateTime != null) {
+                      if (index == messages.length - 1) {
+                        // Oldest message → always show date
+                        showDateSeparator = true;
+                      } else {
+                        final prevData =
+                            messages[index + 1].data() as Map<String, dynamic>;
+                        final prevTimestamp =
+                            prevData['createdAt'] as Timestamp?;
+                        final prevDateTime = prevTimestamp?.toDate();
+
+                        if (prevDateTime != null &&
+                            !isSameDay(dateTime, prevDateTime)) {
+                          showDateSeparator = true;
+                        }
+                      }
+                    }
+
+                    return Column(
+                      children: [
+                        if (showDateSeparator && dateTime != null)
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            child: Text(
+                              formatDateLabel(dateTime),
+                              style: const TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.grey,
+                              ),
+                            ),
+                          ),
+
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+                          child: Row(
+                            mainAxisAlignment:
+                                isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Avatar (only for other player)
+                              if (!isMe)
+                                CircleAvatar(
+                                  radius: 16,
+                                  backgroundImage:
+                                      NetworkImage(widget.otherPlayerPhotoUrl),
+                                ),
+
+                              if (!isMe) const SizedBox(width: 8),
+
+                              Column(
+                                crossAxisAlignment:
+                                    isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+                                children: [
+                                  // Sender name (only for other player)
+                                  if (!isMe)
+                                    Padding(
+                                      padding: const EdgeInsets.only(bottom: 2),
+                                      child: Text(
+                                        widget.otherPlayerName,
+                                        style: const TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w500,
+                                          color: Colors.grey,
+                                        ),
+                                      ),
+                                    ),
+
+                                  // Message bubble
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 10,
+                                      horizontal: 14,
+                                    ),
+                                    constraints: BoxConstraints(
+                                      maxWidth:
+                                          MediaQuery.of(context).size.width * 0.75,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: isMe
+                                          ? Colors.blueAccent
+                                          : Colors.grey.shade300,
+                                      borderRadius: BorderRadius.circular(16),
+                                    ),
+                                    child: Text(
+                                      data['text'] ?? '',
+                                      style: TextStyle(
+                                        color: isMe ? Colors.white : Colors.black,
+                                        fontSize: 16,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+
+                                  // Timestamp
+                                  if (dateTime != null)
+                                    Text(
+                                      formatTime(dateTime),
+                                      style: const TextStyle(
+                                        fontSize: 11,
+                                        color: Colors.grey,
+                                      ),
+                                    ),
+                                  
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    );
+
+                  },
+                );
+              },
+            ),
+          ),
+
+          // Input field
+          Padding(
+            padding: const EdgeInsets.all(8),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _messageController,
+                    textInputAction: TextInputAction.send,
+                    onSubmitted: (_) => sendMessage(),
+                    decoration: const InputDecoration(
+                      hintText: 'Type a message...',
+                    ),
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.send),
+                  onPressed: sendMessage,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
