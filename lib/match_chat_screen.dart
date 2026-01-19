@@ -39,6 +39,9 @@ class _MatchChatScreenState extends State<MatchChatScreen> {
       'text': text,
       'senderUid': currentUid,
       'createdAt': FieldValue.serverTimestamp(),
+      'readBy': {
+        currentUid: true, // sender has obviously read it
+      },
     });
 
     _messageController.clear();
@@ -72,9 +75,31 @@ class _MatchChatScreenState extends State<MatchChatScreen> {
     }
   }
 
+  Future<void> markMessagesAsRead() async {
+    final query = await FirebaseFirestore.instance
+        .collection('matches')
+        .doc(widget.matchId)
+        .collection('messages')
+        .where('senderUid', isNotEqualTo: currentUid)
+        .get();
+
+    for (final doc in query.docs) {
+      final data = doc.data();
+      final readBy = Map<String, dynamic>.from(data['readBy'] ?? {});
+
+      if (readBy[currentUid] != true) {
+        await doc.reference.update({
+          'readBy.$currentUid': true,
+        });
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      markMessagesAsRead();
+    });
     return Scaffold(
       appBar: AppBar(
         title: Row(
@@ -138,6 +163,8 @@ class _MatchChatScreenState extends State<MatchChatScreen> {
                     final data =
                         messages[index].data() as Map<String, dynamic>;
                     final isMe = data['senderUid'] == currentUid;
+                    final readBy = Map<String, dynamic>.from(data['readBy'] ?? {});
+                    final isReadByOther = readBy.length > 1;
                     final Timestamp? timestamp = data['createdAt'] as Timestamp?;
                     final DateTime? dateTime = timestamp?.toDate();
 
@@ -187,8 +214,12 @@ class _MatchChatScreenState extends State<MatchChatScreen> {
                               if (!isMe)
                                 CircleAvatar(
                                   radius: 16,
-                                  backgroundImage:
-                                      NetworkImage(widget.otherPlayerPhotoUrl),
+                                  backgroundImage: widget.otherPlayerPhotoUrl.isNotEmpty
+                                      ? NetworkImage(widget.otherPlayerPhotoUrl)
+                                      : null,
+                                  child: widget.otherPlayerPhotoUrl.isEmpty
+                                      ? const Icon(Icons.person, size: 16)
+                                      : null,
                                 ),
 
                               if (!isMe) const SizedBox(width: 8),
@@ -238,14 +269,28 @@ class _MatchChatScreenState extends State<MatchChatScreen> {
                                   const SizedBox(height: 4),
 
                                   // Timestamp
-                                  if (dateTime != null)
-                                    Text(
-                                      formatTime(dateTime),
-                                      style: const TextStyle(
-                                        fontSize: 11,
-                                        color: Colors.grey,
-                                      ),
-                                    ),
+                                  Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      if (dateTime != null)
+                                        Text(
+                                          formatTime(dateTime),
+                                          style: const TextStyle(
+                                            fontSize: 11,
+                                            color: Colors.grey,
+                                          ),
+                                        ),
+
+                                      if (isMe) const SizedBox(width: 6),
+
+                                      if (isMe)
+                                        Icon(
+                                          isReadByOther ? Icons.done_all : Icons.done,
+                                          size: 16,
+                                          color: isReadByOther ? Colors.blue : Colors.grey,
+                                        ),
+                                    ],
+                                  ),
                                   
                                 ],
                               ),
