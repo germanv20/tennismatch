@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
+final ScrollController _scrollController = ScrollController();
+
 class MatchChatScreen extends StatefulWidget {
   final String matchId;
   final String otherPlayerUid;
@@ -118,7 +120,18 @@ class _MatchChatScreenState extends State<MatchChatScreen> {
                   );
                 }
 
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  if (_scrollController.hasClients) {
+                    _scrollController.animateTo(
+                      0,
+                      duration: const Duration(milliseconds: 250),
+                      curve: Curves.easeOut,
+                    );
+                  }
+                });
+
                 return ListView.builder(
+                  controller: _scrollController,
                   reverse: true,
                   itemCount: messages.length,
                   itemBuilder: (context, index) {

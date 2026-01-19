@@ -29,6 +29,8 @@ class PlayerProfileScreen extends StatelessWidget {
         .where('status', isEqualTo: 'pending')
         .get();
 
+    if (!context.mounted) return; // ✅ FIX #1
+
     if (query.docs.isNotEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Match request already sent')),
@@ -42,6 +44,8 @@ class PlayerProfileScreen extends StatelessWidget {
       'status': 'pending',
       'createdAt': FieldValue.serverTimestamp(),
     });
+
+    if (!context.mounted) return; // ✅ FIX #1
 
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Match request sent 🎾')),
