@@ -45,6 +45,7 @@ class _MatchChatScreenState extends State<MatchChatScreen> {
     });
 
     _messageController.clear();
+    await setTyping(false);
   }
 
   String formatTime(DateTime dateTime) {
@@ -95,6 +96,15 @@ class _MatchChatScreenState extends State<MatchChatScreen> {
     }
   }
 
+  Future<void> setTyping(bool isTyping) async {
+    await FirebaseFirestore.instance
+        .collection('matches')
+        .doc(widget.matchId)
+        .update({
+      'typing.$currentUid': isTyping,
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -123,6 +133,38 @@ class _MatchChatScreenState extends State<MatchChatScreen> {
       ),
       body: Column(
         children: [
+          StreamBuilder<DocumentSnapshot>(
+            stream: FirebaseFirestore.instance
+                .collection('matches')
+                .doc(widget.matchId)
+                .snapshots(),
+            builder: (context, snapshot) {
+              if (!snapshot.hasData) return const SizedBox();
+
+              final data = snapshot.data!.data() as Map<String, dynamic>;
+              final typing = Map<String, dynamic>.from(data['typing'] ?? {});
+              final isOtherTyping = typing[widget.otherPlayerUid] == true;
+
+              if (!isOtherTyping) return const SizedBox();
+
+              return Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                child: Row(
+                  children: [
+                    const SizedBox(width: 40), // align with avatar
+                    Text(
+                      '${widget.otherPlayerName} is typing…',
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: Colors.grey,
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
           // Messages list
           Expanded(
             child: StreamBuilder<QuerySnapshot>(
@@ -154,6 +196,8 @@ class _MatchChatScreenState extends State<MatchChatScreen> {
                     );
                   }
                 });
+
+
 
                 return ListView.builder(
                   controller: _scrollController,
@@ -315,7 +359,17 @@ class _MatchChatScreenState extends State<MatchChatScreen> {
                   child: TextField(
                     controller: _messageController,
                     textInputAction: TextInputAction.send,
-                    onSubmitted: (_) => sendMessage(),
+                    onChanged: (value) {
+                      if (value.isNotEmpty) {
+                        setTyping(true);
+                      } else {
+                        setTyping(false);
+                      }
+                    },
+                    onSubmitted: (_) async {
+                      await setTyping(false);
+                      sendMessage();
+                    },
                     decoration: const InputDecoration(
                       hintText: 'Type a message...',
                     ),
