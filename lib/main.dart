@@ -57,10 +57,16 @@ class _AuthTestState extends State<AuthTest> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
   @override
-    void initState() {
-      super.initState();
-      setupFCM(); // 👈 THIS is what was missing
-    }
+  void initState() {
+    super.initState();
+
+    FirebaseAuth.instance.authStateChanges().listen((user) {
+      if (user != null) {
+        setupFCM();
+      }
+    });
+  }
+
 
   Future<void> signInWithGoogle() async {
     try {
@@ -167,15 +173,45 @@ class _AuthTestState extends State<AuthTest> {
   Future<void> setupFCM() async {
     debugPrint('🔥 setupFCM started');
 
-    final messaging = FirebaseMessaging.instance;
+    FirebaseMessaging messaging = FirebaseMessaging.instance;
 
-    // Ask permission (required on iOS, harmless on Android)
-    await messaging.requestPermission();
+    await messaging.requestPermission(
+      alert: true,
+      badge: true,
+      sound: true,
+    );
 
     final token = await messaging.getToken();
-    debugPrint('📱 FCM Token: $token');
+
+    if (token != null) {
+      debugPrint('📱 FCM Token: $token');
+      await saveFcmToken(token);
+    }
+
+    // Listen for token refresh (VERY important)
+    FirebaseMessaging.instance.onTokenRefresh.listen((newToken) async {
+      debugPrint('🔄 FCM token refreshed: $newToken');
+      await saveFcmToken(newToken);
+    });
   }
 
+
+
+  Future<void> saveFcmToken(String token) async {
+    final user = _auth.currentUser;
+    if (user == null) return;
+
+    final userRef =
+        FirebaseFirestore.instance.collection('users').doc(user.uid);
+
+    await userRef.set({
+      'fcmTokens': {
+        token: true,
+      }
+    }, SetOptions(merge: true));
+
+    debugPrint('✅ FCM token saved to Firestore');
+  }
 
   @override
   Widget build(BuildContext context) {
