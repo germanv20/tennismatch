@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'dart:async';
 
 final ScrollController _scrollController = ScrollController();
 
@@ -27,6 +28,24 @@ class _MatchChatScreenState extends State<MatchChatScreen> {
   final TextEditingController _messageController = TextEditingController();
   final String currentUid = FirebaseAuth.instance.currentUser!.uid;
 
+  Timer? _typingTimer;
+
+  void handleTyping(String value) {
+    if (value.isNotEmpty) {
+      setTyping(true);
+
+      // Reset timer every keystroke
+      _typingTimer?.cancel();
+      _typingTimer = Timer(const Duration(seconds: 2), () {
+        setTyping(false);
+      });
+    } else {
+      // If text cleared, stop typing immediately
+      _typingTimer?.cancel();
+      setTyping(false);
+    }
+  }
+
   Future<void> sendMessage() async {
     final text = _messageController.text.trim();
     if (text.isEmpty) return;
@@ -45,7 +64,9 @@ class _MatchChatScreenState extends State<MatchChatScreen> {
     });
 
     _messageController.clear();
+    _typingTimer?.cancel();
     await setTyping(false);
+
   }
 
   String formatTime(DateTime dateTime) {
@@ -104,6 +125,15 @@ class _MatchChatScreenState extends State<MatchChatScreen> {
       'typing.$currentUid': isTyping,
     });
   }
+
+  @override
+    void dispose() {
+      _typingTimer?.cancel();
+      // setTyping(false); // ensure typing stops if user leaves
+      _messageController.dispose();
+      super.dispose();
+    }
+
 
   @override
   Widget build(BuildContext context) {
@@ -359,13 +389,7 @@ class _MatchChatScreenState extends State<MatchChatScreen> {
                   child: TextField(
                     controller: _messageController,
                     textInputAction: TextInputAction.send,
-                    onChanged: (value) {
-                      if (value.isNotEmpty) {
-                        setTyping(true);
-                      } else {
-                        setTyping(false);
-                      }
-                    },
+                    onChanged: handleTyping,
                     onSubmitted: (_) async {
                       await setTyping(false);
                       sendMessage();

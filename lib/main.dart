@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'firebase_options.dart';
@@ -55,6 +56,12 @@ class AuthTest extends StatefulWidget {
 class _AuthTestState extends State<AuthTest> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
+  @override
+    void initState() {
+      super.initState();
+      setupFCM(); // 👈 THIS is what was missing
+    }
+
   Future<void> signInWithGoogle() async {
     try {
       final GoogleSignInAccount? googleUser =
@@ -77,6 +84,7 @@ class _AuthTestState extends State<AuthTest> {
 
       if (user != null) {
         await ensureUserDocument(user);
+        await setupFCM();
       }
 
     } catch (e) {
@@ -154,6 +162,18 @@ class _AuthTestState extends State<AuthTest> {
         'createdAt': FieldValue.serverTimestamp(),
       });
     }
+  }
+
+  Future<void> setupFCM() async {
+    debugPrint('🔥 setupFCM started');
+
+    final messaging = FirebaseMessaging.instance;
+
+    // Ask permission (required on iOS, harmless on Android)
+    await messaging.requestPermission();
+
+    final token = await messaging.getToken();
+    debugPrint('📱 FCM Token: $token');
   }
 
 
