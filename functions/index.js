@@ -1,32 +1,71 @@
-/**
- * Import function triggers from their respective submodules:
- *
- * const {onCall} = require("firebase-functions/v2/https");
- * const {onDocumentWritten} = require("firebase-functions/v2/firestore");
- *
- * See a full list of supported triggers at https://firebase.google.com/docs/functions
- */
+const {onDocumentCreated} = require("firebase-functions/v2/firestore");
+const {getFirestore} = require("firebase-admin/firestore");
+const {getMessaging} = require("firebase-admin/messaging");
+const admin = require("firebase-admin");
 
-const {setGlobalOptions} = require("firebase-functions");
-const {onRequest} = require("firebase-functions/https");
-const logger = require("firebase-functions/logger");
+admin.initializeApp();
 
-// For cost control, you can set the maximum number of containers that can be
-// running at the same time. This helps mitigate the impact of unexpected
-// traffic spikes by instead downgrading performance. This limit is a
-// per-function limit. You can override the limit for each function using the
-// `maxInstances` option in the function's options, e.g.
-// `onRequest({ maxInstances: 5 }, (req, res) => { ... })`.
-// NOTE: setGlobalOptions does not apply to functions using the v1 API. V1
-// functions should each use functions.runWith({ maxInstances: 10 }) instead.
-// In the v1 API, each function can only serve one request per container, so
-// this will be the maximum concurrent request count.
-setGlobalOptions({ maxInstances: 10 });
+const db = getFirestore();
 
-// Create and deploy your first functions
-// https://firebase.google.com/docs/functions/get-started
+exports.onNewChatMessage = onDocumentCreated(
+    "matches/{matchId}/messages/{messageId}",
+    async (event) => {
+      const messageSnap = event.data;
+      if (!messageSnap) return;
 
-// exports.helloWorld = onRequest((request, response) => {
-//   logger.info("Hello logs!", {structuredData: true});
-//   response.send("Hello from Firebase!");
-// });
+      const message = messageSnap.data();
+      const senderUid = message.senderUid;
+      const matchId = event.params.matchId;
+
+      const matchSnap = await db
+          .collection("matches")
+          .doc(matchId)
+          .get();
+
+      if (!matchSnap.exists) return;
+
+      const match = matchSnap.data();
+
+      const recipientUid =
+        match.player1Uid === senderUid ?
+          match.player2Uid :
+          match.player1Uid;
+
+      if (!recipientUid) {
+        console.log("❌ recipientUid is undefined");
+        return;
+      }
+
+      const userSnap = await db
+          .collection("users")
+          .doc(recipientUid)
+          .get();
+
+      if (!userSnap.exists) return;
+
+      const user = userSnap.data();
+
+      const tokensMap = user.fcmTokens || {};
+      const tokens = Object.keys(tokensMap);
+
+
+      if (tokens.length === 0) {
+        console.log("❌ No FCM tokens for user", recipientUid);
+        return;
+      }
+
+
+      await getMessaging().sendEachForMulticast({
+        tokens: tokens,
+        notification: {
+          title: "New message 💬",
+          body: message.text,
+        },
+        data: {
+          matchId: matchId,
+          senderUid: senderUid,
+        },
+      });
+      console.log("✅ Push notification sent");
+    },
+);
