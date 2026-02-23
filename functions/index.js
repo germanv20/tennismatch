@@ -55,7 +55,7 @@ exports.onNewChatMessage = onDocumentCreated(
       }
 
 
-      await getMessaging().sendEachForMulticast({
+      const response = await getMessaging().sendEachForMulticast({
         tokens: tokens,
         notification: {
           title: "New message 💬",
@@ -66,6 +66,37 @@ exports.onNewChatMessage = onDocumentCreated(
           senderUid: senderUid,
         },
       });
+
       console.log("✅ Push notification sent");
+
+      for (let i = 0; i < response.responses.length; i++) {
+        const resp = response.responses[i];
+
+        if (!resp.success) {
+          const failedToken = tokens[i];
+
+          console.log("❌ Failed token:", failedToken);
+          console.log("Error:", resp.error && resp.error.code);
+
+          const errorCode = resp.error && resp.error.code;
+
+          if (
+            errorCode === "messaging/registration-token-not-registered" ||
+            errorCode === "messaging/invalid-registration-token"
+          ) {
+            const fieldPath =
+              `fcmTokens.${failedToken}`;
+
+            await db.collection("users")
+                .doc(recipientUid)
+                .update({
+                  [fieldPath]:
+                  admin.firestore.FieldValue.delete(),
+                });
+
+            console.log("🧹 Removed invalid token:", failedToken);
+          }
+        }
+      }
     },
 );

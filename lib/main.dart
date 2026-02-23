@@ -8,6 +8,8 @@ import 'firebase_options.dart';
 import 'player_profile_screen.dart';
 import 'incoming_requests_screen.dart';
 import 'my_matches_screen.dart';
+import 'match_detail_screen.dart';
+import 'match_chat_screen.dart';
 
 const tennisLevels = [
   'Beginner',
@@ -25,6 +27,8 @@ const List<String> availableDays = [
   'Sun',
 ];
 
+final GlobalKey<NavigatorState> navigatorKey =
+    GlobalKey<NavigatorState>();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -52,11 +56,54 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: AuthTest(),
+      navigatorKey: navigatorKey,
+      home: const AuthTest(),
     );
+
   }
+}
+
+Future<void> navigateToChat(String matchId) async {
+  final currentUser = FirebaseAuth.instance.currentUser;
+  if (currentUser == null) return;
+
+  final matchDoc = await FirebaseFirestore.instance
+      .collection('matches')
+      .doc(matchId)
+      .get();
+
+  if (!matchDoc.exists) return;
+
+  final matchData = matchDoc.data() as Map<String, dynamic>;
+
+  final opponentUid =
+      matchData['player1Uid'] == currentUser.uid
+          ? matchData['player2Uid']
+          : matchData['player1Uid'];
+
+  final opponentSnap = await FirebaseFirestore.instance
+      .collection('users')
+      .doc(opponentUid)
+      .get();
+
+  if (!opponentSnap.exists) return;
+
+  final opponentData =
+      opponentSnap.data() as Map<String, dynamic>;
+
+  navigatorKey.currentState?.pushAndRemoveUntil(
+    MaterialPageRoute(
+      builder: (_) => MatchChatScreen(
+        matchId: matchId,
+        otherPlayerUid: opponentUid,
+        otherPlayerName: opponentData['name'] ?? 'Player',
+        otherPlayerPhotoUrl: opponentData['photoUrl'] ?? '',
+      ),
+    ),
+    (route) => route.isFirst,
+  );
 }
 
 class AuthTest extends StatefulWidget {
@@ -78,6 +125,29 @@ class _AuthTestState extends State<AuthTest> {
         setupFCM();
       }
     });
+
+    // When app opened from background
+    FirebaseMessaging.onMessageOpenedApp.listen((message) {
+      final matchId = message.data['matchId'];
+      if (matchId != null) {
+        Future.delayed(const Duration(milliseconds: 500), () {
+          navigateToChat(matchId);
+        });
+      }
+    });
+
+    // When app opened from terminated state
+    FirebaseMessaging.instance.getInitialMessage().then((message) {
+      if (message != null) {
+        final matchId = message.data['matchId'];
+        if (matchId != null) {
+          Future.delayed(const Duration(milliseconds: 500), () {
+            navigateToChat(matchId);
+          });
+        }
+      }
+    });
+
   }
 
 
