@@ -17,6 +17,15 @@ exports.onNewChatMessage = onDocumentCreated(
       const senderUid = message.senderUid;
       const matchId = event.params.matchId;
 
+      const senderSnap = await db
+          .collection("users")
+          .doc(senderUid)
+          .get();
+
+      const senderName = senderSnap.exists ?
+        senderSnap.data().name :
+        "Player";
+
       const matchSnap = await db
           .collection("matches")
           .doc(matchId)
@@ -58,7 +67,7 @@ exports.onNewChatMessage = onDocumentCreated(
       const response = await getMessaging().sendEachForMulticast({
         tokens: tokens,
         notification: {
-          title: "New message 💬",
+          title: senderName,
           body: message.text,
         },
         data: {

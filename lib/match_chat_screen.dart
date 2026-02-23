@@ -30,6 +30,15 @@ class _MatchChatScreenState extends State<MatchChatScreen> {
 
   Timer? _typingTimer;
 
+  @override
+  void initState() {
+    super.initState();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      markMessagesAsRead();
+    });
+  }
+
   void handleTyping(String value) {
     if (value.isNotEmpty) {
       setTyping(true);
@@ -137,9 +146,7 @@ class _MatchChatScreenState extends State<MatchChatScreen> {
 
   @override
   Widget build(BuildContext context) {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      markMessagesAsRead();
-    });
+  
     return Scaffold(
       appBar: AppBar(
         title: Row(
