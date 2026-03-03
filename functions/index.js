@@ -22,9 +22,14 @@ exports.onNewChatMessage = onDocumentCreated(
           .doc(senderUid)
           .get();
 
-      const senderName = senderSnap.exists ?
-        senderSnap.data().name :
-        "Player";
+      let senderName = "Player";
+      let senderPhotoUrl = "";
+
+      if (senderSnap.exists) {
+        const senderData = senderSnap.data();
+        senderName = senderData.name || "Player";
+        senderPhotoUrl = senderData.photoUrl || "";
+      }
 
       const matchSnap = await db
           .collection("matches")
@@ -35,6 +40,7 @@ exports.onNewChatMessage = onDocumentCreated(
 
       const match = matchSnap.data();
 
+      // FIRST determine recipient
       const recipientUid =
         match.player1Uid === senderUid ?
           match.player2Uid :
@@ -42,6 +48,16 @@ exports.onNewChatMessage = onDocumentCreated(
 
       if (!recipientUid) {
         console.log("❌ recipientUid is undefined");
+        return;
+      }
+
+      // THEN check if recipient is active in this chat
+      const activeChatUsers = match.activeChatUsers || {};
+      const isRecipientActive =
+        activeChatUsers[recipientUid] === true;
+
+      if (isRecipientActive) {
+        console.log("🔕 User is inside chat. Skipping push.");
         return;
       }
 
@@ -69,6 +85,12 @@ exports.onNewChatMessage = onDocumentCreated(
         notification: {
           title: senderName,
           body: message.text,
+        },
+        android: {
+          notification: {
+            imageUrl: senderPhotoUrl,
+            channelId: "default",
+          },
         },
         data: {
           matchId: matchId,

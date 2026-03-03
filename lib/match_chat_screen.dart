@@ -34,6 +34,8 @@ class _MatchChatScreenState extends State<MatchChatScreen> {
   void initState() {
     super.initState();
 
+    setActiveChat(true);
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       markMessagesAsRead();
     });
@@ -59,24 +61,34 @@ class _MatchChatScreenState extends State<MatchChatScreen> {
     final text = _messageController.text.trim();
     if (text.isEmpty) return;
 
-    await FirebaseFirestore.instance
+    final matchRef = FirebaseFirestore.instance
         .collection('matches')
-        .doc(widget.matchId)
+        .doc(widget.matchId);
+
+    // 1️⃣ Add message to subcollection
+    await matchRef
         .collection('messages')
         .add({
       'text': text,
       'senderUid': currentUid,
       'createdAt': FieldValue.serverTimestamp(),
       'readBy': {
-        currentUid: true, // sender has obviously read it
+        currentUid: true,
       },
+    });
+
+    // 2️⃣ Update parent match document (NEW PART 🔥)
+    await matchRef.update({
+      'lastMessage': text,
+      'lastMessageTime': FieldValue.serverTimestamp(),
+      'lastSenderUid': currentUid,
     });
 
     _messageController.clear();
     _typingTimer?.cancel();
     await setTyping(false);
-
   }
+
 
   String formatTime(DateTime dateTime) {
     final hour = dateTime.hour.toString().padLeft(2, '0');
@@ -138,10 +150,20 @@ class _MatchChatScreenState extends State<MatchChatScreen> {
   @override
     void dispose() {
       _typingTimer?.cancel();
+      setActiveChat(false);
       // setTyping(false); // ensure typing stops if user leaves
       _messageController.dispose();
       super.dispose();
     }
+
+  Future<void> setActiveChat(bool isActive) async {
+    await FirebaseFirestore.instance
+        .collection('matches')
+        .doc(widget.matchId)
+        .update({
+      'activeChatUsers.$currentUid': isActive ? true : false,
+    });
+  }
 
 
   @override

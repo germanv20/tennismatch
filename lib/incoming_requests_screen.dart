@@ -20,11 +20,19 @@ class IncomingRequestsScreen extends StatelessWidget {
       final data = requestSnapshot.data() as Map<String, dynamic>;
 
       await FirebaseFirestore.instance.collection('matches').add({
-        'player1Uid': data['fromUid'],
-        'player2Uid': data['toUid'],
+        'players': [
+          data['fromUid'],
+          data['toUid'],
+        ],
         'createdAt': FieldValue.serverTimestamp(),
         'status': 'active',
+
+        // 🔥 NEW FIELDS (VERY IMPORTANT)
+        'lastMessage': '',
+        'lastMessageTime': FieldValue.serverTimestamp(),
+        'lastSenderUid': null,
       });
+
     }
   }
 

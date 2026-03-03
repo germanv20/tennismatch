@@ -18,8 +18,11 @@ class MyMatchesScreen extends StatelessWidget {
       ),
       body: StreamBuilder<QuerySnapshot>(
         stream: matchesRef
+            .where('players', arrayContains: currentUser.uid)
             .where('status', isEqualTo: 'active')
+            .orderBy('lastMessageTime', descending: true)
             .snapshots(),
+
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
@@ -29,11 +32,10 @@ class MyMatchesScreen extends StatelessWidget {
             return const Center(child: Text('No matches found.'));
           }
 
-          final allMatches = snapshot.data!.docs.where((doc) {
-            final data = doc.data() as Map<String, dynamic>;
-            return data['player1Uid'] == currentUser.uid ||
-                data['player2Uid'] == currentUser.uid;
-          }).toList();
+          final allMatches = snapshot.data!.docs;
+          print("Current UID: ${currentUser.uid}");
+          print("Docs returned: ${snapshot.data!.docs.length}");
+
 
           if (allMatches.isEmpty) {
             return const Center(child: Text('You have no matches yet.'));
@@ -45,10 +47,10 @@ class MyMatchesScreen extends StatelessWidget {
               final match = allMatches[index];
               final data = match.data() as Map<String, dynamic>;
 
+              final players = List<String>.from(data['players']);
               final opponentUid =
-                  data['player1Uid'] == currentUser.uid
-                      ? data['player2Uid']
-                      : data['player1Uid'];
+                  players.firstWhere((uid) => uid != currentUser.uid);
+
 
               return FutureBuilder<DocumentSnapshot>(
                 future: FirebaseFirestore.instance
@@ -73,7 +75,63 @@ class MyMatchesScreen extends StatelessWidget {
                       ),
                       title: Text(userData['name'] ?? 'Unknown'),
                       subtitle: const Text('Match active'),
-                      trailing: const Icon(Icons.sports_tennis),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          StreamBuilder<QuerySnapshot>(
+                            stream: FirebaseFirestore.instance
+                                .collection('matches')
+                                .doc(match.id)
+                                .collection('messages')
+                                .where('senderUid', isNotEqualTo: currentUser.uid)
+                                .snapshots(),
+                            builder: (context, messageSnapshot) {
+                              if (!messageSnapshot.hasData) {
+                                return const SizedBox();
+                              }
+
+                              int unreadCount = 0;
+
+                              for (var doc in messageSnapshot.data!.docs) {
+                                final data = doc.data() as Map<String, dynamic>;
+                                final readBy = Map<String, dynamic>.from(data['readBy'] ?? {});
+                                if (readBy[currentUser.uid] != true) {
+                                  unreadCount++;
+                                }
+                              }
+
+                              if (unreadCount == 0) {
+                                return const SizedBox();
+                              }
+
+                              return Container(
+                                margin: const EdgeInsets.only(right: 8),
+                                padding: const EdgeInsets.all(6),
+                                decoration: const BoxDecoration(
+                                  color: Colors.red,
+                                  shape: BoxShape.circle,
+                                ),
+                                constraints: const BoxConstraints(
+                                  minWidth: 24,
+                                  minHeight: 24,
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    unreadCount > 99 ? '99+' : unreadCount.toString(),
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+
+                          const Icon(Icons.sports_tennis),
+                        ],
+                      ),
                       onTap: () {
                         Navigator.push(
                           context,
