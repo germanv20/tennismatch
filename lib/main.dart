@@ -502,15 +502,62 @@ class _AuthTestState extends State<AuthTest> {
 
                     const SizedBox(height: 20),
 
-                    ElevatedButton.icon(
-                      icon: const Icon(Icons.mail),
-                      label: const Text('Incoming Match Requests'),
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => const IncomingRequestsScreen(),
-                          ),
+                    StreamBuilder<QuerySnapshot>(
+                      stream: FirebaseFirestore.instance
+                          .collection('match_requests')
+                          .where('toUid', isEqualTo: user.uid)
+                          .where('status', isEqualTo: 'pending')
+                          .snapshots(),
+                      builder: (context, snapshot) {
+                        int requestCount = 0;
+
+                        if (snapshot.hasData) {
+                          requestCount = snapshot.data!.docs.length;
+                        }
+
+                        return Stack(
+                          clipBehavior: Clip.none,
+                          children: [
+                            ElevatedButton.icon(
+                              icon: const Icon(Icons.mail),
+                              label: const Text('Incoming Match Requests'),
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => const IncomingRequestsScreen(),
+                                  ),
+                                );
+                              },
+                            ),
+
+                            if (requestCount > 0)
+                              Positioned(
+                                right: -5,
+                                top: -5,
+                                child: Container(
+                                  padding: const EdgeInsets.all(6),
+                                  decoration: const BoxDecoration(
+                                    color: Colors.red,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  constraints: const BoxConstraints(
+                                    minWidth: 22,
+                                    minHeight: 22,
+                                  ),
+                                  child: Center(
+                                    child: Text(
+                                      requestCount > 99 ? '99+' : requestCount.toString(),
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                          ],
                         );
                       },
                     ),

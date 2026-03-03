@@ -22,6 +22,42 @@ class MatchDetailScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Match Details'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.block, color: Colors.red),
+            onPressed: () async {
+              final confirm = await showDialog(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: const Text('Unmatch?'),
+                  content: const Text(
+                      'Are you sure you want to unmatch? This will remove the chat.'),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context, false),
+                      child: const Text('Cancel'),
+                    ),
+                    TextButton(
+                      onPressed: () => Navigator.pop(context, true),
+                      child: const Text('Unmatch'),
+                    ),
+                  ],
+                ),
+              );
+
+              if (confirm == true) {
+                await FirebaseFirestore.instance
+                    .collection('matches')
+                    .doc(matchDoc.id)
+                    .update({
+                  'status': 'ended',
+                });
+
+                Navigator.pop(context); // Exit chat screen
+              }
+            },
+          ),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),
