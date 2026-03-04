@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'match_chat_screen.dart';
+import 'add_match_result_screen.dart';
+
 
 class MatchDetailScreen extends StatelessWidget {
   final DocumentSnapshot matchDoc;
@@ -50,7 +52,7 @@ class MatchDetailScreen extends StatelessWidget {
                     .collection('matches')
                     .doc(matchDoc.id)
                     .update({
-                  'status': 'ended',
+                  'status': 'cancelled',
                 });
 
                 Navigator.pop(context); // Exit chat screen
@@ -122,10 +124,49 @@ class MatchDetailScreen extends StatelessWidget {
 
             const SizedBox(height: 10),
 
-            const Text(
-              'More features coming soon 🎾',
-              style: TextStyle(color: Colors.grey),
-            ),
+            if (data['status'] == 'active') ...[
+              const SizedBox(height: 20),
+
+              ElevatedButton.icon(
+                icon: const Icon(Icons.emoji_events),
+                label: const Text('Add Match Result'),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => AddMatchResultScreen(
+                        matchId: matchDoc.id,
+                        matchData: data,
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ],
+
+            if (data['status'] == 'completed' && data['result'] != null) ...[
+              const SizedBox(height: 20),
+              const Text(
+                'Match Result',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 10),
+
+              ...List.generate(
+                (data['result']['sets'] as List).length,
+                (index) {
+                  final set = data['result']['sets'][index];
+                  return Text(
+                    'Set ${index + 1}: ${set['p1']} - ${set['p2']}',
+                  );
+                },
+              ),
+
+              const SizedBox(height: 10),
+              Text('Location: ${data['result']['location']}'),
+              Text('Duration: ${data['result']['durationMinutes']} min'),
+            ],
+
           ],
         ),
       ),
