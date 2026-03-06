@@ -23,12 +23,19 @@ class _AddMatchResultScreenState
 
   final durationController = TextEditingController();
   final locationController = TextEditingController();
+  bool useOfficialScoring = true;
+  DateTime? selectedMatchDate;
+  String? player1Name;
+  String? player2Name;
 
-  @override
+
+ @override
   void initState() {
     super.initState();
     addSet();
+    loadPlayerNames();
   }
+
 
   void addSet() {
     sets.add({
@@ -43,6 +50,43 @@ class _AddMatchResultScreenState
     );
   }
 
+  bool isValidTennisSet(int p1, int p2) {
+      // One player must reach at least 6
+      if (p1 < 6 && p2 < 6) return false;
+
+      // Normal win (6-x where x <= 4)
+      if ((p1 == 6 && p2 <= 4) || (p2 == 6 && p1 <= 4)) {
+        return true;
+      }
+
+      // 7-5 case
+      if ((p1 == 7 && p2 == 5) || (p2 == 7 && p1 == 5)) {
+        return true;
+      }
+
+      // 7-6 case (tiebreak)
+      if ((p1 == 7 && p2 == 6) || (p2 == 7 && p1 == 6)) {
+        return true;
+      }
+
+      return false;
+    }
+  
+  Future<void> pickMatchDate() async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(2020),
+      lastDate: DateTime.now(),
+    );
+
+    if (picked != null) {
+      setState(() {
+        selectedMatchDate = picked;
+      });
+    }
+  }
+
   Future<void> saveResult() async {
     List<Map<String, int>> formattedSets = [];
 
@@ -53,11 +97,18 @@ class _AddMatchResultScreenState
       final int p1 = int.tryParse(set['p1']!.text) ?? 0;
       final int p2 = int.tryParse(set['p2']!.text) ?? 0;
 
+
       if (p1 == 0 && p2 == 0) {
         showError("Set scores cannot both be zero.");
         return;
       }
 
+      if (useOfficialScoring) {
+        if (!isValidTennisSet(p1, p2)) {
+          showError("Invalid tennis set score.");
+          return;
+        }
+      }
 
       formattedSets.add({'p1': p1, 'p2': p2});
 
@@ -85,6 +136,17 @@ class _AddMatchResultScreenState
       return;
     }
 
+    if (selectedMatchDate == null) {
+      showError("Select match date.");
+      return;
+    }
+
+    final utcDate = DateTime.utc(
+      selectedMatchDate!.year,
+      selectedMatchDate!.month,
+      selectedMatchDate!.day,
+    );
+
     final winnerUid = p1Wins > p2Wins
         ? widget.matchData['player1Uid']
         : widget.matchData['player2Uid'];
@@ -101,7 +163,7 @@ class _AddMatchResultScreenState
         'durationMinutes':
             int.tryParse(durationController.text) ?? 0,
         'location': locationController.text,
-        'matchDate': FieldValue.serverTimestamp(),
+        'matchDate': Timestamp.fromDate(utcDate),
       }
     });
 
@@ -115,6 +177,25 @@ class _AddMatchResultScreenState
     );
   }
 
+  Future<void> loadPlayerNames() async {
+    final players = widget.matchData['players'] as List;
+
+    final user1 = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(players[0])
+        .get();
+
+    final user2 = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(players[1])
+        .get();
+
+    setState(() {
+      player1Name = user1['name'];
+      player2Name = user2['name'];
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -123,6 +204,15 @@ class _AddMatchResultScreenState
         padding: const EdgeInsets.all(16),
         child: ListView(
           children: [
+            SwitchListTile(
+              title: const Text("Use official tennis scoring"),
+              value: useOfficialScoring,
+              onChanged: (value) {
+                setState(() {
+                  useOfficialScoring = value;
+                });
+              },
+            ),
             const Text(
               'Sets',
               style:
@@ -138,7 +228,7 @@ class _AddMatchResultScreenState
                         controller: set['p1'],
                         keyboardType: TextInputType.number,
                         decoration:
-                            const InputDecoration(labelText: 'P1'),
+                            InputDecoration(labelText: player1Name ?? "Loading...",),
                       ),
                     ),
                     const SizedBox(width: 10),
@@ -147,7 +237,7 @@ class _AddMatchResultScreenState
                         controller: set['p2'],
                         keyboardType: TextInputType.number,
                         decoration:
-                            const InputDecoration(labelText: 'P2'),
+                            InputDecoration(labelText: player2Name ?? "Loading...",),
                       ),
                     ),
                   ],
@@ -163,6 +253,18 @@ class _AddMatchResultScreenState
               },
               child: const Text('+ Add Set'),
             ),
+
+             const SizedBox(height: 20),
+
+              ListTile(
+                title: Text(
+                  selectedMatchDate == null
+                      ? "Select match date"
+                      : "Match Date: ${selectedMatchDate!.day}/${selectedMatchDate!.month}/${selectedMatchDate!.year}",
+                ),
+                trailing: const Icon(Icons.calendar_today),
+                onTap: pickMatchDate,
+              ),
 
             const SizedBox(height: 20),
 
