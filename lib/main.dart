@@ -10,6 +10,7 @@ import 'incoming_requests_screen.dart';
 import 'my_matches_screen.dart';
 import 'match_detail_screen.dart';
 import 'match_chat_screen.dart';
+import 'match_history_screen.dart';
 
 const tennisLevels = [
   'Beginner',
@@ -572,6 +573,18 @@ class _AuthTestState extends State<AuthTest> {
                         );
                       },
                       child: const Text('My Matches'),
+                    ),
+
+                    ElevatedButton(
+                      child: const Text("Match History"),
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const MatchHistoryScreen(),
+                          ),
+                        );
+                      },
                     ),
 
                     const SizedBox(height: 20),
