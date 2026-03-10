@@ -1,9 +1,39 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+String currentUserName = "";
 
-class MatchHistoryScreen extends StatelessWidget {
+class MatchHistoryScreen extends StatefulWidget {
   const MatchHistoryScreen({super.key});
+
+  @override
+  State<MatchHistoryScreen> createState() => _MatchHistoryScreenState();
+}
+
+class _MatchHistoryScreenState extends State<MatchHistoryScreen> {
+
+  String currentUserName = "";
+
+  @override
+  void initState() {
+    super.initState();
+    loadCurrentUserName();
+  }
+
+  Future<void> loadCurrentUserName() async {
+
+    final uid = FirebaseAuth.instance.currentUser!.uid;
+
+    final doc = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(uid)
+        .get();
+
+    setState(() {
+      currentUserName = doc['name'];
+    });
+
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -101,7 +131,7 @@ class MatchHistoryScreen extends StatelessWidget {
                             Row(
                               children: [
                                 Text(
-                                  "German Valencia",
+                                  currentUserName,
                                   style: TextStyle(
                                     fontWeight: p1Won ? FontWeight.bold : FontWeight.normal,
                                   ),
