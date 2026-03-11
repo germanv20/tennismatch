@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class AddMatchResultScreen extends StatefulWidget {
   final String matchId;
@@ -87,6 +88,7 @@ class _AddMatchResultScreenState
     }
   }
 
+
   Future<void> saveResult() async {
     List<Map<String, int>> formattedSets = [];
 
@@ -141,31 +143,99 @@ class _AddMatchResultScreenState
       return;
     }
 
-    final utcDate = DateTime.utc(
-      selectedMatchDate!.year,
-      selectedMatchDate!.month,
-      selectedMatchDate!.day,
-    );
+
+    final players = widget.matchData['players'] as List;
+
+    final currentUid = FirebaseAuth.instance.currentUser!.uid;
+    final opponentUid = players.firstWhere((uid) => uid != currentUid);
 
     final winnerUid = p1Wins > p2Wins
-        ? widget.matchData['player1Uid']
-        : widget.matchData['player2Uid'];
+        ? currentUid
+        : opponentUid;
+
+
+    final currentUserDoc = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(currentUid)
+        .get();
+
+    final currentUserName = currentUserDoc['name'];
+
+    final opponentDoc = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(opponentUid)
+        .get();
+
+    final opponentName = opponentDoc['name'];
 
     await FirebaseFirestore.instance
         .collection('matches')
         .doc(widget.matchId)
         .update({
-      'status': 'completed',
-      'completedAt': FieldValue.serverTimestamp(),
-      'result': {
-        'winnerUid': winnerUid,
-        'sets': formattedSets,
-        'durationMinutes':
-            int.tryParse(durationController.text) ?? 0,
-        'location': locationController.text,
-        'matchDate': Timestamp.fromDate(utcDate),
-      }
-    });
+
+          'status': 'completed',
+          'completedAt': FieldValue.serverTimestamp(),
+          'winnerUid': winnerUid,
+
+          'playerNames': {
+            currentUid: currentUserName,
+            opponentUid: opponentName,
+          },
+
+          'result': {
+            'sets': formattedSets,
+            'location': locationController.text.trim(),
+            'durationMinutes': int.parse(durationController.text),
+            'matchDate': selectedMatchDate,
+          },
+
+          'summary': {
+            'p1Name': currentUserName,
+            'p2Name': opponentName,
+            'p1Sets': p1Wins,
+            'p2Sets': p2Wins,
+            'matchDate': selectedMatchDate,
+          },
+
+        });
+
+        // --- STATS ENGINE ---
+
+          final duration = int.parse(durationController.text);
+
+          // Current user stats reference
+          final userRef = FirebaseFirestore.instance
+              .collection('users')
+              .doc(currentUid);
+
+          // Opponent stats reference
+          final opponentRef = FirebaseFirestore.instance
+              .collection('users')
+              .doc(opponentUid);
+
+          // Update current user stats
+          await userRef.update({
+            'matchesPlayed': FieldValue.increment(1),
+            'totalDuration': FieldValue.increment(duration),
+            'wins': winnerUid == currentUid
+                ? FieldValue.increment(1)
+                : FieldValue.increment(0),
+            'losses': winnerUid == currentUid
+                ? FieldValue.increment(0)
+                : FieldValue.increment(1),
+          });
+
+          // Update opponent stats
+          await opponentRef.update({
+            'matchesPlayed': FieldValue.increment(1),
+            'totalDuration': FieldValue.increment(duration),
+            'wins': winnerUid == opponentUid
+                ? FieldValue.increment(1)
+                : FieldValue.increment(0),
+            'losses': winnerUid == opponentUid
+                ? FieldValue.increment(0)
+                : FieldValue.increment(1),
+          });
 
     if (!mounted) return;
 

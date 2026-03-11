@@ -11,6 +11,7 @@ import 'my_matches_screen.dart';
 import 'match_detail_screen.dart';
 import 'match_chat_screen.dart';
 import 'match_history_screen.dart';
+import '../screens/player_statistics_screen.dart';
 
 const tennisLevels = [
   'Beginner',
@@ -582,6 +583,18 @@ class _AuthTestState extends State<AuthTest> {
                           context,
                           MaterialPageRoute(
                             builder: (context) => const MatchHistoryScreen(),
+                          ),
+                        );
+                      },
+                    ),
+
+                    ElevatedButton(
+                      child: const Text("My Matches Stats"),
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const PlayerStatisticsScreen(),
                           ),
                         );
                       },
