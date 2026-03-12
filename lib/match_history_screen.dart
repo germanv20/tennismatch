@@ -102,13 +102,15 @@ class _MatchHistoryScreenState extends State<MatchHistoryScreen> {
               final duration = match['result']?['durationMinutes'] ?? 0;
 
 
-              return MatchCard(
+             return MatchCard(
                 playerName: currentUserName,
                 opponentName: opponentName,
                 sets: sets,
                 location: location,
                 duration: duration,
                 matchDate: matchDate,
+                winnerUid: match['winnerUid'],
+                currentUserUid: currentUid,
               );
 
             },

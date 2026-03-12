@@ -9,19 +9,41 @@ class MatchCard extends StatelessWidget {
   final String location;
   final int duration;
   final DateTime matchDate;
+  final String winnerUid;
+  final String currentUserUid;
 
   const MatchCard({
-    super.key,
-    required this.playerName,
-    required this.opponentName,
-    required this.sets,
-    required this.location,
-    required this.duration,
-    required this.matchDate,
-  });
+  super.key,
+  required this.playerName,
+  required this.opponentName,
+  required this.sets,
+  required this.location,
+  required this.duration,
+  required this.matchDate,
+  required this.winnerUid,
+  required this.currentUserUid,
+});
 
   @override
   Widget build(BuildContext context) {
+
+    final bool isWin = winnerUid == currentUserUid;
+
+    final badge = Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: isWin ? Colors.green : Colors.red,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Text(
+        isWin ? "WIN" : "LOSS",
+        style: const TextStyle(
+          color: Colors.white,
+          fontWeight: FontWeight.bold,
+          fontSize: 12,
+        ),
+      ),
+    );
 
     int p1Sets = 0;
     int p2Sets = 0;
@@ -55,80 +77,98 @@ class MatchCard extends StatelessWidget {
       },
         child: Card(
             margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            child: Padding(
-              padding: const EdgeInsets.all(12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
+            child: Stack(
+              children: [
 
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(12, 35, 12, 12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
 
                       Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(
-                            playerName,
-                            style: TextStyle(
-                              fontWeight: p1Won ? FontWeight.bold : FontWeight.normal,
-                            ),
+
+                          Row(
+                            children: [
+
+                              Text(
+                                playerName,
+                                style: TextStyle(
+                                  fontWeight: p1Won ? FontWeight.bold : FontWeight.normal,
+                                ),
+                              ),
+
+                              if (p1Won) const SizedBox(width: 4),
+                              if (p1Won) const Text("🏆"),
+                            ],
                           ),
-                          if (p1Won) const SizedBox(width: 4),
-                          if (p1Won) const Text("🏆"),
-                        ],
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const SizedBox(), 
+                              Text(
+                                sets.map((s) => s['p1'].toString()).join("  "),
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontFamily: 'monospace',
+                                ),
+                              ),
+                            ],
+                          ),
+
+                        ]
                       ),
 
-                      Text(
-                        sets.map((s) => s['p1'].toString()).join("  "),
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontFamily: 'monospace',
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 4),
-
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
+                      const SizedBox(height: 4),
 
                       Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
+
+                          Row(
+                            children: [
+                              Text(
+                                opponentName,
+                                style: TextStyle(
+                                  fontWeight: p2Won ? FontWeight.bold : FontWeight.normal,
+                                ),
+                              ),
+                              if (p2Won) const SizedBox(width: 4),
+                              if (p2Won) const Text("🏆"),
+                            ],
+                          ),
+
                           Text(
-                            opponentName,
-                            style: TextStyle(
-                              fontWeight: p2Won ? FontWeight.bold : FontWeight.normal,
+                            sets.map((s) => s['p2'].toString()).join("  "),
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontFamily: 'monospace',
                             ),
                           ),
-                          if (p2Won) const SizedBox(width: 4),
-                          if (p2Won) const Text("🏆"),
                         ],
                       ),
 
+                      const SizedBox(height: 8),
+
                       Text(
-                        sets.map((s) => s['p2'].toString()).join("  "),
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontFamily: 'monospace',
-                        ),
+                        "$location • ${matchDate.day}/${matchDate.month}/${matchDate.year} • $duration min",
+                        style: const TextStyle(color: Colors.grey),
                       ),
+
                     ],
                   ),
-
-                  const SizedBox(height: 8),
-
-                  Text(
-                    "$location • ${matchDate.day}/${matchDate.month}/${matchDate.year} • $duration min",
-                    style: const TextStyle(color: Colors.grey),
-                  ),
-
-                ],
-              ),
+                ),
+                Positioned(
+                  top: 8,
+                  right: 8,
+                  child: badge,
+                ),
+              ],
             ),
-          ),
-      );
-    }
-  }
-  
+        ),
+    );
+   }
+}
+      
