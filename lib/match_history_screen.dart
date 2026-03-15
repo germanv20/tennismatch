@@ -14,10 +14,29 @@ class _MatchHistoryScreenState extends State<MatchHistoryScreen> {
 
   String currentUserName = "";
 
+  List<DocumentSnapshot> matches = [];
+
+  bool isLoading = false;
+  bool hasMore = true;
+
+  DocumentSnapshot? lastDocument;
+
+  final int pageSize = 20;
+
+  final ScrollController scrollController = ScrollController();
+
   @override
   void initState() {
     super.initState();
     loadCurrentUserName();
+    loadMatches();
+
+    scrollController.addListener(() {
+      if (scrollController.position.pixels >=
+          scrollController.position.maxScrollExtent - 200) {
+        loadMatches();
+      }
+    });
   }
 
   Future<void> loadCurrentUserName() async {
@@ -33,6 +52,43 @@ class _MatchHistoryScreenState extends State<MatchHistoryScreen> {
     });
   }
 
+  Future<void> loadMatches() async {
+    if (isLoading || !hasMore) return;
+
+    setState(() {
+      isLoading = true;
+    });
+
+    final currentUid = FirebaseAuth.instance.currentUser!.uid;
+
+    Query query = FirebaseFirestore.instance
+        .collection('matches')
+        .where('players', arrayContains: currentUid)
+        .where('status', isEqualTo: 'completed')
+        .orderBy('completedAt', descending: true)
+        .limit(pageSize);
+
+    if (lastDocument != null) {
+      query = query.startAfterDocument(lastDocument!);
+    }
+
+    final snapshot = await query.get();
+
+    if (snapshot.docs.isNotEmpty) {
+      lastDocument = snapshot.docs.last;
+    }
+
+    if (snapshot.docs.length < pageSize) {
+      hasMore = false;
+    }
+
+    matches.addAll(snapshot.docs);
+
+    setState(() {
+      isLoading = false;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
 
@@ -42,81 +98,72 @@ class _MatchHistoryScreenState extends State<MatchHistoryScreen> {
       appBar: AppBar(
         title: const Text("Match History"),
       ),
-      body: StreamBuilder<QuerySnapshot>(
-        stream: FirebaseFirestore.instance
-          .collection('matches')
-          .where('players', arrayContains: currentUid)
-          .where('status', isEqualTo: 'completed')
-          .orderBy('completedAt', descending: true)
-          .limit(50)
-          .snapshots(),
-        builder: (context, snapshot) {
+      body: matches.isEmpty && isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : matches.isEmpty
+              ? const Center(child: Text("No matches played yet"))
+              : ListView.builder(
+                  controller: scrollController,
+                  itemCount: matches.length + (hasMore ? 1 : 0),
+                  itemBuilder: (context, index) {
 
-          if (!snapshot.hasData) {
-            return const Center(child: CircularProgressIndicator());
-          }
+                    if (index == matches.length) {
+                      return const Padding(
+                        padding: EdgeInsets.all(16),
+                        child: Center(child: CircularProgressIndicator()),
+                      );
+                    }
 
-          final matches = snapshot.data!.docs;
+                    final match =
+                        matches[index].data() as Map<String, dynamic>;
 
-          if (matches.isEmpty) {
-            return const Center(
-              child: Text("No matches played yet"),
-            );
-          }
+                    final players = match['players'] ?? [];
+                    final playerNames = match['playerNames'] ?? {};
 
-          return ListView.builder(
-            itemCount: matches.length,
-            itemBuilder: (context, index) {
+                    final opponentUid =
+                        players.firstWhere((uid) => uid != currentUid);
 
-              final match =
-                  matches[index].data() as Map<String, dynamic>;
+                    final opponentName =
+                        playerNames[opponentUid] ?? "Opponent";
 
-              final players = match['players'] ?? [];
-              final playerNames = match['playerNames'] ?? {};
+                    final summary =
+                        match['summary'] as Map<String, dynamic>? ?? {};
 
-              final opponentUid =
-                  players.firstWhere((uid) => uid != currentUid);
+                    final p1Sets = summary['p1Sets'] ?? 0;
+                    final p2Sets = summary['p2Sets'] ?? 0;
 
-              final opponentName =
-                  playerNames[opponentUid] ?? "Opponent";
+                    // Safe match date handling
+                    Timestamp? matchDateTs = summary['matchDate'];
 
-              final summary = match['summary'] as Map<String, dynamic>? ?? {};
+                    if (matchDateTs == null) {
+                      matchDateTs = match['result']?['matchDate'];
+                    }
 
-              final p1Sets = summary['p1Sets'] ?? 0;
-              final p2Sets = summary['p2Sets'] ?? 0;
+                    final DateTime matchDate =
+                        matchDateTs != null
+                            ? matchDateTs.toDate()
+                            : DateTime.now();
 
-              // Safe match date handling
-              Timestamp? matchDateTs = summary['matchDate'];
+                    // Real sets for UI display
+                    final sets = match['result']?['sets'] ?? [];
 
-              if (matchDateTs == null) {
-                matchDateTs = match['result']?['matchDate'];
-              }
+                    final location = match['result']?['location'] ?? '';
+                    final duration =
+                        match['result']?['durationMinutes'] ?? 0;
 
-              final DateTime matchDate =
-                  matchDateTs != null ? matchDateTs.toDate() : DateTime.now();
-
-              // Real sets for UI display
-              final sets = match['result']?['sets'] ?? [];
-
-              final location = match['result']?['location'] ?? '';
-              final duration = match['result']?['durationMinutes'] ?? 0;
-
-
-             return MatchCard(
-                playerName: currentUserName,
-                opponentName: opponentName,
-                sets: sets,
-                location: location,
-                duration: duration,
-                matchDate: matchDate,
-                winnerUid: match['winnerUid'],
-                currentUserUid: currentUid,
-              );
-
-            },
-          );
-        },
-      ),
+                    return MatchCard(
+                      playerName: currentUserName,
+                      opponentName: opponentName,
+                      opponentUid: opponentUid, 
+                      sets: sets,
+                      location: location,
+                      duration: duration,
+                      matchDate: matchDate,
+                      winnerUid: match['winnerUid'],
+                      currentUserUid: currentUid,
+                    );
+                  },
+                ),
     );
   }
 }

@@ -14,6 +14,8 @@ class _PlayerStatisticsScreenState extends State<PlayerStatisticsScreen> {
   int matchesPlayed = 0;
   int wins = 0;
   int losses = 0;
+  int setsWon = 0;
+  int setsLost = 0;
   double winRate = 0;
   int averageDuration = 0;
 
@@ -54,6 +56,26 @@ class _PlayerStatisticsScreenState extends State<PlayerStatisticsScreen> {
 
       totalDuration += duration.toInt();
 
+      final sets = result['sets'] ?? [];
+
+      for (var set in sets) {
+
+        final p1 = set['p1'];
+        final p2 = set['p2'];
+
+        final bool userIsP1 = match['players'][0] == uid;
+
+        int myScore = userIsP1 ? p1 : p2;
+        int opponentScore = userIsP1 ? p2 : p1;
+
+        if (myScore > opponentScore) {
+          setsWon++;
+        } else {
+          setsLost++;
+        }
+
+      }
+
     }
 
     if (matchesPlayed > 0) {
@@ -86,6 +108,8 @@ class _PlayerStatisticsScreenState extends State<PlayerStatisticsScreen> {
             StatTile("Wins", wins.toString()),
             StatTile("Losses", losses.toString()),
             StatTile("Win Rate", "${winRate.toStringAsFixed(1)}%"),
+            StatTile("Total Sets Won", setsWon.toString()),
+            StatTile("Total Sets Lost", setsLost.toString()),
             StatTile("Average Match Duration", "$averageDuration min"),
 
           ],

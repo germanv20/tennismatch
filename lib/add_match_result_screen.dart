@@ -237,6 +237,59 @@ class _AddMatchResultScreenState
                 : FieldValue.increment(1),
           });
 
+          // --- HEAD TO HEAD STATS ---
+
+    int p1SetsWon = 0;
+    int p2SetsWon = 0;
+
+    for (var set in formattedSets) {
+      if (set['p1']! > set['p2']!) {
+        p1SetsWon++;
+      } else {
+        p2SetsWon++;
+      }
+    }
+
+    final batch = FirebaseFirestore.instance.batch();
+
+    final p1H2H = FirebaseFirestore.instance
+        .collection('users')
+        .doc(currentUid)
+        .collection('headToHead')
+        .doc(opponentUid);
+
+    final p2H2H = FirebaseFirestore.instance
+        .collection('users')
+        .doc(opponentUid)
+        .collection('headToHead')
+        .doc(currentUid);
+
+    batch.set(p1H2H, {
+      'matches': FieldValue.increment(1),
+      'wins': winnerUid == currentUid
+          ? FieldValue.increment(1)
+          : FieldValue.increment(0),
+      'losses': winnerUid != currentUid
+          ? FieldValue.increment(1)
+          : FieldValue.increment(0),
+      'setsWon': FieldValue.increment(p1SetsWon),
+      'setsLost': FieldValue.increment(p2SetsWon),
+    }, SetOptions(merge: true));
+
+    batch.set(p2H2H, {
+      'matches': FieldValue.increment(1),
+      'wins': winnerUid == opponentUid
+          ? FieldValue.increment(1)
+          : FieldValue.increment(0),
+      'losses': winnerUid != opponentUid
+          ? FieldValue.increment(1)
+          : FieldValue.increment(0),
+      'setsWon': FieldValue.increment(p2SetsWon),
+      'setsLost': FieldValue.increment(p1SetsWon),
+    }, SetOptions(merge: true));
+
+    await batch.commit();
+
     if (!mounted) return;
 
     Navigator.pop(context);

@@ -5,6 +5,7 @@ class MatchCard extends StatelessWidget {
 
   final String playerName;
   final String opponentName;
+  final String opponentUid;
   final List sets;
   final String location;
   final int duration;
@@ -16,6 +17,7 @@ class MatchCard extends StatelessWidget {
   super.key,
   required this.playerName,
   required this.opponentName,
+  required this.opponentUid,
   required this.sets,
   required this.location,
   required this.duration,
@@ -67,6 +69,7 @@ class MatchCard extends StatelessWidget {
             builder: (_) => MatchDetailsScreen(
               playerName: playerName,
               opponentName: opponentName,
+              opponentUid:  opponentUid, 
               sets: sets,
               location: location,
               duration: duration,
@@ -108,12 +111,28 @@ class MatchCard extends StatelessWidget {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               const SizedBox(), 
-                              Text(
-                                sets.map((s) => s['p1'].toString()).join("  "),
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontFamily: 'monospace',
-                                ),
+                              Row(
+                                children: sets.map<Widget>((set) {
+
+                                  final p1 = set['p1'];
+                                  final p2 = set['p2'];
+
+                                  final bool wonSet = p1 > p2;
+
+                                  return Padding(
+                                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                                    child: Text(
+                                      p1.toString(),
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontFamily: 'monospace',
+                                        fontWeight: wonSet ? FontWeight.bold : FontWeight.normal,
+                                        color: wonSet ? Colors.green.shade700 : Colors.grey,
+                                      ),
+                                    ),
+                                  );
+
+                                }).toList(),
                               ),
                             ],
                           ),
@@ -140,12 +159,28 @@ class MatchCard extends StatelessWidget {
                             ],
                           ),
 
-                          Text(
-                            sets.map((s) => s['p2'].toString()).join("  "),
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontFamily: 'monospace',
-                            ),
+                          Row(
+                            children: sets.map<Widget>((set) {
+
+                              final p1 = set['p1'];
+                              final p2 = set['p2'];
+
+                              final bool wonSet = p2 > p1;
+
+                              return Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 4),
+                                child: Text(
+                                  p2.toString(),
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontFamily: 'monospace',
+                                    fontWeight: wonSet ? FontWeight.bold : FontWeight.normal,
+                                    color: wonSet ? Colors.green.shade700 : Colors.grey,
+                                  ),
+                                ),
+                              );
+
+                            }).toList(),
                           ),
                         ],
                       ),
