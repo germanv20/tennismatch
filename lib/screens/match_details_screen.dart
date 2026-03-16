@@ -73,6 +73,22 @@ class _MatchDetailsScreenState extends State<MatchDetailsScreen> {
   @override
   Widget build(BuildContext context) {
 
+    int playerSetsWon = 0;
+    int opponentSetsWon = 0;
+
+    for (var set in widget.sets) {
+      if (set['p1'] > set['p2']) {
+        playerSetsWon++;
+      } else {
+        opponentSetsWon++;
+      }
+    }
+
+    final bool playerWon = playerSetsWon > opponentSetsWon;
+
+    final winnerName = playerWon ? widget.playerName : widget.opponentName;
+    final loserName = playerWon ? widget.opponentName : widget.playerName;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text("Match Details"),
@@ -83,37 +99,130 @@ class _MatchDetailsScreenState extends State<MatchDetailsScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
 
-            Text(
-              "${widget.playerName} vs ${widget.opponentName}",
-              style: const TextStyle(
+            const Text(
+              "Result",
+              style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
               ),
             ),
 
-            const SizedBox(height: 20),
-
-            const Text(
-              "Sets",
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-
             const SizedBox(height: 10),
 
-            ...widget.sets.asMap().entries.map((entry) {
-
-              final index = entry.key;
-              final set = entry.value;
-
-              return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4),
-                child: Text(
-                  "Set ${index + 1}: ${set['p1']} - ${set['p2']}",
+            Row(
+              children: [
+                Text(
+                  winnerName,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const Text(" defeated "),
+                Text(
+                  loserName,
                   style: const TextStyle(fontSize: 16),
                 ),
-              );
+              ],
+            ),
 
-            }),
+            const SizedBox(height: 20),
+
+            const SizedBox(height: 20),
+
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  children: [
+
+                    // Header row (SET1 SET2 SET3...)
+                    Row(
+                      children: [
+                        const SizedBox(width: 120),
+                        ...widget.sets.asMap().entries.map((entry) {
+                          final index = entry.key;
+
+                          return Expanded(
+                            child: Center(
+                              child: Text(
+                                "SET ${index + 1}",
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          );
+                        }),
+                      ],
+                    ),
+
+                    const SizedBox(height: 10),
+
+                    // Player 1 row
+                    Row(
+                      children: [
+                        SizedBox(
+                          width: 120,
+                          child: Text(widget.playerName),
+                        ),
+                        ...widget.sets.map((set) {
+
+                          final p1 = set['p1'];
+                          final p2 = set['p2'];
+                          final isWinner = p1 > p2;
+
+                          return Expanded(
+                            child: Center(
+                              child: Text(
+                                p1.toString(),
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: isWinner ? FontWeight.bold : FontWeight.normal,
+                                  color: isWinner ? Colors.black : Colors.grey[500],
+                                ),
+                              ),
+                            ),
+                          );
+                        }),
+                      ],
+                    ),
+
+                    const SizedBox(height: 6),
+
+                    // Player 2 row
+                    Row(
+                      children: [
+                        SizedBox(
+                          width: 120,
+                          child: Text(widget.opponentName),
+                        ),
+                        ...widget.sets.map((set) {
+
+                          final p1 = set['p1'];
+                          final p2 = set['p2'];
+                          final isWinner = p2 > p1;
+
+                          return Expanded(
+                            child: Center(
+                              child: Text(
+                                p2.toString(),
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: isWinner ? FontWeight.bold : FontWeight.normal,
+                                  color: isWinner ? Colors.black : Colors.grey[500],
+                                ),
+                              ),
+                            ),
+                          );
+                        }),
+                      ],
+                    ),
+
+                  ],
+                ),
+              ),
+            ),
 
             const SizedBox(height: 20),
 

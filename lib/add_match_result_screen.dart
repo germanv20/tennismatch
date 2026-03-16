@@ -177,6 +177,10 @@ class _AddMatchResultScreenState
           'completedAt': FieldValue.serverTimestamp(),
           'winnerUid': winnerUid,
 
+          // NEW FIELDS
+          'player1Uid': players[0],
+          'player2Uid': players[1],
+
           'playerNames': {
             currentUid: currentUserName,
             opponentUid: opponentName,

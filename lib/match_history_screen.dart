@@ -129,6 +129,11 @@ class _MatchHistoryScreenState extends State<MatchHistoryScreen> {
                     final summary =
                         match['summary'] as Map<String, dynamic>? ?? {};
 
+                    final player1Uid = match['player1Uid'];
+                    final player2Uid = match['player2Uid'];
+
+                    final bool currentUserIsP1 = currentUid == player1Uid;
+
                     final p1Sets = summary['p1Sets'] ?? 0;
                     final p2Sets = summary['p2Sets'] ?? 0;
 
@@ -145,7 +150,21 @@ class _MatchHistoryScreenState extends State<MatchHistoryScreen> {
                             : DateTime.now();
 
                     // Real sets for UI display
-                    final sets = match['result']?['sets'] ?? [];
+                    final rawSets = match['result']?['sets'] ?? [];
+
+                    // Fix perspective so p1 always = current user
+                    List sets = [];
+
+                    for (var set in rawSets) {
+                      if (currentUserIsP1) {
+                        sets.add(set);
+                      } else {
+                        sets.add({
+                          'p1': set['p2'],
+                          'p2': set['p1'],
+                        });
+                      }
+                    }
 
                     final location = match['result']?['location'] ?? '';
                     final duration =
@@ -161,6 +180,9 @@ class _MatchHistoryScreenState extends State<MatchHistoryScreen> {
                       matchDate: matchDate,
                       winnerUid: match['winnerUid'],
                       currentUserUid: currentUid,
+                      currentUserIsP1: currentUserIsP1,
+                      player1Uid: player1Uid,
+                      player2Uid: player2Uid,
                     );
                   },
                 ),

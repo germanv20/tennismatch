@@ -12,6 +12,9 @@ class MatchCard extends StatelessWidget {
   final DateTime matchDate;
   final String winnerUid;
   final String currentUserUid;
+  final bool currentUserIsP1;
+  final String player1Uid;
+  final String player2Uid;
 
   const MatchCard({
   super.key,
@@ -24,12 +27,16 @@ class MatchCard extends StatelessWidget {
   required this.matchDate,
   required this.winnerUid,
   required this.currentUserUid,
+  required this.currentUserIsP1,
+  required this.player1Uid,
+  required this.player2Uid,
 });
 
   @override
   Widget build(BuildContext context) {
 
     final bool isWin = winnerUid == currentUserUid;
+    final bool viewerIsP1 = currentUserUid == player1Uid;
 
     final badge = Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -58,8 +65,8 @@ class MatchCard extends StatelessWidget {
       }
     }
 
-    bool p1Won = p1Sets > p2Sets;
-    bool p2Won = p2Sets > p1Sets;
+    bool viewerWon = winnerUid == currentUserUid;
+    bool opponentWon = winnerUid == opponentUid;
 
     return InkWell(
       onTap: () {
@@ -99,12 +106,12 @@ class MatchCard extends StatelessWidget {
                               Text(
                                 playerName,
                                 style: TextStyle(
-                                  fontWeight: p1Won ? FontWeight.bold : FontWeight.normal,
+                                  fontWeight: viewerWon ? FontWeight.bold : FontWeight.normal,
                                 ),
                               ),
 
-                              if (p1Won) const SizedBox(width: 4),
-                              if (p1Won) const Text("🏆"),
+                              if (viewerWon) const SizedBox(width: 4),
+                              if (viewerWon) const Text("🏆"),
                             ],
                           ),
                           Row(
@@ -117,12 +124,15 @@ class MatchCard extends StatelessWidget {
                                   final p1 = set['p1'];
                                   final p2 = set['p2'];
 
-                                  final bool wonSet = p1 > p2;
+                                  final myScore = viewerIsP1 ? p1 : p2;
+                                  final opponentScore = viewerIsP1 ? p2 : p1;
+
+                                  final bool wonSet = myScore > opponentScore;
 
                                   return Padding(
                                     padding: const EdgeInsets.symmetric(horizontal: 4),
                                     child: Text(
-                                      p1.toString(),
+                                      myScore.toString(),
                                       style: TextStyle(
                                         fontSize: 16,
                                         fontFamily: 'monospace',
@@ -151,11 +161,11 @@ class MatchCard extends StatelessWidget {
                               Text(
                                 opponentName,
                                 style: TextStyle(
-                                  fontWeight: p2Won ? FontWeight.bold : FontWeight.normal,
+                                  fontWeight: opponentWon ? FontWeight.bold : FontWeight.normal,
                                 ),
                               ),
-                              if (p2Won) const SizedBox(width: 4),
-                              if (p2Won) const Text("🏆"),
+                              if (opponentWon) const SizedBox(width: 4),
+                              if (opponentWon) const Text("🏆"),
                             ],
                           ),
 
@@ -165,12 +175,15 @@ class MatchCard extends StatelessWidget {
                               final p1 = set['p1'];
                               final p2 = set['p2'];
 
-                              final bool wonSet = p2 > p1;
+                              final myScore = viewerIsP1 ? p1 : p2;
+                              final opponentScore = viewerIsP1 ? p2 : p1;
+
+                              final bool wonSet = opponentScore > myScore;
 
                               return Padding(
                                 padding: const EdgeInsets.symmetric(horizontal: 4),
                                 child: Text(
-                                  p2.toString(),
+                                  opponentScore.toString(),
                                   style: TextStyle(
                                     fontSize: 16,
                                     fontFamily: 'monospace',
