@@ -7,6 +7,7 @@ import 'my_matches_screen.dart';
 import 'incoming_requests_screen.dart';
 import 'player_profile_screen.dart';
 import 'player_statistics_screen.dart';
+import '../widgets/home_card.dart';
 
 const tennisLevels = [
   'Beginner',
@@ -125,92 +126,101 @@ class HomeScreen extends StatelessWidget {
                 }).toList(),
               ),
 
-              ElevatedButton(
-                child: const Text("Find Players"),
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const AvailablePlayersScreen(),
-                    ),
-                  );
-                },
-              ),
+              const SizedBox(height: 24),
 
-              const SizedBox(height: 12),
+              GridView.count(
+                crossAxisCount: 2,
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                crossAxisSpacing: 12,
+                mainAxisSpacing: 12,
+                children: [
 
-              ElevatedButton(
-                child: const Text("My Matches"),
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => MyMatchesScreen(
-                        currentUser: currentUser,
-                      ),
-                    ),
-                  );
-                },
-              ),
+                  HomeCard(
+                    title: "Find Players",
+                    icon: Icons.sports_tennis,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const AvailablePlayersScreen(),
+                        ),
+                      );
+                    },
+                  ),
 
-              const SizedBox(height: 12),
+                  HomeCard(
+                    title: "My Matches",
+                    icon: Icons.calendar_today,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => MyMatchesScreen(
+                            currentUser: currentUser,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
 
-              ElevatedButton(
-                child: const Text("Match History"),
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const MatchHistoryScreen(),
-                    ),
-                  );
-                },
-              ),
+                  HomeCard(
+                    title: "Match History",
+                    icon: Icons.history,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const MatchHistoryScreen(),
+                        ),
+                      );
+                    },
+                  ),
 
-              const SizedBox(height: 12),
+                  HomeCard(
+                    title: "My Stats",
+                    icon: Icons.bar_chart,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => PlayerStatisticsScreen(
+                            userId: currentUser.uid,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
 
-              ElevatedButton(
-                child: const Text("Incoming Requests"),
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const IncomingRequestsScreen(),
-                    ),
-                  );
-                },
-              ),
+                  HomeCard(
+                    title: "Incoming Requests",
+                    icon: Icons.mail,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const IncomingRequestsScreen(),
+                        ),
+                      );
+                    },
+                  ),
 
-              const SizedBox(height: 12),
+                  HomeCard(
+                    title: "My Profile",
+                    icon: Icons.person,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => PlayerProfileScreen(
+                            userData: userData,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
 
-              ElevatedButton(
-                child: const Text("My Stats"),
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => PlayerStatisticsScreen(
-                        userId: currentUser.uid,
-                      ),
-                    ),
-                  );
-                },
-              ),
-
-              const SizedBox(height: 12),
-
-              ElevatedButton(
-                child: const Text("My Profile"),
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => PlayerProfileScreen(
-                        userData: userData,
-                      ),
-                    ),
-                  );
-                },
+                ],
               ),
             ],
           ),
