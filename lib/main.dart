@@ -5,29 +5,16 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'firebase_options.dart';
-import 'player_profile_screen.dart';
-import 'incoming_requests_screen.dart';
-import 'my_matches_screen.dart';
-import 'match_detail_screen.dart';
-import 'match_chat_screen.dart';
-import 'match_history_screen.dart';
+import 'screens/player_profile_screen.dart';
+import 'screens/incoming_requests_screen.dart';
+import 'screens/my_matches_screen.dart';
+import 'screens/match_detail_screen.dart';
+import 'screens/match_chat_screen.dart';
+import 'screens/match_history_screen.dart';
 import '../screens/player_statistics_screen.dart';
+import '../screens/available_players_screen.dart';
+import 'screens/home_screen.dart';
 
-const tennisLevels = [
-  'Beginner',
-  'Intermediate',
-  'Advanced',
-];
-
-const List<String> availableDays = [
-  'Mon',
-  'Tue',
-  'Wed',
-  'Thu',
-  'Fri',
-  'Sat',
-  'Sun',
-];
 
 final GlobalKey<NavigatorState> navigatorKey =
     GlobalKey<NavigatorState>();
@@ -117,13 +104,15 @@ class AuthTest extends StatefulWidget {
 
 class _AuthTestState extends State<AuthTest> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  bool _fcmInitialized = false;
 
   @override
   void initState() {
     super.initState();
 
     FirebaseAuth.instance.authStateChanges().listen((user) {
-      if (user != null) {
+      if (user != null && !_fcmInitialized) {
+        _fcmInitialized = true;
         setupFCM();
       }
     });
@@ -175,7 +164,6 @@ class _AuthTestState extends State<AuthTest> {
 
       if (user != null) {
         await ensureUserDocument(user);
-        await setupFCM();
       }
 
     } catch (e) {
@@ -212,29 +200,7 @@ class _AuthTestState extends State<AuthTest> {
     }
   }
 
-  Future<void> updateTennisLevel(String level) async {
-    final user = _auth.currentUser;
-    if (user == null) return;
-
-    await FirebaseFirestore.instance
-        .collection('users')
-        .doc(user.uid)
-        .update({
-      'tennisLevel': level,
-    });
-  }
-
-  Future<void> updateAvailability(List<String> days) async {
-    final user = _auth.currentUser;
-    if (user == null) return;
-
-    await FirebaseFirestore.instance
-        .collection('users')
-        .doc(user.uid)
-        .update({
-      'availability': days,
-    });
-  }
+  
 
   Future<void> ensureUserDocument(User user) async {
     final ref =
@@ -303,6 +269,7 @@ class _AuthTestState extends State<AuthTest> {
     return StreamBuilder<User?>(
       stream: _auth.authStateChanges(),
       builder: (context, authSnapshot) {
+
         if (authSnapshot.connectionState == ConnectionState.waiting) {
           return const Scaffold(
             body: Center(child: CircularProgressIndicator()),
@@ -329,6 +296,7 @@ class _AuthTestState extends State<AuthTest> {
               .doc(user.uid)
               .snapshots(),
           builder: (context, userSnapshot) {
+
             if (userSnapshot.connectionState == ConnectionState.waiting) {
               return const Scaffold(
                 body: Center(child: CircularProgressIndicator()),
@@ -341,280 +309,25 @@ class _AuthTestState extends State<AuthTest> {
               );
             }
 
-
             final rawData = userSnapshot.data!.data();
+
             if (rawData == null) {
               return const Scaffold(
                 body: Center(child: CircularProgressIndicator()),
               );
             }
 
-            final Map<String, dynamic> data = rawData as Map<String, dynamic>;
+            final Map<String, dynamic> data =
+                rawData as Map<String, dynamic>;
 
-
-            final String? tennisLevel = data['tennisLevel'];
-            final List<dynamic> availabilityRaw = data['availability'] ?? [];
-            final List<String> availability =
-                availabilityRaw.map((e) => e.toString()).toList();
-
-
-            return Scaffold(
-              appBar: AppBar(title: const Text('TennisMatch Profile')),
-              body: SingleChildScrollView(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  children: [
-                    Text(
-                      'Welcome ${user.displayName}',
-                      style: const TextStyle(fontSize: 20),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(user.email ?? ''),
-                    const SizedBox(height: 20),
-
-                    const Text('Your tennis level'),
-                    const SizedBox(height: 8),
-
-                    DropdownButton<String>(
-                      value: tennisLevel,
-                      hint: const Text('Choose level'),
-                      items: tennisLevels.map((level) {
-                        return DropdownMenuItem(
-                          value: level,
-                          child: Text(level),
-                        );
-                      }).toList(),
-                      onChanged: (value) async {
-                        if (value == null) return;
-                        await updateTennisLevel(value);
-                      },
-                    ),
-
-                    const SizedBox(height: 20),
-
-                    const Text('Your availability'),
-                    const SizedBox(height: 8),
-
-                    Column(
-                      children: availableDays.map((day) {
-                        final isSelected = availability.contains(day);
-
-                        return CheckboxListTile(
-                          title: Text(day),
-                          value: isSelected,
-                          onChanged: (checked) {
-                            final updated = List<String>.from(availability);
-
-                            if (checked == true) {
-                              updated.add(day);
-                            } else {
-                              updated.remove(day);
-                            }
-
-                            updateAvailability(updated);
-                          },
-                        );
-                      }).toList(),
-                    ),
-
-                    const SizedBox(height: 30),
-                    const Divider(),
-                    const SizedBox(height: 10),
-                    const Text(
-                      'Available Players',
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 10),
-
-                    if (tennisLevel == null)
-                      const Text(
-                        'Select your tennis level to see available players',
-                        style: TextStyle(color: Colors.grey),
-                      )
-                    else
-                      StreamBuilder<QuerySnapshot>(
-                        stream: FirebaseFirestore.instance
-                            .collection('users')
-                            .where('tennisLevel', isEqualTo: tennisLevel)
-                            .snapshots(),
-                        builder: (context, snapshot) {
-
-                        if (snapshot.connectionState == ConnectionState.waiting) {
-                          return const CircularProgressIndicator();
-                        }
-
-                        if (!snapshot.hasData) {
-                          return const Text('No data available');
-                        }
-
-                        final docs = snapshot.data!.docs;
-
-                        final matches = docs.where((doc) {
-                          final data = doc.data() as Map<String, dynamic>;
-
-                          // Exclude current user
-                          if (data['uid'] == user.uid) return false;
-
-                          final List<dynamic> otherAvailability =
-                              data['availability'] ?? [];
-
-                          // At least one shared day
-                          return otherAvailability.any(
-                            (day) => availability.contains(day),
-                          );
-                        }).toList();
-
-                        if (matches.isEmpty) {
-                          return const Text('No players available right now.');
-                        }
-
-                        return Column(
-                          children: matches.map((doc) {
-                            final data = doc.data() as Map<String, dynamic>;
-
-                            return GestureDetector(
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => PlayerProfileScreen(
-                                      userData: data,
-                                    ),
-                                  ),
-                                );
-                              },
-                              child: Card(
-                                child: ListTile(
-                                  leading: CircleAvatar(
-                                    backgroundImage: NetworkImage(data['photoUrl'] ?? ''),
-                                  ),
-                                  title: Text(data['name'] ?? 'Unknown'),
-                                  subtitle: Text(
-                                    'Available: ${(data['availability'] as List).join(', ')}',
-                                  ),
-                                  trailing: const Icon(Icons.sports_tennis),
-                                ),
-                              ),
-                            );
-
-                          }).toList(),
-                        );
-                      },
-                    ),
-
-                    const SizedBox(height: 20),
-
-                    StreamBuilder<QuerySnapshot>(
-                      stream: FirebaseFirestore.instance
-                          .collection('match_requests')
-                          .where('toUid', isEqualTo: user.uid)
-                          .where('status', isEqualTo: 'pending')
-                          .snapshots(),
-                      builder: (context, snapshot) {
-                        int requestCount = 0;
-
-                        if (snapshot.hasData) {
-                          requestCount = snapshot.data!.docs.length;
-                        }
-
-                        return Stack(
-                          clipBehavior: Clip.none,
-                          children: [
-                            ElevatedButton.icon(
-                              icon: const Icon(Icons.mail),
-                              label: const Text('Incoming Match Requests'),
-                              onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => const IncomingRequestsScreen(),
-                                  ),
-                                );
-                              },
-                            ),
-
-                            if (requestCount > 0)
-                              Positioned(
-                                right: -5,
-                                top: -5,
-                                child: Container(
-                                  padding: const EdgeInsets.all(6),
-                                  decoration: const BoxDecoration(
-                                    color: Colors.red,
-                                    shape: BoxShape.circle,
-                                  ),
-                                  constraints: const BoxConstraints(
-                                    minWidth: 22,
-                                    minHeight: 22,
-                                  ),
-                                  child: Center(
-                                    child: Text(
-                                      requestCount > 99 ? '99+' : requestCount.toString(),
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                          ],
-                        );
-                      },
-                    ),
-
-                    ElevatedButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => MyMatchesScreen(currentUser: user),
-                          ),
-                        );
-                      },
-                      child: const Text('My Matches'),
-                    ),
-
-                    ElevatedButton(
-                      child: const Text("Match History"),
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const MatchHistoryScreen(),
-                          ),
-                        );
-                      },
-                    ),
-
-                    ElevatedButton(
-                      child: const Text("My Matches Stats"),
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const PlayerStatisticsScreen(),
-                          ),
-                        );
-                      },
-                    ),
-
-                    const SizedBox(height: 20),
-
-                    ElevatedButton(
-                      onPressed: signOut,
-                      child: const Text('Sign out'),
-                    ),
-
-                  ],
-                ),
-              ),
+            // ✅ THIS is the ONLY place HomeScreen should be called
+            return HomeScreen(
+              currentUser: user,
+              userData: data,
             );
           },
         );
       },
     );
-
   }
 }

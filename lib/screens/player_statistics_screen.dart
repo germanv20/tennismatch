@@ -3,7 +3,12 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class PlayerStatisticsScreen extends StatefulWidget {
-  const PlayerStatisticsScreen({super.key});
+  final String userId;
+
+  const PlayerStatisticsScreen({
+    super.key,
+    required this.userId,
+  });
 
   @override
   State<PlayerStatisticsScreen> createState() => _PlayerStatisticsScreenState();
@@ -29,7 +34,7 @@ class _PlayerStatisticsScreenState extends State<PlayerStatisticsScreen> {
 
   Future<void> loadStats() async {
 
-    final uid = FirebaseAuth.instance.currentUser!.uid;
+    final uid = widget.userId;
 
     final snapshot = await FirebaseFirestore.instance
         .collection('matches')
