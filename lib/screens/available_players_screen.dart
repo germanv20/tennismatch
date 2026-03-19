@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'player_profile_screen.dart';
+import '../widgets/empty_state.dart';
+import '../widgets/error_state.dart';
 
 class AvailablePlayersScreen extends StatelessWidget {
   const AvailablePlayersScreen({super.key});
@@ -12,8 +14,13 @@ class AvailablePlayersScreen extends StatelessWidget {
     final user = FirebaseAuth.instance.currentUser;
 
     if (user == null) {
-      return const Scaffold(
-        body: Center(child: Text("User not logged in")),
+      return Scaffold(
+        appBar: AppBar(title: Text("Available Players")),
+        body: EmptyState(
+          icon: Icons.person_off,
+          title: "Not logged in",
+          subtitle: "Please log in to find players",
+        ),
       );
     }
 
@@ -28,19 +35,34 @@ class AvailablePlayersScreen extends StatelessWidget {
             .snapshots(),
         builder: (context, userSnapshot) {
 
+          if (userSnapshot.hasError){
+            return const ErrorState(
+              message: "Failed to load your profile",
+            );
+          }
+
           if (!userSnapshot.hasData) {
             return const Center(child: CircularProgressIndicator());
           }
 
-          final data =
-              userSnapshot.data!.data() as Map<String, dynamic>;
+          final rawData = userSnapshot.data!.data();
+
+          if (rawData == null) {
+            return const ErrorState(
+              message: "Invalid user data",
+            );
+          }
+
+          final data = rawData as Map<String, dynamic>;
 
           final tennisLevel = data['tennisLevel'];
           final List availability = data['availability'] ?? [];
 
           if (tennisLevel == null) {
-            return const Center(
-              child: Text("Select your tennis level first."),
+            return const EmptyState(
+              icon: Icons.info,
+              title: "Set your tennis level",
+              subtitle: "Go back and select your level to find players",
             );
           }
 
@@ -50,6 +72,12 @@ class AvailablePlayersScreen extends StatelessWidget {
                 .where('tennisLevel', isEqualTo: tennisLevel)
                 .snapshots(),
             builder: (context, snapshot) {
+
+              if (snapshot.hasError){
+                return const ErrorState(
+                  message: "Failed to load players",
+                  );
+              }
 
               if (!snapshot.hasData) {
                 return const Center(
@@ -75,8 +103,10 @@ class AvailablePlayersScreen extends StatelessWidget {
               }).toList();
 
               if (matches.isEmpty) {
-                return const Center(
-                  child: Text("No players available."),
+                return const EmptyState(
+                  icon: Icons.people,
+                  title: "No players available",
+                  subtitle: "Try changing your availability or check later",
                 );
               }
 
@@ -101,8 +131,13 @@ class AvailablePlayersScreen extends StatelessWidget {
                     child: Card(
                       child: ListTile(
                         leading: CircleAvatar(
-                          backgroundImage: NetworkImage(
-                              data['photoUrl'] ?? ''),
+                          backgroundImage: (data['photoUrl'] != null &&
+                                data['photoUrl'].toString().isNotEmpty)
+                            ? NetworkImage(data['photoUrl'])
+                            : null,
+                        child: data['photoUrl'] == null
+                            ? const Icon(Icons.person)
+                            : null,
                         ),
                         title: Text(data['name'] ?? 'Unknown'),
                         subtitle: Text(

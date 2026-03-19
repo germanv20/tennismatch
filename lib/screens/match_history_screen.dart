@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../widgets/match_card.dart';
+import '../../widgets/empty_state.dart';
 
 class MatchHistoryScreen extends StatefulWidget {
   const MatchHistoryScreen({super.key});
@@ -40,16 +41,22 @@ class _MatchHistoryScreenState extends State<MatchHistoryScreen> {
   }
 
   Future<void> loadCurrentUserName() async {
-    final uid = FirebaseAuth.instance.currentUser!.uid;
+    try {
+      final uid = FirebaseAuth.instance.currentUser!.uid;
 
-    final doc = await FirebaseFirestore.instance
-        .collection('users')
-        .doc(uid)
-        .get();
+      final doc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(uid)
+          .get();
 
-    setState(() {
-      currentUserName = doc['name'];
-    });
+      setState(() {
+        currentUserName = doc['name'];
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Failed to load user info")),
+      );
+    }
   }
 
   Future<void> loadMatches() async {
@@ -59,34 +66,44 @@ class _MatchHistoryScreenState extends State<MatchHistoryScreen> {
       isLoading = true;
     });
 
-    final currentUid = FirebaseAuth.instance.currentUser!.uid;
+    try {
+      final currentUid = FirebaseAuth.instance.currentUser!.uid;
 
-    Query query = FirebaseFirestore.instance
-        .collection('matches')
-        .where('players', arrayContains: currentUid)
-        .where('status', isEqualTo: 'completed')
-        .orderBy('completedAt', descending: true)
-        .limit(pageSize);
+      Query query = FirebaseFirestore.instance
+          .collection('matches')
+          .where('players', arrayContains: currentUid)
+          .where('status', isEqualTo: 'completed')
+          .orderBy('completedAt', descending: true)
+          .limit(pageSize);
 
-    if (lastDocument != null) {
-      query = query.startAfterDocument(lastDocument!);
+      if (lastDocument != null) {
+        query = query.startAfterDocument(lastDocument!);
+      }
+
+      final snapshot = await query.get();
+
+      if (snapshot.docs.isNotEmpty) {
+        lastDocument = snapshot.docs.last;
+      }
+
+      if (snapshot.docs.length < pageSize) {
+        hasMore = false;
+      }
+
+      setState(() {
+        matches.addAll(snapshot.docs);
+        isLoading = false;
+      });
+
+    } catch (e) {
+      setState(() {
+        isLoading = false;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Error loading match history")),
+      );
     }
-
-    final snapshot = await query.get();
-
-    if (snapshot.docs.isNotEmpty) {
-      lastDocument = snapshot.docs.last;
-    }
-
-    if (snapshot.docs.length < pageSize) {
-      hasMore = false;
-    }
-
-    matches.addAll(snapshot.docs);
-
-    setState(() {
-      isLoading = false;
-    });
   }
 
   @override
@@ -101,7 +118,11 @@ class _MatchHistoryScreenState extends State<MatchHistoryScreen> {
       body: matches.isEmpty && isLoading
           ? const Center(child: CircularProgressIndicator())
           : matches.isEmpty
-              ? const Center(child: Text("No matches played yet"))
+              ? const EmptyState(
+                  icon: Icons.history,
+                  title: "No match history yet",
+                  subtitle: "Play some matches to see them here 🎾",
+                )
               : ListView.builder(
                   controller: scrollController,
                   itemCount: matches.length + (hasMore ? 1 : 0),

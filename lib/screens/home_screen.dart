@@ -8,6 +8,8 @@ import 'incoming_requests_screen.dart';
 import 'player_profile_screen.dart';
 import 'player_statistics_screen.dart';
 import '../widgets/home_card.dart';
+import 'package:url_launcher/url_launcher.dart';
+
 
 const tennisLevels = [
   'Beginner',
@@ -35,23 +37,112 @@ class HomeScreen extends StatelessWidget {
     required this.userData,
   });
 
+  Widget buildProfileCard() {
+    final String name = currentUser.displayName ?? "Player";
+    final String level = userData['tennisLevel'] ?? "Not set";
+    final List availabilityRaw = userData['availability'] ?? [];
+
+    final String availabilityText = availabilityRaw.isEmpty
+        ? "No availability set"
+        : availabilityRaw.join(', ');
+
+    return Card(
+      color: const Color(0xFF2E7D32),
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
+      //elevation: 4,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          children: [
+            CircleAvatar(
+              radius: 30,
+              backgroundColor: Colors.deepPurple.shade100,
+              backgroundImage: (userData['photoUrl'] != null &&
+                      userData['photoUrl'].toString().isNotEmpty)
+                  ? NetworkImage(userData['photoUrl'])
+                  : null,
+              child: userData['photoUrl'] == null
+                  ? const Icon(Icons.person, size: 30)
+                  : null,
+            ),
+            const SizedBox(width: 16),
+
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+
+                  Text(
+                    name,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+
+                  const SizedBox(height: 4),
+
+                  Text(
+                    "🎾 $level",
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontSize: 14,
+                    ),
+                  ),
+
+                  const SizedBox(height: 2),
+
+                  Text(
+                    "📅 $availabilityText",
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Future<void> updateTennisLevel(String level) async {
-  await FirebaseFirestore.instance
-      .collection('users')
-      .doc(currentUser.uid)
-      .update({
-    'tennisLevel': level,
-  });
-}
+    await FirebaseFirestore.instance
+        .collection('users')
+        .doc(currentUser.uid)
+        .update({
+      'tennisLevel': level,
+    });
+  }
 
   Future<void> updateAvailability(List<String> days) async {
-  await FirebaseFirestore.instance
-      .collection('users')
-      .doc(currentUser.uid)
-      .update({
-    'availability': days,
-  });
-}
+    await FirebaseFirestore.instance
+        .collection('users')
+        .doc(currentUser.uid)
+        .update({
+      'availability': days,
+    });
+  }
+
+  Future<void> openFeedbackForm(BuildContext context) async {
+    final url = Uri.parse("https://docs.google.com/forms/d/e/1FAIpQLScGcT2eC2znik4ndofkiExqAN1k7LL_A3eOOQfjeCkl-5RO-A/viewform");
+
+    if (!await launchUrl(
+      url,
+      mode: LaunchMode.externalApplication,
+    )) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Could not open feedback form"),
+        ),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -70,10 +161,7 @@ class HomeScreen extends StatelessWidget {
           child: Column(
             children: [
 
-              Text(
-                'Welcome ${currentUser.displayName}',
-                style: const TextStyle(fontSize: 20),
-              ),
+              buildProfileCard(),
 
               const SizedBox(height: 24),
 
@@ -218,6 +306,12 @@ class HomeScreen extends StatelessWidget {
                         ),
                       );
                     },
+                  ),
+
+                  HomeCard(
+                    title: "Send Feedback",
+                    icon: Icons.feedback,
+                    onTap: () => openFeedbackForm(context),
                   ),
 
                 ],

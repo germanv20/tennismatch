@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../widgets/empty_state.dart';
 
 class PlayerStatisticsScreen extends StatefulWidget {
   final String userId;
@@ -34,19 +35,44 @@ class _PlayerStatisticsScreenState extends State<PlayerStatisticsScreen> {
 
   Future<void> loadStats() async {
 
+    matchesPlayed = 0;
+    wins = 0;
+    losses = 0;
+    setsWon = 0;
+    setsLost = 0;
+    winRate = 0;
+    averageDuration = 0;
+
     final uid = widget.userId;
 
-    final snapshot = await FirebaseFirestore.instance
-        .collection('matches')
-        .where('players', arrayContains: uid)
-        .where('status', isEqualTo: 'completed')
-        .get();
+    
+    QuerySnapshot snapshot;
+
+    try {
+      snapshot = await FirebaseFirestore.instance
+          .collection('matches')
+          .where('players', arrayContains: uid)
+          .where('status', isEqualTo: 'completed')
+          .get();
+    } catch (e) {
+      setState(() {
+        loading = false;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Failed to load stats")),
+      );
+
+      return;
+    }
 
     int totalDuration = 0;
 
     for (var doc in snapshot.docs) {
 
-      final match = doc.data();
+      final match = doc.data() as Map<String, dynamic>?;
+
+      if (match == null) continue;
 
       matchesPlayed++;
 
@@ -56,19 +82,24 @@ class _PlayerStatisticsScreenState extends State<PlayerStatisticsScreen> {
         losses++;
       }
 
-      final result = match['result'] ?? {};
-      final duration = (result['durationMinutes'] ?? 0) as num;
+      final result = match['result'] as Map<String, dynamic>? ?? {};
 
+      final duration = (result['durationMinutes'] ?? 0) as num;
       totalDuration += duration.toInt();
 
-      final sets = result['sets'] ?? [];
+      final sets = result['sets'] as List? ?? [];
+
+      final players = match['players'] as List? ?? [];
+
+      final bool userIsP1 =
+          players.isNotEmpty && players[0] == uid;
 
       for (var set in sets) {
 
-        final p1 = set['p1'];
-        final p2 = set['p2'];
+        final setMap = set as Map<String, dynamic>? ?? {};
 
-        final bool userIsP1 = match['players'][0] == uid;
+        final p1 = (setMap['p1'] ?? 0) as int;
+        final p2 = (setMap['p2'] ?? 0) as int;
 
         int myScore = userIsP1 ? p1 : p2;
         int opponentScore = userIsP1 ? p2 : p1;
@@ -78,9 +109,7 @@ class _PlayerStatisticsScreenState extends State<PlayerStatisticsScreen> {
         } else {
           setsLost++;
         }
-
       }
-
     }
 
     if (matchesPlayed > 0) {
@@ -99,6 +128,17 @@ class _PlayerStatisticsScreenState extends State<PlayerStatisticsScreen> {
     if (loading) {
       return const Scaffold(
         body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (matchesPlayed == 0) {
+      return Scaffold(
+        appBar: AppBar(title: Text("Player Statistics")),
+        body: EmptyState(
+          icon: Icons.bar_chart,
+          title: "No stats yet",
+          subtitle: "Play your first match to see your statistics 🎾",
+        ),
       );
     }
 

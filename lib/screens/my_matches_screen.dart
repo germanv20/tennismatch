@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:tennismatch/widgets/error_state.dart';
 import 'match_detail_screen.dart';
+import '../widgets/empty_state.dart';
 
 class MyMatchesScreen extends StatelessWidget {
   final User currentUser;
@@ -28,17 +30,29 @@ class MyMatchesScreen extends StatelessWidget {
             return const Center(child: CircularProgressIndicator());
           }
 
+          if (snapshot.hasError) {
+            return const ErrorState(
+              message: "Failed to load matches",
+            );
+          }
+
           if (!snapshot.hasData) {
-            return const Center(child: Text('No matches found.'));
+            return const EmptyState(
+              icon: Icons.calendar_today,
+              title: "No matches found",
+              subtitle: "Try refreshing or check again later",
+            );
           }
 
           final allMatches = snapshot.data!.docs;
-          print("Current UID: ${currentUser.uid}");
-          print("Docs returned: ${snapshot.data!.docs.length}");
 
 
           if (allMatches.isEmpty) {
-            return const Center(child: Text('You have no matches yet.'));
+            return const EmptyState(
+              icon: Icons.sports_tennis,
+              title: "No active matches",
+              subtitle: "Start by finding a player to play with 🎾",
+            );
           }
 
           return ListView.builder(
@@ -47,9 +61,11 @@ class MyMatchesScreen extends StatelessWidget {
               final match = allMatches[index];
               final data = match.data() as Map<String, dynamic>;
 
-              final players = List<String>.from(data['players']);
+              final players = List<String>.from(data['players'] ?? []);
               final opponentUid =
-                  players.firstWhere((uid) => uid != currentUser.uid);
+                  players.firstWhere((uid) => uid != currentUser.uid,
+                  orElse: () => '',
+              );
 
 
               return FutureBuilder<DocumentSnapshot>(
@@ -58,20 +74,31 @@ class MyMatchesScreen extends StatelessWidget {
                     .doc(opponentUid)
                     .get(),
                 builder: (context, userSnapshot) {
+                  if (userSnapshot.hasError) {
+                    return const ListTile(
+                      title: Text('Failed to load opponent'),
+                    );
+                  }
                   if (!userSnapshot.hasData) {
                     return const ListTile(
-                      title: Text('Loading opponent...'),
+                      leading: CircleAvatar(child: Icon(Icons.person)),
+                      title: Text('Loading...'),
                     );
                   }
 
                   final userData =
-                      userSnapshot.data!.data() as Map<String, dynamic>;
+                      userSnapshot.data!.data() as Map<String, dynamic>? ?? {};
 
                   return Card(
                     child: ListTile(
                       leading: CircleAvatar(
-                        backgroundImage:
-                            NetworkImage(userData['photoUrl'] ?? ''),
+                        backgroundImage: (userData['photoUrl'] != null &&
+                                userData['photoUrl'].toString().isNotEmpty)
+                            ? NetworkImage(userData['photoUrl'])
+                            : null,
+                        child: userData['photoUrl'] == null
+                            ? const Icon(Icons.person)
+                            : null,
                       ),
                       title: Text(userData['name'] ?? 'Unknown'),
                       subtitle: const Text('Match active'),
@@ -86,6 +113,11 @@ class MyMatchesScreen extends StatelessWidget {
                                 .where('senderUid', isNotEqualTo: currentUser.uid)
                                 .snapshots(),
                             builder: (context, messageSnapshot) {
+
+                              if (messageSnapshot.hasError){
+                                return const SizedBox();
+                              }
+
                               if (!messageSnapshot.hasData) {
                                 return const SizedBox();
                               }

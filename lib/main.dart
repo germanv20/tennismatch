@@ -47,8 +47,41 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
+      title: 'Tennis Match',
+
       navigatorKey: navigatorKey,
-      home: const AuthTest(),
+
+      theme: ThemeData(
+        primarySwatch: Colors.green,
+
+        scaffoldBackgroundColor: const Color(0xFFF5F5F5),
+
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Color(0xFF2E7D32), // deep tennis green
+          foregroundColor: Colors.white,
+          elevation: 2,
+        ),
+
+        cardTheme: CardThemeData(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          elevation: 3,
+          margin: const EdgeInsets.symmetric(vertical: 6),
+        ),
+
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF4CAF50),
+            foregroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+        ),
+      ),
+
+      home: const AuthTest(), // keep yours
     );
 
   }
