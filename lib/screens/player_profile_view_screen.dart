@@ -1,12 +1,24 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 
 class PlayerProfileViewScreen extends StatelessWidget {
   final Map<String, dynamic> userData;
+
+  // ✅ NEW
+  final bool showActions;
+  final DocumentReference? requestRef;
+  final VoidCallback? onAccept;
+  final VoidCallback? onReject;
   final VoidCallback? onRequestMatch;
 
   const PlayerProfileViewScreen({
     super.key,
     required this.userData,
+    this.showActions = false,
+    this.requestRef,
+    this.onAccept,
+    this.onReject,
     this.onRequestMatch,
   });
 
@@ -60,11 +72,41 @@ class PlayerProfileViewScreen extends StatelessWidget {
 
             const SizedBox(height: 24),
 
+            // 🔹 Request Match (Available Players)
             if (onRequestMatch != null)
               ElevatedButton(
                 onPressed: onRequestMatch,
                 child: const Text("Request Match"),
               ),
+
+            if (showActions) ...[
+              const SizedBox(height: 20),
+
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  ElevatedButton.icon(
+                    onPressed: onAccept,
+                    icon: const Icon(Icons.check),
+                    label: const Text("Accept"),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green,
+                    ),
+                  ),
+
+                  const SizedBox(width: 16),
+
+                  ElevatedButton.icon(
+                    onPressed: onReject,
+                    icon: const Icon(Icons.close),
+                    label: const Text("Reject"),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red,
+                    ),
+                  ),
+                ],
+              ),
+            ]
           ],
         ),
       ),

@@ -3,12 +3,12 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 
-class PlayerProfileScreen extends StatelessWidget {
+class MyProfileScreen extends StatelessWidget {
   final Map<String, dynamic> userData;
 
   String get currentUid => FirebaseAuth.instance.currentUser!.uid;
 
-  const PlayerProfileScreen({
+  const MyProfileScreen({
     super.key,
     required this.userData,
   });

@@ -106,6 +106,24 @@ class IncomingRequestsScreen extends StatelessWidget {
                           MaterialPageRoute(
                             builder: (_) => PlayerProfileViewScreen(
                               userData: userData,
+                              showActions: true,
+                              requestRef: request.reference,
+
+                              onAccept: () async {
+                                await updateRequestStatus(
+                                  request.reference,
+                                  'accepted',
+                                );
+                                Navigator.pop(context); // go back after action
+                              },
+
+                              onReject: () async {
+                                await updateRequestStatus(
+                                  request.reference,
+                                  'rejected',
+                                );
+                                Navigator.pop(context);
+                              },
                             ),
                           ),
                         );
@@ -115,29 +133,7 @@ class IncomingRequestsScreen extends StatelessWidget {
                       ),
                       title: Text(userData['name'] ?? 'Unknown'),
                       subtitle: const Text('Wants to play a match'),
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          IconButton(
-                            icon: const Icon(Icons.check, color: Colors.green),
-                            onPressed: () async {
-                              await updateRequestStatus(
-                                request.reference,
-                                'accepted',
-                              );
-                            },
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.close, color: Colors.red),
-                            onPressed: () async {
-                              await updateRequestStatus(
-                                request.reference,
-                                'rejected',
-                              );
-                            },
-                          ),
-                        ],
-                      ),
+    
                     ),
                   );
                 },

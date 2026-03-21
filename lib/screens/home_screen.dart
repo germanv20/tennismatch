@@ -6,8 +6,8 @@ import 'match_history_screen.dart';
 import 'my_matches_screen.dart';
 import 'incoming_requests_screen.dart';
 import 'outgoing_requests_screen.dart';
-import 'player_profile_screen.dart';
 import 'player_statistics_screen.dart';
+import 'my_profile_screen.dart';
 import '../widgets/home_card.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -434,7 +434,7 @@ class HomeScreen extends StatelessWidget {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (_) => PlayerProfileScreen(
+                            builder: (_) => MyProfileScreen(
                               userData: userData,
                             ),
                           ),

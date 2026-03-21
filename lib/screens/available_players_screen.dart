@@ -1,12 +1,43 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'player_profile_screen.dart';
+import 'player_profile_view_screen.dart';
 import '../widgets/empty_state.dart';
 import '../widgets/error_state.dart';
 
 class AvailablePlayersScreen extends StatelessWidget {
   const AvailablePlayersScreen({super.key});
+
+  Future<void> requestMatch(BuildContext context, String toUid) async {
+    final fromUid = FirebaseAuth.instance.currentUser!.uid;
+
+    if (fromUid == toUid) return;
+
+    final query = await FirebaseFirestore.instance
+        .collection('match_requests')
+        .where('fromUid', isEqualTo: fromUid)
+        .where('toUid', isEqualTo: toUid)
+        .where('status', isEqualTo: 'pending')
+        .get();
+
+    if (query.docs.isNotEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Match request already sent')),
+      );
+      return;
+    }
+
+    await FirebaseFirestore.instance.collection('match_requests').add({
+      'fromUid': fromUid,
+      'toUid': toUid,
+      'status': 'pending',
+      'createdAt': FieldValue.serverTimestamp(),
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Match request sent 🎾')),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -121,9 +152,11 @@ class AvailablePlayersScreen extends StatelessWidget {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (_) =>
-                              PlayerProfileScreen(
+                          builder: (_) => PlayerProfileViewScreen(
                             userData: data,
+                            onRequestMatch: () {
+                              requestMatch(context, data['uid']);
+                            },
                           ),
                         ),
                       );

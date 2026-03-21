@@ -5,7 +5,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'firebase_options.dart';
-import 'screens/player_profile_screen.dart';
+import 'screens/my_profile_screen.dart';
 import 'screens/incoming_requests_screen.dart';
 import 'screens/my_matches_screen.dart';
 import 'screens/match_detail_screen.dart';
