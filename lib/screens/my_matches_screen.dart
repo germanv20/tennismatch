@@ -5,10 +5,42 @@ import 'package:tennismatch/widgets/error_state.dart';
 import 'match_detail_screen.dart';
 import '../widgets/empty_state.dart';
 
-class MyMatchesScreen extends StatelessWidget {
+class MyMatchesScreen extends StatefulWidget {
   final User currentUser;
 
   const MyMatchesScreen({super.key, required this.currentUser});
+
+  @override
+  State<MyMatchesScreen> createState() => _MyMatchesScreenState();
+}
+
+class _MyMatchesScreenState extends State<MyMatchesScreen> {
+
+    @override
+    void initState() {
+      super.initState();
+      markMatchesAsSeen(widget.currentUser.uid);
+    }
+
+  Future<void> markMatchesAsSeen(String userId) async {
+    final snapshot = await FirebaseFirestore.instance
+        .collection('matches')
+        .where('players', arrayContains: userId)
+        .get();
+
+    for (var doc in snapshot.docs) {
+      final data = doc.data();
+      final notified = List<String>.from(data['notifiedPlayers'] ?? []);
+
+      if (!notified.contains(userId)) {
+        notified.add(userId);
+
+        await doc.reference.update({
+          'notifiedPlayers': notified,
+        });
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -20,7 +52,7 @@ class MyMatchesScreen extends StatelessWidget {
       ),
       body: StreamBuilder<QuerySnapshot>(
         stream: matchesRef
-            .where('players', arrayContains: currentUser.uid)
+            .where('players', arrayContains: widget.currentUser.uid)
             .where('status', isEqualTo: 'active')
             .orderBy('lastMessageTime', descending: true)
             .snapshots(),
@@ -63,7 +95,7 @@ class MyMatchesScreen extends StatelessWidget {
 
               final players = List<String>.from(data['players'] ?? []);
               final opponentUid =
-                  players.firstWhere((uid) => uid != currentUser.uid,
+                  players.firstWhere((uid) => uid != widget.currentUser.uid,
                   orElse: () => '',
               );
 
@@ -110,7 +142,7 @@ class MyMatchesScreen extends StatelessWidget {
                                 .collection('matches')
                                 .doc(match.id)
                                 .collection('messages')
-                                .where('senderUid', isNotEqualTo: currentUser.uid)
+                                .where('senderUid', isNotEqualTo: widget.currentUser.uid)
                                 .snapshots(),
                             builder: (context, messageSnapshot) {
 
@@ -127,7 +159,7 @@ class MyMatchesScreen extends StatelessWidget {
                               for (var doc in messageSnapshot.data!.docs) {
                                 final data = doc.data() as Map<String, dynamic>;
                                 final readBy = Map<String, dynamic>.from(data['readBy'] ?? {});
-                                if (readBy[currentUser.uid] != true) {
+                                if (readBy[widget.currentUser.uid] != true) {
                                   unreadCount++;
                                 }
                               }

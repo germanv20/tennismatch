@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'player_profile_view_screen.dart';
 
 class IncomingRequestsScreen extends StatelessWidget {
   const IncomingRequestsScreen({super.key});
@@ -27,10 +28,12 @@ class IncomingRequestsScreen extends StatelessWidget {
         'createdAt': FieldValue.serverTimestamp(),
         'status': 'active',
 
-        // 🔥 NEW FIELDS (VERY IMPORTANT)
         'lastMessage': '',
         'lastMessageTime': FieldValue.serverTimestamp(),
         'lastSenderUid': null,
+
+        // 🔥 NEW FIELD
+        'notifiedPlayers': [data['toUid']], // receiver already "knows"
       });
 
     }
@@ -97,34 +100,43 @@ class IncomingRequestsScreen extends StatelessWidget {
                   return Card(
                     margin: const EdgeInsets.all(12),
                     child: ListTile(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => PlayerProfileViewScreen(
+                              userData: userData,
+                            ),
+                          ),
+                        );
+                      },
                       leading: CircleAvatar(
-                        backgroundImage:
-                            NetworkImage(userData['photoUrl'] ?? ''),
+                        backgroundImage: NetworkImage(userData['photoUrl'] ?? ''),
                       ),
                       title: Text(userData['name'] ?? 'Unknown'),
                       subtitle: const Text('Wants to play a match'),
                       trailing: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                        IconButton(
-                          icon: const Icon(Icons.check, color: Colors.green),
-                          onPressed: () async {
-                            await updateRequestStatus(
-                              request.reference,
-                              'accepted',
-                            );
-                          },
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.close, color: Colors.red),
-                          onPressed: () async {
-                            await updateRequestStatus(
-                              request.reference,
-                              'rejected',
-                            );
-                          },
-                        ),
-                      ],
+                          IconButton(
+                            icon: const Icon(Icons.check, color: Colors.green),
+                            onPressed: () async {
+                              await updateRequestStatus(
+                                request.reference,
+                                'accepted',
+                              );
+                            },
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.close, color: Colors.red),
+                            onPressed: () async {
+                              await updateRequestStatus(
+                                request.reference,
+                                'rejected',
+                              );
+                            },
+                          ),
+                        ],
                       ),
                     ),
                   );

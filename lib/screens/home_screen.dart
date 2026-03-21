@@ -5,6 +5,7 @@ import 'available_players_screen.dart';
 import 'match_history_screen.dart';
 import 'my_matches_screen.dart';
 import 'incoming_requests_screen.dart';
+import 'outgoing_requests_screen.dart';
 import 'player_profile_screen.dart';
 import 'player_statistics_screen.dart';
 import '../widgets/home_card.dart';
@@ -26,6 +27,52 @@ const List<String> availableDays = [
   'Sat',
   'Sun',
 ];
+
+class NotificationBadge extends StatelessWidget {
+  final Widget child;
+  final int count;
+
+  const NotificationBadge({
+    super.key,
+    required this.child,
+    required this.count,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        child,
+        if (count > 0)
+          Positioned(
+            right: 4,
+            top: 4,
+            child: Container(
+              padding: const EdgeInsets.all(6),
+              decoration: const BoxDecoration(
+                color: Colors.red,
+                shape: BoxShape.circle,
+              ),
+              constraints: const BoxConstraints(
+                minWidth: 20,
+                minHeight: 20,
+              ),
+              child: Text(
+                count > 9 ? '9+' : count.toString(),
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+}
 
 class HomeScreen extends StatelessWidget {
   final User currentUser;
@@ -144,6 +191,36 @@ class HomeScreen extends StatelessWidget {
     }
   }
 
+  Stream<int> getIncomingRequestsCount(String userId) {
+    return FirebaseFirestore.instance
+        .collection('match_requests')
+        .where('toUid', isEqualTo: userId)
+        .where('status', isEqualTo: 'pending')
+        .snapshots()
+        .map((snapshot) => snapshot.docs.length);
+  }
+
+  Stream<int> getNewMatchesCount(String userId) {
+    return FirebaseFirestore.instance
+        .collection('matches')
+        .where('players', arrayContains: userId)
+        .snapshots()
+        .map((snapshot) {
+          int count = 0;
+
+          for (var doc in snapshot.docs) {
+            final data = doc.data();
+            final notified = List<String>.from(data['notifiedPlayers'] ?? []);
+
+            if (!notified.contains(userId)) {
+              count++;
+            }
+          }
+
+          return count;
+        });
+  }
+
   @override
   Widget build(BuildContext context) {
     final String? tennisLevel = userData['tennisLevel'];
@@ -224,95 +301,156 @@ class HomeScreen extends StatelessWidget {
                 mainAxisSpacing: 12,
                 children: [
 
-                  HomeCard(
-                    title: "Find Players",
-                    icon: Icons.sports_tennis,
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const AvailablePlayersScreen(),
-                        ),
-                      );
+                  AspectRatio(
+                    aspectRatio: 1,
+                    child: HomeCard(
+                      title: "Find Players",
+                      icon: Icons.sports_tennis,
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                            MaterialPageRoute(
+                              builder: (_) => const AvailablePlayersScreen(),
+                            ),
+                        );
+                      },
+                    ),
+                  ),
+
+                  StreamBuilder<int>(
+                    stream: getNewMatchesCount(currentUser.uid),
+                    builder: (context, snapshot) {
+                      final count = snapshot.data ?? 0;
+
+                        return AspectRatio(
+                          aspectRatio: 1, 
+                          child: NotificationBadge(
+                            count: count,
+                            child: HomeCard(
+                              title: "My Matches",
+                              icon: Icons.calendar_today,
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => MyMatchesScreen(
+                                      currentUser: currentUser,
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                          )
+                       );
                     },
                   ),
 
-                  HomeCard(
-                    title: "My Matches",
-                    icon: Icons.calendar_today,
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => MyMatchesScreen(
-                            currentUser: currentUser,
+
+                  AspectRatio(
+                    aspectRatio: 1,
+                      child: HomeCard(
+                        title: "Match History",
+                        icon: Icons.history,
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const MatchHistoryScreen(),
+                            ),
+                          );
+                        },
+                      ),
+                  ),
+
+                  AspectRatio(
+                    aspectRatio: 1,
+                    child: HomeCard(
+                      title: "My Stats",
+                      icon: Icons.bar_chart,
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => PlayerStatisticsScreen(
+                              userId: currentUser.uid,
+                            ),
                           ),
-                        ),
+                        );
+                      },
+                    ),
+                  ),
+
+
+                  StreamBuilder<int>(
+                    stream: getIncomingRequestsCount(currentUser.uid),
+                    builder: (context, snapshot) {
+                      final count = snapshot.data ?? 0;
+
+                      return AspectRatio(
+                          aspectRatio: 1, 
+                          child: NotificationBadge(
+                            count: count,
+                            child: HomeCard(
+                              title: "Incoming Requests",
+                              icon: Icons.mail,
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => const IncomingRequestsScreen(),
+                                  ),
+                                );
+                              },
+                            ),
+                          )
                       );
                     },
                   ),
 
-                  HomeCard(
-                    title: "Match History",
-                    icon: Icons.history,
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const MatchHistoryScreen(),
-                        ),
-                      );
-                    },
-                  ),
-
-                  HomeCard(
-                    title: "My Stats",
-                    icon: Icons.bar_chart,
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => PlayerStatisticsScreen(
-                            userId: currentUser.uid,
+                  AspectRatio(
+                    aspectRatio: 1,
+                    child: HomeCard(
+                      title: "Outgoing Requests",
+                      icon: Icons.outbox,
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => OutgoingRequestsScreen(
+                              currentUser: currentUser,
+                            ),
                           ),
-                        ),
-                      );
-                    },
+                        );
+                      },
+                    ),
                   ),
 
-                  HomeCard(
-                    title: "Incoming Requests",
-                    icon: Icons.mail,
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const IncomingRequestsScreen(),
-                        ),
-                      );
-                    },
-                  ),
-
-                  HomeCard(
-                    title: "My Profile",
-                    icon: Icons.person,
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => PlayerProfileScreen(
-                            userData: userData,
+                  AspectRatio(
+                    aspectRatio: 1,
+                    child: HomeCard(
+                      title: "My Profile",
+                      icon: Icons.person,
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => PlayerProfileScreen(
+                              userData: userData,
+                            ),
                           ),
-                        ),
-                      );
-                    },
+                        );
+                      },
+                    ),
                   ),
 
-                  HomeCard(
-                    title: "Send Feedback",
-                    icon: Icons.feedback,
-                    onTap: () => openFeedbackForm(context),
-                  ),
+                  AspectRatio(
+                    aspectRatio: 1,
+                    child: HomeCard(
+                      title: "Send Feedback",
+                      icon: Icons.feedback,
+                      onTap: () => openFeedbackForm(context),
+                    ),
+                  )
 
                 ],
               ),

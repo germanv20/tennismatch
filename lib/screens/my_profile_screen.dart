@@ -100,14 +100,14 @@ class PlayerProfileScreen extends StatelessWidget {
 
             const SizedBox(height: 24),
 
-            ElevatedButton.icon(
+            /*ElevatedButton.icon(
               onPressed: () => requestMatch(context),
               icon: const Icon(Icons.sports_tennis),
               label: const Text('Request Match'),
               style: ElevatedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
               ),
-            ),
+            ),*/
 
             Wrap(
               spacing: 8,
