@@ -37,11 +37,22 @@ class _AddMatchResultScreenState
     loadPlayerNames();
   }
 
-
   void addSet() {
     sets.add({
       'p1': TextEditingController(),
       'p2': TextEditingController(),
+    });
+  }
+
+  void removeSet(int index) {
+    if (sets.length == 1) return; // prevent removing last set
+
+    // Dispose controllers to avoid memory leaks
+    sets[index]['p1']!.dispose();
+    sets[index]['p2']!.dispose();
+
+    setState(() {
+      sets.removeAt(index);
     });
   }
 
@@ -348,27 +359,43 @@ class _AddMatchResultScreenState
 
             const SizedBox(height: 10),
 
-            ...sets.map((set) => Row(
-                  children: [
-                    Expanded(
-                      child: TextField(
-                        controller: set['p1'],
-                        keyboardType: TextInputType.number,
-                        decoration:
-                            InputDecoration(labelText: player1Name ?? "Loading...",),
+            ...sets.asMap().entries.map((entry) {
+              final index = entry.key;
+              final set = entry.value;
+
+              return Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: set['p1'],
+                      keyboardType: TextInputType.number,
+                      decoration: InputDecoration(
+                        labelText: player1Name ?? "Loading...",
                       ),
                     ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: TextField(
-                        controller: set['p2'],
-                        keyboardType: TextInputType.number,
-                        decoration:
-                            InputDecoration(labelText: player2Name ?? "Loading...",),
+                  ),
+                  const SizedBox(width: 10),
+
+                  Expanded(
+                    child: TextField(
+                      controller: set['p2'],
+                      keyboardType: TextInputType.number,
+                      decoration: InputDecoration(
+                        labelText: player2Name ?? "Loading...",
                       ),
                     ),
-                  ],
-                )),
+                  ),
+
+                  const SizedBox(width: 10),
+
+                  // ❌ REMOVE BUTTON
+                  IconButton(
+                    icon: const Icon(Icons.remove_circle, color: Colors.red),
+                    onPressed: sets.length > 1 ? () => removeSet(index) : null,
+                  ),
+                ],
+              );
+            }),
 
             const SizedBox(height: 10),
 

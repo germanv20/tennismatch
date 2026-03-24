@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'player_profile_view_screen.dart';
+import '../widgets/empty_state.dart';
 
 class IncomingRequestsScreen extends StatelessWidget {
   const IncomingRequestsScreen({super.key});
@@ -60,8 +61,10 @@ class IncomingRequestsScreen extends StatelessWidget {
           }
 
           if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-            return const Center(
-              child: Text('No incoming match requests'),
+            return const EmptyState(
+              icon: Icons.mail_outline,
+              title: "No incoming requests",
+              subtitle: "Match requests you receive will appear here",
             );
           }
 
@@ -114,7 +117,7 @@ class IncomingRequestsScreen extends StatelessWidget {
                                   request.reference,
                                   'accepted',
                                 );
-                                Navigator.pop(context); // go back after action
+
                               },
 
                               onReject: () async {
@@ -122,7 +125,7 @@ class IncomingRequestsScreen extends StatelessWidget {
                                   request.reference,
                                   'rejected',
                                 );
-                                Navigator.pop(context);
+
                               },
                             ),
                           ),
@@ -133,6 +136,8 @@ class IncomingRequestsScreen extends StatelessWidget {
                       ),
                       title: Text(userData['name'] ?? 'Unknown'),
                       subtitle: const Text('Wants to play a match'),
+
+                      trailing: const Icon(Icons.arrow_forward_ios),
     
                     ),
                   );

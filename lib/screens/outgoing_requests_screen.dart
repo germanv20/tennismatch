@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../widgets/empty_state.dart';
 import '../widgets/error_state.dart';
+import 'player_profile_view_screen.dart';
 
 class OutgoingRequestsScreen extends StatelessWidget {
   final User currentUser;
@@ -12,7 +13,7 @@ class OutgoingRequestsScreen extends StatelessWidget {
     required this.currentUser,
   });
 
-  Future<void> cancelRequest(String requestId, BuildContext context) async {
+  Future<void> cancelRequest(String requestId) async {
     try {
       await FirebaseFirestore.instance
           .collection('match_requests')
@@ -21,17 +22,8 @@ class OutgoingRequestsScreen extends StatelessWidget {
         'status': 'cancelled',
       });
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Request cancelled'),
-        ),
-      );
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Failed to cancel request'),
-        ),
-      );
+      debugPrint('❌ Error cancelling request: $e');
     }
   }
 
@@ -107,6 +99,21 @@ class OutgoingRequestsScreen extends StatelessWidget {
 
                   return Card(
                     child: ListTile(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => PlayerProfileViewScreen(
+                              userData: userData,
+
+                              onCancel: () async {
+                                await cancelRequest(request.id); // ✅ no context
+                              },
+                            ),
+                          ),
+                        );
+                      },
+
                       leading: CircleAvatar(
                         backgroundImage: (userData['photoUrl'] != null &&
                                 userData['photoUrl'].toString().isNotEmpty)
@@ -118,13 +125,8 @@ class OutgoingRequestsScreen extends StatelessWidget {
                       ),
                       title: Text(userData['name'] ?? 'Unknown'),
                       subtitle: const Text('Waiting for response'),
-                      trailing: IconButton(
-                        icon: const Icon(
-                          Icons.cancel,
-                          color: Colors.red,
-                        ),
-                        onPressed: () => cancelRequest(request.id, context),
-                      ),
+
+                      trailing: const Icon(Icons.arrow_forward_ios),
                     ),
                   );
                 },

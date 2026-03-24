@@ -39,6 +39,14 @@ class AvailablePlayersScreen extends StatelessWidget {
     );
   }
 
+  Stream<QuerySnapshot> getMyPendingRequests(String uid) {
+    return FirebaseFirestore.instance
+        .collection('match_requests')
+        .where('fromUid', isEqualTo: uid)
+        .where('status', isEqualTo: 'pending')
+        .snapshots();
+  }
+
   @override
   Widget build(BuildContext context) {
 
@@ -141,49 +149,76 @@ class AvailablePlayersScreen extends StatelessWidget {
                 );
               }
 
-              return ListView(
-                children: matches.map((doc) {
+                return StreamBuilder<QuerySnapshot>(
+                  stream: getMyPendingRequests(user.uid),
+                  builder: (context, requestSnapshot) {
 
-                  final data =
-                      doc.data() as Map<String, dynamic>;
+                    if (!requestSnapshot.hasData) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
 
-                  return GestureDetector(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => PlayerProfileViewScreen(
-                            userData: data,
-                            onRequestMatch: () {
-                              requestMatch(context, data['uid']);
-                            },
+                    final pendingRequests = requestSnapshot.data!.docs;
+
+                    // 🔥 Create a Set of requested user IDs
+                    final requestedUserIds = pendingRequests
+                        .map((doc) => doc['toUid'] as String)
+                        .toSet();
+
+                    return ListView(
+                      children: matches.map((doc) {
+
+                        final data =
+                            doc.data() as Map<String, dynamic>;
+
+                        final isAlreadyRequested = requestedUserIds.contains(data['uid']);
+
+                        return GestureDetector(
+                          onTap: isAlreadyRequested
+                              ? null
+                              : () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => PlayerProfileViewScreen(
+                                  userData: data,
+                                  onRequestMatch: () async {
+                                    await requestMatch(context, data['uid']);
+                                    Navigator.pop(context);
+                                  },
+                                ),
+                              ),
+                            );
+                          },
+                          child: Card(
+                            color: isAlreadyRequested ? Colors.grey[200] : null,
+                            child: ListTile(
+                              leading: CircleAvatar(
+                                backgroundImage: (data['photoUrl'] != null &&
+                                      data['photoUrl'].toString().isNotEmpty)
+                                  ? NetworkImage(data['photoUrl'])
+                                  : null,
+                              child: data['photoUrl'] == null
+                                  ? const Icon(Icons.person)
+                                  : null,
+                              ),
+                              title: Text(data['name'] ?? 'Unknown'),
+                              subtitle: Text(
+                                'Available: ${(data['availability'] as List).join(', ')}',
+                              ),
+                              trailing: isAlreadyRequested
+                                  ? const Text(
+                                      "Requested",
+                                      style: TextStyle(color: Colors.grey),
+                                    )
+                                  : const Icon(Icons.sports_tennis),
+                            ),
                           ),
-                        ),
-                      );
-                    },
-                    child: Card(
-                      child: ListTile(
-                        leading: CircleAvatar(
-                          backgroundImage: (data['photoUrl'] != null &&
-                                data['photoUrl'].toString().isNotEmpty)
-                            ? NetworkImage(data['photoUrl'])
-                            : null,
-                        child: data['photoUrl'] == null
-                            ? const Icon(Icons.person)
-                            : null,
-                        ),
-                        title: Text(data['name'] ?? 'Unknown'),
-                        subtitle: Text(
-                          'Available: ${(data['availability'] as List).join(', ')}',
-                        ),
-                        trailing:
-                            const Icon(Icons.sports_tennis),
-                      ),
-                    ),
-                  );
+                        );
 
-                }).toList(),
-              );
+                      }).toList(),
+                    );
+                 },
+               );
             },
           );
         },
