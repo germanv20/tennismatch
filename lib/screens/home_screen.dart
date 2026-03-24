@@ -28,6 +28,8 @@ const List<String> availableDays = [
   'Sun',
 ];
 
+const weekOrder = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
 class NotificationBadge extends StatelessWidget {
   final Widget child;
   final int count;
@@ -89,9 +91,12 @@ class HomeScreen extends StatelessWidget {
     final String level = userData['tennisLevel'] ?? "Not set";
     final List availabilityRaw = userData['availability'] ?? [];
 
-    final String availabilityText = availabilityRaw.isEmpty
+    final List<String> sortedAvailability = List<String>.from(availabilityRaw)
+      ..sort((a, b) => weekOrder.indexOf(a).compareTo(weekOrder.indexOf(b)));
+
+    final String availabilityText = sortedAvailability.isEmpty
         ? "No availability set"
-        : availabilityRaw.join(', ');
+        : sortedAvailability.join(', ');
 
     return Card(
       color: const Color(0xFF2E7D32),

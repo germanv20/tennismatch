@@ -5,6 +5,8 @@ import 'player_profile_view_screen.dart';
 import '../widgets/empty_state.dart';
 import '../widgets/error_state.dart';
 
+const weekOrder = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
 class AvailablePlayersScreen extends StatelessWidget {
   const AvailablePlayersScreen({super.key});
 
@@ -167,8 +169,16 @@ class AvailablePlayersScreen extends StatelessWidget {
                     return ListView(
                       children: matches.map((doc) {
 
-                        final data =
-                            doc.data() as Map<String, dynamic>;
+                        final data = doc.data() as Map<String, dynamic>;
+
+                        final List availabilityRaw = data['availability'] ?? [];
+
+                        final List<String> sortedAvailability = List<String>.from(availabilityRaw)
+                          ..sort((a, b) => weekOrder.indexOf(a).compareTo(weekOrder.indexOf(b)));
+
+                        final String availabilityText = sortedAvailability.isEmpty
+                            ? "No availability"
+                            : sortedAvailability.join(', ');
 
                         final isAlreadyRequested = requestedUserIds.contains(data['uid']);
 
@@ -203,7 +213,7 @@ class AvailablePlayersScreen extends StatelessWidget {
                               ),
                               title: Text(data['name'] ?? 'Unknown'),
                               subtitle: Text(
-                                'Available: ${(data['availability'] as List).join(', ')}',
+                                'Available: $availabilityText',
                               ),
                               trailing: isAlreadyRequested
                                   ? const Text(

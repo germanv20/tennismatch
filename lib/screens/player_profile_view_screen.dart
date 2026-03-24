@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
+const weekOrder = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
 class PlayerProfileViewScreen extends StatefulWidget {
   final Map<String, dynamic> userData;
@@ -23,6 +24,7 @@ class PlayerProfileViewScreen extends StatefulWidget {
     this.onRequestMatch,
     this.onCancel, 
   });
+  
 
    @override
     State<PlayerProfileViewScreen> createState() =>
@@ -37,13 +39,16 @@ class PlayerProfileViewScreen extends StatefulWidget {
     final userData = widget.userData;
     final String name = userData['name'] ?? 'Unknown';
     final String level = userData['tennisLevel'] ?? 'Not set';
-    final List availabilityRaw = userData['availability'] ?? [];
     final currentUid = FirebaseAuth.instance.currentUser!.uid;
     final viewedUid = userData['uid'];
+    final List availabilityRaw = userData['availability'] ?? [];
 
-    final String availabilityText = availabilityRaw.isEmpty
+    final List<String> sortedAvailability = List<String>.from(availabilityRaw)
+      ..sort((a, b) => weekOrder.indexOf(a).compareTo(weekOrder.indexOf(b)));
+
+    final String availabilityText = sortedAvailability.isEmpty
         ? "No availability set"
-        : availabilityRaw.join(', ');
+        : sortedAvailability.join(', ');
 
     return Scaffold(
       appBar: AppBar(
