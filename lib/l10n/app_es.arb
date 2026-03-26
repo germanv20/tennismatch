@@ -1,0 +1,157 @@
+{
+  "appTitle": "Tennis Match",
+
+  "findPlayers": "Buscar jugadores",
+  "myMatches": "Mis partidos",
+  "matchHistory": "Historial",
+  "myStats": "Mis estadísticas",
+  "incomingRequests": "Solicitudes recibidas",
+  "outgoingRequests": "Solicitudes enviadas",
+  "myProfile": "Mi perfil",
+  "sendFeedback": "Enviar comentarios",
+
+  "selectLevel": "Selecciona nivel",
+  "mon": "Lun",
+  "tue": "Mar",
+  "wed": "Mié",
+  "thu": "Jue",
+  "fri": "Vie",
+  "sat": "Sáb",
+  "sun": "Dom",
+
+  "levelBeginner": "Principiante",
+  "levelIntermediate": "Intermedio",
+  "levelAdvanced": "Avanzado",
+
+  "accept": "Aceptar",
+  "reject": "Rechazar",
+  "cancel": "Cancelar",
+  "loading": "Cargando...",
+  "processing": "Procesando...",
+  "waitingForResponse": "Esperando respuesta",
+
+  "requestMatch": "Solicitar partido",
+  "cancelRequest": "Cancelar solicitud",
+  "requestSent": "Solicitud enviada 🎾",
+  "requestAlreadySent": "Solicitud ya enviada",
+  "requestRejected": "Solicitud rechazada",
+  "matchAccepted": "Partido aceptado",
+
+  "noIncomingRequests": "No tienes solicitudes recibidas",
+  "noOutgoingRequests": "No tienes solicitudes enviadas",
+  "noPlayersAvailable": "No hay jugadores disponibles",
+  "noMatchesFound": "No se encontraron partidos",
+  "noActiveMatches": "No hay partidos activos",
+  "noMessagesYet": "Aún no hay mensajes 👋",
+  "noMatchHistory": "Aún no tienes historial",
+
+  "playerProfile": "Perfil del jugador",
+  "level": "Nivel",
+  "yourTennisLevel": "Tu nivel de tenis",
+  "availability": "Disponibilidad",
+  "noAvailability": "Sin disponibilidad",
+  "availablePlayers": "Jugadores disponibles",
+  "notLoggedIn": "No has iniciado sesión",
+  "loginToFindPlayers": "Inicia sesión para encontrar jugadores",
+  "failedToLoadProfile": "Error al cargar tu perfil",
+  "failedToLoadPlayers": "Error al cargar jugadores",
+  "failedToLoadUser": "Error al cargar usuario",
+  "failedToLoadOutgoing": "Error al cargar solicitudes salientes",
+  "incomingRequestsSubtitle": "Las solicitudes que recibas aparecerán aquí.",
+  "outgoingRequestsSubtitle": "Las solicitudes que envíe apareceran aquí",
+  "setYourLevel": "Configura tu nivel de tenis",
+  "setLevelToFindPlayers": "Regresa y selecciona tu nivel",
+  "tryChangingAvailability": "Intenta cambiar tu disponibilidad o vuelve más tarde",
+  "playMatchesToSeeHistory": "Juega algunos partidos para verlos aquí 🎾",
+  "requested": "Solicitado",
+  "invalidUserData": "Datos inválidos",
+  "availableLabel": "Disponible",
+  "unknown": "Desconocido",
+  "notSet": "No definido",
+  "result": "Resultado",
+  "dateLabel": "Fecha",
+  "headToHead": "Cara a cara",
+  "errorPrefix": "Error",
+  "wantsToPlayMatch": "Quiere jugar un partido",
+  "unmatchConfirmation": "¿Seguro que quieres eliminar la coincidencia? Esto cerrará el chat.",
+  "unmatchTitle": "¿Eliminar emparejamiento?",
+  "unmatch": "Eliminar",
+
+  "myMatchesTitle": "Mis partidos",
+  "failedToLoadMatches": "Error al cargar partidos",
+  "refreshOrTryLater": "Intenta actualizar o vuelve más tarde",
+  "startByFindingPlayer": "Empieza buscando un jugador 🎾",
+  "failedToLoadOpponent": "Error al cargar oponente",
+  "matchActive": "Partido activo",
+
+  "matchDetailsTitle": "Detalles del partido",
+  "statusLabel": "Estado",
+  "createdAtLabel": "Creado el",
+  "openChat": "Abrir chat",
+  "addMatchResult": "Agregar resultado",
+  "matchResult": "Resultado del partido",
+  "locationLabel": "Ubicación",
+  "durationLabel": "Duración",
+  "minutesShort": "min",
+
+  "today": "Hoy",
+  "yesterday": "Ayer",
+  "typeMessage": "Escribe un mensaje...",
+  "isTyping": "{name} está escribiendo...",
+  "@isTyping": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+
+  "addMatchResultTitle": "Agregar resultado",
+  "useOfficialScoring": "Usar puntuación oficial",
+  "sets": "Sets",
+  "addSet": "+ Agregar set",
+  "selectMatchDate": "Seleccionar fecha",
+  "matchDateLabel": "Fecha del partido: {date}",
+  "@matchDateLabel": {
+    "placeholders": {
+      "date": {}
+    }
+  },
+  "durationMinutes": "Duración (minutos)",
+  "location": "Ubicación",
+  "saveResult": "Guardar resultado",
+
+  "setScoresZeroError": "Los puntajes no pueden ser ambos cero.",
+  "invalidSetScore": "Puntuación inválida.",
+  "addAtLeastOneSet": "Agrega al menos un set.",
+  "mustHaveWinner": "Debe haber un ganador.",
+  "enterDuration": "Ingresa la duración",
+  "enterLocation": "Ingresa la ubicación",
+  "selectDateError": "Selecciona la fecha",
+  "matchCompleted": "Partido completado 🎾",
+
+  "playerStatisticsTitle": "Estadísticas del jugador",
+  "noStatsYet": "Aún no tienes estadísticas",
+  "playFirstMatchStats": "Juega tu primer partido para ver tus estadísticas 🎾",
+  "matchesPlayed": "Partidos jugados",
+  "wins": "Victorias",
+  "losses": "Derrotas",
+  "winRate": "Porcentaje de victoria",
+  "totalSetsWon": "Sets ganados",
+  "totalSetsLost": "Sets perdidos",
+  "averageMatchDuration": "Duración promedio",
+  "failedToLoadStats": "Error al cargar estadísticas",
+
+  "setLabel": "Set {number}",
+  "@setLabel": {
+    "placeholders": {
+      "number": {}
+    }
+  },
+
+  "matchResultSentence": "{winnerName} derrotó a {loserName}",
+  "@matchResultSentence": {
+    "placeholders": {
+      "winnerName": {},
+      "loserName": {}
+    }
+  }
+}

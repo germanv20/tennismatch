@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:tennismatch/gen_l10n/app_localizations.dart';
 
 class MatchDetailsScreen extends StatefulWidget {
 
@@ -73,6 +74,8 @@ class _MatchDetailsScreenState extends State<MatchDetailsScreen> {
   @override
   Widget build(BuildContext context) {
 
+    final loc = AppLocalizations.of(context)!;
+
     int playerSetsWon = 0;
     int opponentSetsWon = 0;
 
@@ -91,7 +94,7 @@ class _MatchDetailsScreenState extends State<MatchDetailsScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Match Details"),
+        title: Text(loc.matchDetailsTitle), // "Match Details"
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),
@@ -99,8 +102,8 @@ class _MatchDetailsScreenState extends State<MatchDetailsScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
 
-            const Text(
-              "Result",
+            Text(
+              loc.result, // "Result"
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
@@ -118,7 +121,7 @@ class _MatchDetailsScreenState extends State<MatchDetailsScreen> {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                const Text(" defeated "),
+                Text(loc.matchResultSentence(winnerName, loserName)), // " defeated "
                 Text(
                   loserName,
                   style: const TextStyle(fontSize: 16),
@@ -146,7 +149,7 @@ class _MatchDetailsScreenState extends State<MatchDetailsScreen> {
                           return Expanded(
                             child: Center(
                               child: Text(
-                                "SET ${index + 1}",
+                                loc.setLabel(index + 1),
                                 style: const TextStyle(
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -226,16 +229,16 @@ class _MatchDetailsScreenState extends State<MatchDetailsScreen> {
 
             const SizedBox(height: 20),
 
-            Text("Location: ${widget.location}"),
-            Text("Duration: ${widget.duration} min"),
+            Text('${loc.locationLabel}: ${widget.location}'),
+            Text('${loc.durationLabel}: ${widget.duration} ${loc.minutesShort}'),
             Text(
-              "Date: ${widget.matchDate.day}/${widget.matchDate.month}/${widget.matchDate.year}",
+              '${loc.dateLabel}: ${widget.matchDate.day}/${widget.matchDate.month}/${widget.matchDate.year}',
             ),
 
             const SizedBox(height: 30),
 
-            const Text(
-              "Head-to-Head",
+            Text(
+              loc.headToHead, // "Head-to-Head"
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
@@ -255,7 +258,7 @@ class _MatchDetailsScreenState extends State<MatchDetailsScreen> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              const Text("Matches"),
+                              Text(loc.headToHead), // Matches
                               Text(h2hMatches.toString()),
                             ],
                           ),
@@ -263,7 +266,7 @@ class _MatchDetailsScreenState extends State<MatchDetailsScreen> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              const Text("Wins"),
+                              Text(loc.wins), // "Wins"
                               Text(h2hWins.toString()),
                             ],
                           ),
@@ -271,7 +274,7 @@ class _MatchDetailsScreenState extends State<MatchDetailsScreen> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              const Text("Losses"),
+                              Text(loc.losses), // "Losses"
                               Text(h2hLosses.toString()),
                             ],
                           ),
@@ -279,7 +282,7 @@ class _MatchDetailsScreenState extends State<MatchDetailsScreen> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              const Text("Sets Won"),
+                              Text(loc.totalSetsWon), // "Sets Won"
                               Text(h2hSetsWon.toString()),
                             ],
                           ),
@@ -287,7 +290,7 @@ class _MatchDetailsScreenState extends State<MatchDetailsScreen> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              const Text("Sets Lost"),
+                              Text(loc.totalSetsLost), // "Sets Lost"
                               Text(h2hSetsLost.toString()),
                             ],
                           ),

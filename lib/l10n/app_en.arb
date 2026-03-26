@@ -1,0 +1,157 @@
+{
+  "appTitle": "Tennis Match",
+
+  "findPlayers": "Find Players",
+  "myMatches": "My Matches",
+  "matchHistory": "Match History",
+  "myStats": "My Stats",
+  "incomingRequests": "Incoming Match Requests",
+  "outgoingRequests": "Outgoing Requests",
+  "myProfile": "My Profile",
+  "sendFeedback": "Send Feedback",
+
+  "selectLevel": "Choose level",
+  "mon": "Mon",
+  "tue": "Tue",
+  "wed": "Wed",
+  "thu": "Thu",
+  "fri": "Fri",
+  "sat": "Sat",
+  "sun": "Sun",
+
+  "levelBeginner": "Begginer",
+  "levelIntermediate": "Intermediate",
+  "levelAdvanced": "Advanced",
+
+  "accept": "Accept",
+  "reject": "Reject",
+  "cancel": "Cancel",
+  "loading": "Loading...",
+  "processing": "Processing...",
+  "waitingForResponse": "Waiting for response",
+
+  "requestMatch": "Request Match",
+  "cancelRequest": "Cancel Request",
+  "requestSent": "Match request sent 🎾",
+  "requestAlreadySent": "Match request already sent",
+  "requestRejected": "Request rejected",
+  "matchAccepted": "Match accepted",
+
+  "noIncomingRequests": "No incoming match requests",
+  "noOutgoingRequests": "No outgoing requests",
+  "noPlayersAvailable": "No players available",
+  "noMatchesFound": "No matches found",
+  "noActiveMatches": "No active matches",
+  "noMessagesYet": "No messages yet 👋",
+  "noMatchHistory": "No match history yet",
+
+  "playerProfile": "Player Profile",
+  "level": "Level",
+  "yourTennisLevel": "Your tennis level",
+  "availability": "Availability",
+  "noAvailability": "No availability set",
+  "availablePlayers": "Available Players",
+  "notLoggedIn": "Not logged in",
+  "loginToFindPlayers": "Please log in to find players",
+  "failedToLoadProfile": "Failed to load your profile",
+  "failedToLoadPlayers": "Failed to load players",
+  "failedToLoadUser": "Failed to load user",
+  "failedToLoadOutgoing": "Failed to load outgoing requests",
+  "incomingRequestsSubtitle": "Match requests you receive will appear here",
+  "outgoingRequestsSubtitle": "Requests you send will appear here",
+  "setYourLevel": "Set your tennis level",
+  "setLevelToFindPlayers": "Go back and select your level to find players",
+  "tryChangingAvailability": "Try changing your availability or check later",
+  "playMatchesToSeeHistory": "Play some matches to see them here 🎾",
+  "requested": "Requested",
+  "invalidUserData": "Invalid user data",
+  "availableLabel": "Available",
+  "unknown": "Unknown",
+  "notSet": "Not set",
+  "result": "Result",
+  "dateLabel": "Date",
+  "headToHead": "Head-to-Head",
+  "errorPrefix": "Error",
+  "wantsToPlayMatch": "Wants to play a match",
+  "unmatchConfirmation": "Are you sure you want to unmatch? This will remove the chat.",
+  "unmatchTitle": "Unmatch?",
+  "unmatch": "Unmatch",
+
+  "myMatchesTitle": "My Matches",
+  "failedToLoadMatches": "Failed to load matches",
+  "refreshOrTryLater": "Try refreshing or check again later",
+  "startByFindingPlayer": "Start by finding a player to play with 🎾",
+  "failedToLoadOpponent": "Failed to load opponent",
+  "matchActive": "Match active",
+
+  "matchDetailsTitle": "Match Details",
+  "statusLabel": "Status",
+  "createdAtLabel": "Created at",
+  "openChat": "Open Chat",
+  "addMatchResult": "Add Match Result",
+  "matchResult": "Match Result",
+  "locationLabel": "Location",
+  "durationLabel": "Duration",
+  "minutesShort": "min",
+
+  "today": "Today",
+  "yesterday": "Yesterday",
+  "typeMessage": "Type a message...",
+  "isTyping": "{name} is typing...",
+  "@isTyping": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+
+  "addMatchResultTitle": "Add Match Result",
+  "useOfficialScoring": "Use official tennis scoring",
+  "sets": "Sets",
+  "addSet": "+ Add Set",
+  "selectMatchDate": "Select match date",
+  "matchDateLabel": "Match Date: {date}",
+  "@matchDateLabel": {
+    "placeholders": {
+      "date": {}
+    }
+  },
+  "durationMinutes": "Duration (minutes)",
+  "location": "Location",
+  "saveResult": "Save Result",
+
+  "setScoresZeroError": "Set scores cannot both be zero.",
+  "invalidSetScore": "Invalid tennis set score.",
+  "addAtLeastOneSet": "Add at least one set.",
+  "mustHaveWinner": "There must be a winner.",
+  "enterDuration": "Enter match duration.",
+  "enterLocation": "Enter match location.",
+  "selectDateError": "Select match date.",
+  "matchCompleted": "Match completed 🎾",
+
+  "playerStatisticsTitle": "Player Statistics",
+  "noStatsYet": "No stats yet",
+  "playFirstMatchStats": "Play your first match to see your statistics 🎾",
+  "matchesPlayed": "Matches Played",
+  "wins": "Wins",
+  "losses": "Losses",
+  "winRate": "Win Rate",
+  "totalSetsWon": "Total Sets Won",
+  "totalSetsLost": "Total Sets Lost",
+  "averageMatchDuration": "Average Match Duration",
+  "failedToLoadStats": "Failed to load stats",
+
+  "setLabel": "Set {number}",
+  "@setLabel": {
+    "placeholders": {
+      "number": {}
+    }
+  },
+
+  "matchResultSentence": "{winnerName} defeated {loserName}",
+  "@matchResultSentence": {
+    "placeholders": {
+      "winnerName": {},
+      "loserName": {}
+    }
+  }
+}

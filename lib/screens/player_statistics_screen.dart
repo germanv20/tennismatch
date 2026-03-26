@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:tennismatch/gen_l10n/app_localizations.dart';
 import '../widgets/empty_state.dart';
 
 class PlayerStatisticsScreen extends StatefulWidget {
@@ -34,128 +35,139 @@ class _PlayerStatisticsScreenState extends State<PlayerStatisticsScreen> {
   }
 
   Future<void> loadStats() async {
-
-    matchesPlayed = 0;
-    wins = 0;
-    losses = 0;
-    setsWon = 0;
-    setsLost = 0;
-    winRate = 0;
-    averageDuration = 0;
-
     final uid = widget.userId;
 
-    
-    QuerySnapshot snapshot;
-
     try {
-      snapshot = await FirebaseFirestore.instance
+      debugPrint("📊 Loading stats for user: $uid");
+
+      QuerySnapshot snapshot = await FirebaseFirestore.instance
           .collection('matches')
           .where('players', arrayContains: uid)
           .where('status', isEqualTo: 'completed')
           .get();
-    } catch (e) {
-      setState(() {
-        loading = false;
-      });
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Failed to load stats")),
-      );
+      int totalDuration = 0;
 
-      return;
-    }
+      // Reset values BEFORE processing
+      matchesPlayed = 0;
+      wins = 0;
+      losses = 0;
+      setsWon = 0;
+      setsLost = 0;
 
-    int totalDuration = 0;
+      for (var doc in snapshot.docs) {
+        final match = doc.data() as Map<String, dynamic>?;
 
-    for (var doc in snapshot.docs) {
+        if (match == null) continue;
 
-      final match = doc.data() as Map<String, dynamic>?;
+        matchesPlayed++;
 
-      if (match == null) continue;
-
-      matchesPlayed++;
-
-      if (match['winnerUid'] == uid) {
-        wins++;
-      } else {
-        losses++;
-      }
-
-      final result = match['result'] as Map<String, dynamic>? ?? {};
-
-      final duration = (result['durationMinutes'] ?? 0) as num;
-      totalDuration += duration.toInt();
-
-      final sets = result['sets'] as List? ?? [];
-
-      final players = match['players'] as List? ?? [];
-
-      final bool userIsP1 =
-          players.isNotEmpty && players[0] == uid;
-
-      for (var set in sets) {
-
-        final setMap = set as Map<String, dynamic>? ?? {};
-
-        final p1 = (setMap['p1'] ?? 0) as int;
-        final p2 = (setMap['p2'] ?? 0) as int;
-
-        int myScore = userIsP1 ? p1 : p2;
-        int opponentScore = userIsP1 ? p2 : p1;
-
-        if (myScore > opponentScore) {
-          setsWon++;
+        if (match['winnerUid'] == uid) {
+          wins++;
         } else {
-          setsLost++;
+          losses++;
+        }
+
+        final result = match['result'] as Map<String, dynamic>? ?? {};
+
+        final duration = (result['durationMinutes'] ?? 0) as num;
+        totalDuration += duration.toInt();
+
+        final sets = result['sets'] as List? ?? [];
+        final players = match['players'] as List? ?? [];
+
+        final bool userIsP1 =
+            players.isNotEmpty && players[0] == uid;
+
+        for (var set in sets) {
+          final setMap = set as Map<String, dynamic>? ?? {};
+
+          final p1 = (setMap['p1'] ?? 0) as int;
+          final p2 = (setMap['p2'] ?? 0) as int;
+
+          int myScore = userIsP1 ? p1 : p2;
+          int opponentScore = userIsP1 ? p2 : p1;
+
+          if (myScore > opponentScore) {
+            setsWon++;
+          } else {
+            setsLost++;
+          }
         }
       }
-    }
 
-    if (matchesPlayed > 0) {
-      winRate = (wins / matchesPlayed) * 100;
-      averageDuration = (totalDuration / matchesPlayed).round();
-    }
+      if (matchesPlayed > 0) {
+        winRate = (wins / matchesPlayed) * 100;
+        averageDuration = (totalDuration / matchesPlayed).round();
+      }
 
-    setState(() {
-      loading = false;
-    });
+      debugPrint("✅ Stats loaded successfully");
+
+    } catch (e) {
+      debugPrint("🔥 STATS ERROR: $e");
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Failed to load stats")),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          loading = false;
+        });
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
 
+    final loc = AppLocalizations.of(context)!;
+
     if (loading) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
+      return Scaffold(
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const CircularProgressIndicator(),
+              const SizedBox(height: 8),
+              Text(loc.loading),
+            ],
+          ),
+        ),
       );
     }
 
     if (matchesPlayed == 0) {
       return Scaffold(
-        appBar: AppBar(title: Text("Player Statistics")),
+        appBar: AppBar(title: Text(loc.playerStatisticsTitle)),
         body: EmptyState(
           icon: Icons.bar_chart,
-          title: "No stats yet",
-          subtitle: "Play your first match to see your statistics 🎾",
+          title: loc.noStatsYet,
+          subtitle: loc.playFirstMatchStats,
         ),
       );
     }
 
     return Scaffold(
-      appBar: AppBar(title: const Text("Player Statistics")),
+      appBar: AppBar(title: Text(loc.playerStatisticsTitle)),
       body: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
           children: [
 
-            StatTile("Matches Played", matchesPlayed.toString()),
-            StatTile("Wins", wins.toString()),
-            StatTile("Losses", losses.toString()),
-            StatTile("Win Rate", "${winRate.toStringAsFixed(1)}%"),
-            StatTile("Total Sets Won", setsWon.toString()),
-            StatTile("Total Sets Lost", setsLost.toString()),
-            StatTile("Average Match Duration", "$averageDuration min"),
+            StatTile(loc.matchesPlayed, matchesPlayed.toString()),
+            StatTile(loc.wins, wins.toString()),
+            StatTile(loc.losses, losses.toString()),
+            StatTile(loc.winRate, "${winRate.toStringAsFixed(1)}%"),
+            StatTile(loc.totalSetsWon, setsWon.toString()),
+            StatTile(loc.totalSetsLost, setsLost.toString()),
+            StatTile(
+              loc.averageMatchDuration,
+              "$averageDuration ${loc.minutesShort}",
+            ),
 
           ],
         ),

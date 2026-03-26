@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:tennismatch/gen_l10n/app_localizations.dart';
 import 'player_profile_view_screen.dart';
 import '../widgets/empty_state.dart';
 import '../widgets/error_state.dart';
@@ -11,6 +12,7 @@ class AvailablePlayersScreen extends StatelessWidget {
   const AvailablePlayersScreen({super.key});
 
   Future<void> requestMatch(BuildContext context, String toUid) async {
+    final loc = AppLocalizations.of(context)!;
     final fromUid = FirebaseAuth.instance.currentUser!.uid;
 
     if (fromUid == toUid) return;
@@ -24,7 +26,7 @@ class AvailablePlayersScreen extends StatelessWidget {
 
     if (query.docs.isNotEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Match request already sent')),
+        SnackBar(content: Text(loc.requestAlreadySent)), // 'Match request already sent'
       );
       return;
     }
@@ -37,7 +39,7 @@ class AvailablePlayersScreen extends StatelessWidget {
     });
 
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Match request sent 🎾')),
+      SnackBar(content: Text(loc.requestSent)), // 'Match request sent 🎾'
     );
   }
 
@@ -51,23 +53,24 @@ class AvailablePlayersScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final loc = AppLocalizations.of(context)!;
 
     final user = FirebaseAuth.instance.currentUser;
 
     if (user == null) {
       return Scaffold(
-        appBar: AppBar(title: Text("Available Players")),
+        appBar: AppBar(title: Text(loc.availablePlayers)),
         body: EmptyState(
           icon: Icons.person_off,
-          title: "Not logged in",
-          subtitle: "Please log in to find players",
+          title: loc.notLoggedIn,
+          subtitle: loc.loginToFindPlayers,
         ),
       );
     }
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Available Players"),
+        title: Text(loc.availablePlayers), // "Available Players"
       ),
       body: StreamBuilder<DocumentSnapshot>(
         stream: FirebaseFirestore.instance
@@ -77,8 +80,8 @@ class AvailablePlayersScreen extends StatelessWidget {
         builder: (context, userSnapshot) {
 
           if (userSnapshot.hasError){
-            return const ErrorState(
-              message: "Failed to load your profile",
+            return ErrorState(
+              message: loc.failedToLoadProfile,
             );
           }
 
@@ -89,8 +92,8 @@ class AvailablePlayersScreen extends StatelessWidget {
           final rawData = userSnapshot.data!.data();
 
           if (rawData == null) {
-            return const ErrorState(
-              message: "Invalid user data",
+            return ErrorState(
+              message: loc.invalidUserData, // "Invalid user data"
             );
           }
 
@@ -100,10 +103,10 @@ class AvailablePlayersScreen extends StatelessWidget {
           final List availability = data['availability'] ?? [];
 
           if (tennisLevel == null) {
-            return const EmptyState(
+            return EmptyState(
               icon: Icons.info,
-              title: "Set your tennis level",
-              subtitle: "Go back and select your level to find players",
+              title: loc.setYourLevel,
+              subtitle: loc.setLevelToFindPlayers,
             );
           }
 
@@ -115,8 +118,8 @@ class AvailablePlayersScreen extends StatelessWidget {
             builder: (context, snapshot) {
 
               if (snapshot.hasError){
-                return const ErrorState(
-                  message: "Failed to load players",
+                return ErrorState(
+                  message: loc.failedToLoadPlayers,
                   );
               }
 
@@ -144,10 +147,10 @@ class AvailablePlayersScreen extends StatelessWidget {
               }).toList();
 
               if (matches.isEmpty) {
-                return const EmptyState(
+                return EmptyState(
                   icon: Icons.people,
-                  title: "No players available",
-                  subtitle: "Try changing your availability or check later",
+                  title: loc.noPlayersAvailable, // "No players available"
+                  subtitle: loc.tryChangingAvailability, // "Try changing your availability or check later"
                 );
               }
 
@@ -177,7 +180,7 @@ class AvailablePlayersScreen extends StatelessWidget {
                           ..sort((a, b) => weekOrder.indexOf(a).compareTo(weekOrder.indexOf(b)));
 
                         final String availabilityText = sortedAvailability.isEmpty
-                            ? "No availability"
+                            ? loc.noAvailability // "No availability"
                             : sortedAvailability.join(', ');
 
                         final isAlreadyRequested = requestedUserIds.contains(data['uid']);
@@ -211,13 +214,13 @@ class AvailablePlayersScreen extends StatelessWidget {
                                   ? const Icon(Icons.person)
                                   : null,
                               ),
-                              title: Text(data['name'] ?? 'Unknown'),
+                              title: Text(data['name'] ?? loc.unknown),
                               subtitle: Text(
-                                'Available: $availabilityText',
+                                '${loc.availableLabel}: $availabilityText',
                               ),
                               trailing: isAlreadyRequested
-                                  ? const Text(
-                                      "Requested",
+                                  ? Text(
+                                      loc.requested, // "Requested"
                                       style: TextStyle(color: Colors.grey),
                                     )
                                   : const Icon(Icons.sports_tennis),

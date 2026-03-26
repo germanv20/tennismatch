@@ -10,25 +10,7 @@ import 'player_statistics_screen.dart';
 import 'my_profile_screen.dart';
 import '../widgets/home_card.dart';
 import 'package:url_launcher/url_launcher.dart';
-
-
-const tennisLevels = [
-  'Beginner',
-  'Intermediate',
-  'Advanced',
-];
-
-const List<String> availableDays = [
-  'Mon',
-  'Tue',
-  'Wed',
-  'Thu',
-  'Fri',
-  'Sat',
-  'Sun',
-];
-
-const weekOrder = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+import 'package:tennismatch/gen_l10n/app_localizations.dart';
 
 class NotificationBadge extends StatelessWidget {
   final Widget child;
@@ -76,6 +58,8 @@ class NotificationBadge extends StatelessWidget {
   }
 }
 
+const weekOrder = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
 class HomeScreen extends StatelessWidget {
   final User currentUser;
   final Map<String, dynamic> userData;
@@ -86,17 +70,71 @@ class HomeScreen extends StatelessWidget {
     required this.userData,
   });
 
-  Widget buildProfileCard() {
+  String translateLevel(String level, AppLocalizations loc) {
+    switch (level) {
+      case 'Beginner':
+        return loc.levelBeginner;
+      case 'Intermediate':
+        return loc.levelIntermediate;
+      case 'Advanced':
+        return loc.levelAdvanced;
+      default:
+        return level;
+    }
+  }
+
+  String translateDay(String day, AppLocalizations loc) {
+    switch (day) {
+      case 'Mon':
+        return loc.mon;
+      case 'Tue':
+        return loc.tue;
+      case 'Wed':
+        return loc.wed;
+      case 'Thu':
+        return loc.thu;
+      case 'Fri':
+        return loc.fri;
+      case 'Sat':
+        return loc.sat;
+      case 'Sun':
+        return loc.sun;
+      default:
+        return day;
+    }
+  }
+
+  List<String> normalizeDays(List rawDays) {
+    final map = {
+      'Mon': 'Mon', 'Tue': 'Tue', 'Wed': 'Wed',
+      'Thu': 'Thu', 'Fri': 'Fri', 'Sat': 'Sat', 'Sun': 'Sun',
+      'Lun': 'Mon', 'Mar': 'Tue', 'Mié': 'Wed',
+      'Jue': 'Thu', 'Vie': 'Fri', 'Sáb': 'Sat', 'Dom': 'Sun',
+    };
+
+    return rawDays
+        .map<String>((day) => map[day.toString()] ?? day.toString())
+        .toSet()
+        .toList();
+  }
+
+  Widget buildProfileCard(AppLocalizations loc) {
     final String name = currentUser.displayName ?? "Player";
-    final String level = userData['tennisLevel'] ?? "Not set";
-    final List availabilityRaw = userData['availability'] ?? [];
+    final String rawLevel = userData['tennisLevel'] ?? "";
+    final String level = rawLevel.isEmpty
+        ? loc.notSet
+        : translateLevel(rawLevel, loc);
+    final List availabilityRaw =
+        normalizeDays(userData['availability'] ?? []);
 
     final List<String> sortedAvailability = List<String>.from(availabilityRaw)
       ..sort((a, b) => weekOrder.indexOf(a).compareTo(weekOrder.indexOf(b)));
 
     final String availabilityText = sortedAvailability.isEmpty
-        ? "No availability set"
-        : sortedAvailability.join(', ');
+        ? loc.noAvailability
+        : sortedAvailability
+            .map((day) => translateDay(day, loc))
+            .join(', ');
 
     return Card(
       color: const Color(0xFF2E7D32),
@@ -231,11 +269,44 @@ class HomeScreen extends StatelessWidget {
     final String? tennisLevel = userData['tennisLevel'];
     final List<dynamic> availabilityRaw = userData['availability'] ?? [];
     final List<String> availability =
-        availabilityRaw.map((e) => e.toString()).toList();
+        normalizeDays(availabilityRaw);
+    final loc = AppLocalizations.of(context)!;
+
+    final dayMap = {
+      'Mon': loc.mon,
+      'Tue': loc.tue,
+      'Wed': loc.wed,
+      'Thu': loc.thu,
+      'Fri': loc.fri,
+      'Sat': loc.sat,
+      'Sun': loc.sun,
+    };
+
+    final levelMap = {
+      'Beginner': loc.levelBeginner,
+      'Intermediate': loc.levelIntermediate,
+      'Advanced': loc.levelAdvanced,
+    };
+
+    final tennisLevels = [
+      loc.levelBeginner,
+      loc.levelIntermediate,
+      loc.levelAdvanced,
+    ];
+
+    final availableDays = [
+      loc.mon,
+      loc.tue,
+      loc.wed,
+      loc.thu,
+      loc.fri,
+      loc.sat,
+      loc.sun,
+    ];
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Tennis Match"),
+        title: Text(loc.appTitle),
       ),
       body: SingleChildScrollView(
         child: Padding(
@@ -243,21 +314,21 @@ class HomeScreen extends StatelessWidget {
           child: Column(
             children: [
 
-              buildProfileCard(),
+              buildProfileCard(loc),
 
               const SizedBox(height: 24),
 
-              const Text('Your tennis level'),
+              Text(loc.yourTennisLevel),
 
               const SizedBox(height: 8),
 
               DropdownButton<String>(
                 value: tennisLevel,
-                hint: const Text('Choose level'),
-                items: tennisLevels.map((level) {
-                  return DropdownMenuItem(
-                    value: level,
-                    child: Text(level),
+                hint: Text(loc.selectLevel),
+                items: levelMap.entries.map((entry) {
+                  return DropdownMenuItem<String>(
+                    value: entry.key,        // ✅ stored in Firestore
+                    child: Text(entry.value) // ✅ translated label
                   );
                 }).toList(),
                 onChanged: (value) async {
@@ -268,26 +339,31 @@ class HomeScreen extends StatelessWidget {
 
               const SizedBox(height: 32),
 
-              const Text('Your availability'),
+              Text(loc.availability), // Your availability
 
               const SizedBox(height: 8),
 
               ListView(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
-                children: availableDays.map((day) {
-                  final isSelected = availability.contains(day);
+                children: dayMap.entries.map((entry) {
+                  final key = entry.key;     // 'Mon'
+                  final label = entry.value; // 'Lun'
+
+                  final isSelected = availability.contains(key); // ✅ FIX
 
                   return CheckboxListTile(
-                    title: Text(day),
+                    title: Text(label), // already translated
                     value: isSelected,
                     onChanged: (checked) async {
                       final updated = List<String>.from(availability);
 
                       if (checked == true) {
-                        updated.add(day);
+                        if (!updated.contains(key)) {
+                          updated.add(key);
+                        }
                       } else {
-                        updated.remove(day);
+                        updated.remove(key);
                       }
 
                       await updateAvailability(updated);
@@ -309,7 +385,7 @@ class HomeScreen extends StatelessWidget {
                   AspectRatio(
                     aspectRatio: 1,
                     child: HomeCard(
-                      title: "Find Players",
+                      title: loc.findPlayers,
                       icon: Icons.sports_tennis,
                       onTap: () {
                         Navigator.push(
@@ -332,7 +408,7 @@ class HomeScreen extends StatelessWidget {
                           child: NotificationBadge(
                             count: count,
                             child: HomeCard(
-                              title: "My Matches",
+                              title: loc.myMatches,
                               icon: Icons.calendar_today,
                               onTap: () {
                                 Navigator.push(
@@ -354,7 +430,7 @@ class HomeScreen extends StatelessWidget {
                   AspectRatio(
                     aspectRatio: 1,
                       child: HomeCard(
-                        title: "Match History",
+                        title: loc.matchHistory,
                         icon: Icons.history,
                         onTap: () {
                           Navigator.push(
@@ -370,7 +446,7 @@ class HomeScreen extends StatelessWidget {
                   AspectRatio(
                     aspectRatio: 1,
                     child: HomeCard(
-                      title: "My Stats",
+                      title: loc.myStats,
                       icon: Icons.bar_chart,
                       onTap: () {
                         Navigator.push(
@@ -396,7 +472,7 @@ class HomeScreen extends StatelessWidget {
                           child: NotificationBadge(
                             count: count,
                             child: HomeCard(
-                              title: "Incoming Requests",
+                              title: loc.incomingRequests,
                               icon: Icons.mail,
                               onTap: () {
                                 Navigator.push(
@@ -415,7 +491,7 @@ class HomeScreen extends StatelessWidget {
                   AspectRatio(
                     aspectRatio: 1,
                     child: HomeCard(
-                      title: "Outgoing Requests",
+                      title: loc.outgoingRequests,
                       icon: Icons.outbox,
                       onTap: () {
                         Navigator.push(
@@ -433,7 +509,7 @@ class HomeScreen extends StatelessWidget {
                   AspectRatio(
                     aspectRatio: 1,
                     child: HomeCard(
-                      title: "My Profile",
+                      title: loc.myProfile,
                       icon: Icons.person,
                       onTap: () {
                         Navigator.push(
@@ -451,7 +527,7 @@ class HomeScreen extends StatelessWidget {
                   AspectRatio(
                     aspectRatio: 1,
                     child: HomeCard(
-                      title: "Send Feedback",
+                      title: loc.sendFeedback,
                       icon: Icons.feedback,
                       onTap: () => openFeedbackForm(context),
                     ),

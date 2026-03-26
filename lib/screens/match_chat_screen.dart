@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:tennismatch/gen_l10n/app_localizations.dart';
 import 'dart:async';
 
 final ScrollController _scrollController = ScrollController();
@@ -102,7 +103,7 @@ class _MatchChatScreenState extends State<MatchChatScreen> {
         a.day == b.day;
   }
 
-  String formatDateLabel(DateTime date) {
+  String formatDateLabel(DateTime date, AppLocalizations loc) {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final yesterday = today.subtract(const Duration(days: 1));
@@ -110,9 +111,9 @@ class _MatchChatScreenState extends State<MatchChatScreen> {
     final messageDate = DateTime(date.year, date.month, date.day);
 
     if (messageDate == today) {
-      return 'Today';
+      return loc.today;
     } else if (messageDate == yesterday) {
-      return 'Yesterday';
+      return loc.yesterday;
     } else {
       return '${date.day}/${date.month}/${date.year}';
     }
@@ -168,6 +169,7 @@ class _MatchChatScreenState extends State<MatchChatScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final loc = AppLocalizations.of(context)!;
   
     return Scaffold(
       appBar: AppBar(
@@ -212,7 +214,7 @@ class _MatchChatScreenState extends State<MatchChatScreen> {
                   children: [
                     const SizedBox(width: 40), // align with avatar
                     Text(
-                      '${widget.otherPlayerName} is typing…',
+                      loc.isTyping(widget.otherPlayerName),
                       style: const TextStyle(
                         fontSize: 13,
                         color: Colors.grey,
@@ -241,8 +243,8 @@ class _MatchChatScreenState extends State<MatchChatScreen> {
                 final messages = snapshot.data!.docs;
 
                 if (messages.isEmpty) {
-                  return const Center(
-                    child: Text('No messages yet 👋'),
+                  return Center(
+                    child: Text(loc.noMessagesYet),
                   );
                 }
 
@@ -297,7 +299,7 @@ class _MatchChatScreenState extends State<MatchChatScreen> {
                           Padding(
                             padding: const EdgeInsets.symmetric(vertical: 8),
                             child: Text(
-                              formatDateLabel(dateTime),
+                              formatDateLabel(dateTime, loc),
                               style: const TextStyle(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w600,
@@ -423,8 +425,8 @@ class _MatchChatScreenState extends State<MatchChatScreen> {
                       await setTyping(false);
                       sendMessage();
                     },
-                    decoration: const InputDecoration(
-                      hintText: 'Type a message...',
+                    decoration: InputDecoration(
+                      hintText: loc.typeMessage,
                     ),
                   ),
                 ),

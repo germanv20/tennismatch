@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:tennismatch/gen_l10n/app_localizations.dart';
 
 const weekOrder = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
@@ -36,9 +37,10 @@ class PlayerProfileViewScreen extends StatefulWidget {
 
   @override
   Widget build(BuildContext context) {
+    final loc = AppLocalizations.of(context)!;
     final userData = widget.userData;
-    final String name = userData['name'] ?? 'Unknown';
-    final String level = userData['tennisLevel'] ?? 'Not set';
+    final String name = userData['name'] ?? loc.unknown; // 'Unknown'
+    final String level = userData['tennisLevel'] ?? loc.notSet; // 'Not set'
     final currentUid = FirebaseAuth.instance.currentUser!.uid;
     final viewedUid = userData['uid'];
     final List availabilityRaw = userData['availability'] ?? [];
@@ -47,12 +49,12 @@ class PlayerProfileViewScreen extends StatefulWidget {
       ..sort((a, b) => weekOrder.indexOf(a).compareTo(weekOrder.indexOf(b)));
 
     final String availabilityText = sortedAvailability.isEmpty
-        ? "No availability set"
+        ? loc.noAvailability // "No availability set"
         : sortedAvailability.join(', ');
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Player Profile"),
+        title: Text(loc.playerProfile), // "Player Profile"
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),
@@ -82,11 +84,11 @@ class PlayerProfileViewScreen extends StatefulWidget {
 
             const SizedBox(height: 8),
 
-            Text("🎾 Level: $level"),
+            Text("🎾 ${loc.level}: $level"), // Level
 
             const SizedBox(height: 8),
 
-            Text("📅 Availability: $availabilityText"),
+            Text("📅 ${loc.availability}: $availabilityText"), // Availability
 
             const SizedBox(height: 24),
 
@@ -122,7 +124,7 @@ class PlayerProfileViewScreen extends StatefulWidget {
                             height: 16,
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
-                        : Text(hasRequest ? "Requested" : "Request Match"),
+                        : Text(hasRequest ? loc.requested : loc.requestMatch),
                   );
                 },
               ),
@@ -149,7 +151,7 @@ class PlayerProfileViewScreen extends StatefulWidget {
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
                     : const Icon(Icons.cancel),
-                label: Text(isLoading ? "Processing..." : "Cancel Request"),
+                label: Text(isLoading ? loc.processing : loc.cancelRequest),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.red,
                 ),
@@ -181,7 +183,7 @@ class PlayerProfileViewScreen extends StatefulWidget {
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
                         : const Icon(Icons.check),
-                    label: Text(isLoading ? "Processing..." : "Accept"),
+                    label: Text(isLoading ? loc.processing : loc.accept),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.green,
                     ),
@@ -208,7 +210,7 @@ class PlayerProfileViewScreen extends StatefulWidget {
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
                         : const Icon(Icons.close),
-                    label: Text(isLoading ? "Processing..." : "Reject"),
+                    label: Text(isLoading ? loc.processing : loc.reject),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.red,
                     ),

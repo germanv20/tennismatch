@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:tennismatch/gen_l10n/app_localizations.dart';
 import '../../widgets/match_card.dart';
 import '../../widgets/empty_state.dart';
 
@@ -41,6 +42,7 @@ class _MatchHistoryScreenState extends State<MatchHistoryScreen> {
   }
 
   Future<void> loadCurrentUserName() async {
+    final loc = AppLocalizations.of(context)!;
     try {
       final uid = FirebaseAuth.instance.currentUser!.uid;
 
@@ -53,13 +55,15 @@ class _MatchHistoryScreenState extends State<MatchHistoryScreen> {
         currentUserName = doc['name'];
       });
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Failed to load user info")),
+        SnackBar(content: Text(loc.failedToLoadUser)), // "Failed to load user info"
       );
     }
   }
 
   Future<void> loadMatches() async {
+    final loc = AppLocalizations.of(context)!;
     if (isLoading || !hasMore) return;
 
     setState(() {
@@ -99,9 +103,9 @@ class _MatchHistoryScreenState extends State<MatchHistoryScreen> {
       setState(() {
         isLoading = false;
       });
-
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Error loading match history")),
+        SnackBar(content: Text(loc.failedToLoadMatches)), // "Error loading match history"
       );
     }
   }
@@ -109,19 +113,30 @@ class _MatchHistoryScreenState extends State<MatchHistoryScreen> {
   @override
   Widget build(BuildContext context) {
 
+    final loc = AppLocalizations.of(context)!;
+
     final currentUid = FirebaseAuth.instance.currentUser!.uid;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Match History"),
+        title: Text(loc.matchHistory), // "Match History"
       ),
       body: matches.isEmpty && isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const CircularProgressIndicator(),
+                  const SizedBox(height: 8),
+                  Text(loc.loading),
+                ],
+              ),
+            )
           : matches.isEmpty
-              ? const EmptyState(
+              ? EmptyState(
                   icon: Icons.history,
-                  title: "No match history yet",
-                  subtitle: "Play some matches to see them here 🎾",
+                  title: loc.noMatchHistory, // "No match history yet"
+                  subtitle: loc.playMatchesToSeeHistory, // "Play some matches to see them here 🎾"
                 )
               : ListView.builder(
                   controller: scrollController,
@@ -145,7 +160,7 @@ class _MatchHistoryScreenState extends State<MatchHistoryScreen> {
                         players.firstWhere((uid) => uid != currentUid);
 
                     final opponentName =
-                        playerNames[opponentUid] ?? "Opponent";
+                        playerNames[opponentUid] ?? loc.unknown;
 
                     final summary =
                         match['summary'] as Map<String, dynamic>? ?? {};

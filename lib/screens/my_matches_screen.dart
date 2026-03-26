@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:tennismatch/widgets/error_state.dart';
+import 'package:tennismatch/gen_l10n/app_localizations.dart';
 import 'match_detail_screen.dart';
 import '../widgets/empty_state.dart';
 
@@ -44,11 +45,12 @@ class _MyMatchesScreenState extends State<MyMatchesScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final loc = AppLocalizations.of(context)!;
     final matchesRef = FirebaseFirestore.instance.collection('matches');
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('My Matches'),
+        title: Text(loc.myMatchesTitle), // 'My Matches'
       ),
       body: StreamBuilder<QuerySnapshot>(
         stream: matchesRef
@@ -63,16 +65,16 @@ class _MyMatchesScreenState extends State<MyMatchesScreen> {
           }
 
           if (snapshot.hasError) {
-            return const ErrorState(
-              message: "Failed to load matches",
+            return ErrorState(
+              message: loc.failedToLoadMatches, // "Failed to load matches"
             );
           }
 
           if (!snapshot.hasData) {
-            return const EmptyState(
+            return EmptyState(
               icon: Icons.calendar_today,
-              title: "No matches found",
-              subtitle: "Try refreshing or check again later",
+              title: loc.noMatchesFound, // "No matches found"
+              subtitle: loc.refreshOrTryLater, // "Try refreshing or check again later"
             );
           }
 
@@ -80,10 +82,10 @@ class _MyMatchesScreenState extends State<MyMatchesScreen> {
 
 
           if (allMatches.isEmpty) {
-            return const EmptyState(
+            return EmptyState(
               icon: Icons.sports_tennis,
-              title: "No active matches",
-              subtitle: "Start by finding a player to play with 🎾",
+              title: loc.noActiveMatches, // "No active matches"
+              subtitle: loc.startByFindingPlayer, // "Start by finding a player to play with 🎾"
             );
           }
 
@@ -107,14 +109,14 @@ class _MyMatchesScreenState extends State<MyMatchesScreen> {
                     .get(),
                 builder: (context, userSnapshot) {
                   if (userSnapshot.hasError) {
-                    return const ListTile(
-                      title: Text('Failed to load opponent'),
+                    return ListTile(
+                      title: Text(loc.failedToLoadOpponent), // 'Failed to load opponent'
                     );
                   }
                   if (!userSnapshot.hasData) {
-                    return const ListTile(
+                    return ListTile(
                       leading: CircleAvatar(child: Icon(Icons.person)),
-                      title: Text('Loading...'),
+                      title: Text(loc.loading), // 'Loading...'
                     );
                   }
 
@@ -132,8 +134,8 @@ class _MyMatchesScreenState extends State<MyMatchesScreen> {
                             ? const Icon(Icons.person)
                             : null,
                       ),
-                      title: Text(userData['name'] ?? 'Unknown'),
-                      subtitle: const Text('Match active'),
+                      title: Text(userData['name'] ?? loc.unknown), // 'Unknown'
+                      subtitle: Text(loc.matchActive), // 'Match active'
                       trailing: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [

@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:tennismatch/gen_l10n/app_localizations.dart';
 import 'player_profile_view_screen.dart';
 import '../widgets/empty_state.dart';
 
@@ -42,11 +43,12 @@ class IncomingRequestsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final loc = AppLocalizations.of(context)!;
     final currentUser = FirebaseAuth.instance.currentUser!;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Incoming Match Requests'),
+        title: Text(loc.incomingRequests), // 'Incoming Match Requests'
       ),
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
@@ -61,15 +63,15 @@ class IncomingRequestsScreen extends StatelessWidget {
           }
 
           if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-            return const EmptyState(
+            return EmptyState(
               icon: Icons.mail_outline,
-              title: "No incoming requests",
-              subtitle: "Match requests you receive will appear here",
+              title: loc.noIncomingRequests, // "No incoming requests"
+              subtitle: loc.incomingRequestsSubtitle, // "Match requests you receive will appear here"
             );
           }
 
           if (snapshot.hasError) {
-            return Text('ERROR: ${snapshot.error}');
+            return Text('${loc.errorPrefix}: ${snapshot.error}');
           }
 
           if (!snapshot.hasData) {
@@ -134,8 +136,8 @@ class IncomingRequestsScreen extends StatelessWidget {
                       leading: CircleAvatar(
                         backgroundImage: NetworkImage(userData['photoUrl'] ?? ''),
                       ),
-                      title: Text(userData['name'] ?? 'Unknown'),
-                      subtitle: const Text('Wants to play a match'),
+                      title: Text(userData['name'] ?? loc.unknown), // Unknown
+                      subtitle: Text(loc.wantsToPlayMatch), // 'Wants to play a match'
 
                       trailing: const Icon(Icons.arrow_forward_ios),
     

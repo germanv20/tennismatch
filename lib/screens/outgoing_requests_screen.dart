@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:tennismatch/gen_l10n/app_localizations.dart';
 import '../widgets/empty_state.dart';
 import '../widgets/error_state.dart';
 import 'player_profile_view_screen.dart';
@@ -29,12 +30,13 @@ class OutgoingRequestsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final loc = AppLocalizations.of(context)!;
     final requestsRef =
         FirebaseFirestore.instance.collection('match_requests');
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Outgoing Requests'),
+        title: Text(loc.outgoingRequests), // 'Outgoing Requests'
       ),
       body: StreamBuilder<QuerySnapshot>(
         stream: requestsRef
@@ -49,16 +51,16 @@ class OutgoingRequestsScreen extends StatelessWidget {
           }
 
           if (snapshot.hasError) {
-            return const ErrorState(
-              message: "Failed to load outgoing requests",
+            return ErrorState(
+              message: loc.failedToLoadOutgoing, // "Failed to load outgoing requests"
             );
           }
 
           if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-            return const EmptyState(
+            return EmptyState(
               icon: Icons.outbox,
-              title: "No outgoing requests",
-              subtitle: "Requests you send will appear here",
+              title: loc.noOutgoingRequests, // "No outgoing requests"
+              subtitle: loc.outgoingRequestsSubtitle, // "Requests you send will appear here"
             );
           }
 
@@ -80,17 +82,17 @@ class OutgoingRequestsScreen extends StatelessWidget {
                 builder: (context, userSnapshot) {
 
                   if (userSnapshot.hasError) {
-                    return const ListTile(
-                      title: Text('Failed to load user'),
+                    return ListTile(
+                      title: Text(loc.failedToLoadUser), // 'Failed to load user'
                     );
                   }
 
                   if (!userSnapshot.hasData) {
-                    return const ListTile(
+                    return ListTile(
                       leading: CircleAvatar(
                         child: Icon(Icons.person),
                       ),
-                      title: Text('Loading...'),
+                      title: Text(loc.loading), // 'Loading...'
                     );
                   }
 
@@ -123,8 +125,8 @@ class OutgoingRequestsScreen extends StatelessWidget {
                             ? const Icon(Icons.person)
                             : null,
                       ),
-                      title: Text(userData['name'] ?? 'Unknown'),
-                      subtitle: const Text('Waiting for response'),
+                      title: Text(userData['name'] ?? loc.unknown), // Unknown
+                      subtitle: Text(loc.waitingForResponse), // 'Waiting for response'
 
                       trailing: const Icon(Icons.arrow_forward_ios),
                     ),

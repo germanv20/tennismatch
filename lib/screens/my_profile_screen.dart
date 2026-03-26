@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:tennismatch/gen_l10n/app_localizations.dart';
 
 
 class MyProfileScreen extends StatelessWidget {
@@ -14,6 +15,7 @@ class MyProfileScreen extends StatelessWidget {
   });
 
   Future<void> requestMatch(BuildContext context) async {
+    final loc = AppLocalizations.of(context)!;
     final fromUid = currentUid;
     final toUid = userData['uid'];
 
@@ -33,7 +35,7 @@ class MyProfileScreen extends StatelessWidget {
 
     if (query.docs.isNotEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Match request already sent')),
+        SnackBar(content: Text(loc.requestAlreadySent)), // 'Match request already sent'
       );
       return;
     }
@@ -48,22 +50,58 @@ class MyProfileScreen extends StatelessWidget {
     if (!context.mounted) return; // ✅ FIX #1
 
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Match request sent 🎾')),
+      SnackBar(content: Text(loc.requestSent)), // 'Match request sent 🎾'
     );
   }
 
+  String translateLevel(String level, AppLocalizations loc) {
+    switch (level) {
+      case 'Beginner':
+        return loc.levelBeginner;
+      case 'Intermediate':
+        return loc.levelIntermediate;
+      case 'Advanced':
+        return loc.levelAdvanced;
+      default:
+        return level;
+    }
+  }
+
+  String translateDay(String day, AppLocalizations loc) {
+    switch (day) {
+      case 'Mon':
+        return loc.mon;
+      case 'Tue':
+        return loc.tue;
+      case 'Wed':
+        return loc.wed;
+      case 'Thu':
+        return loc.thu;
+      case 'Fri':
+        return loc.fri;
+      case 'Sat':
+        return loc.sat;
+      case 'Sun':
+        return loc.sun;
+      default:
+        return day;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    final String name = userData['name'] ?? 'Unknown';
+    final loc = AppLocalizations.of(context)!;
+    final String name = userData['name'] ?? loc.unknown; // 'Unknown'
     final String email = userData['email'] ?? '';
-    final String tennisLevel = userData['tennisLevel'] ?? '';
+    final String rawLevel = userData['tennisLevel'] ?? '';
+    final String tennisLevel =
+        rawLevel.isEmpty ? loc.notSet : translateLevel(rawLevel, loc);
     final List<dynamic> availability = userData['availability'] ?? [];
     final String? photoUrl = userData['photoUrl'];
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(name),
+        title: Text(loc.myProfile),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),
@@ -87,13 +125,13 @@ class MyProfileScreen extends StatelessWidget {
             const SizedBox(height: 16),
 
             Text(
-              'Tennis level: $tennisLevel',
+              '${loc.level}: $tennisLevel', // Tennis level
               style: const TextStyle(fontSize: 16),
             ),
             const SizedBox(height: 16),
 
-            const Text(
-              'Availability',
+            Text(
+              loc.availability, // 'Availability'
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
@@ -112,7 +150,9 @@ class MyProfileScreen extends StatelessWidget {
             Wrap(
               spacing: 8,
               children: availability.map<Widget>((day) {
-                return Chip(label: Text(day.toString()));
+                return Chip(
+                  label: Text(translateDay(day.toString(), loc)), // ✅ FIX
+                );
               }).toList(),
             ),
           ],

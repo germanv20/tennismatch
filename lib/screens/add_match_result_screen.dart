@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:tennismatch/gen_l10n/app_localizations.dart';
 
 class AddMatchResultScreen extends StatefulWidget {
   final String matchId;
@@ -101,6 +102,7 @@ class _AddMatchResultScreenState
 
 
   Future<void> saveResult() async {
+    final loc = AppLocalizations.of(context)!;
     List<Map<String, int>> formattedSets = [];
 
     int p1Wins = 0;
@@ -112,13 +114,13 @@ class _AddMatchResultScreenState
 
 
       if (p1 == 0 && p2 == 0) {
-        showError("Set scores cannot both be zero.");
+        showError(loc.setScoresZeroError); // "Set scores cannot both be zero."
         return;
       }
 
       if (useOfficialScoring) {
         if (!isValidTennisSet(p1, p2)) {
-          showError("Invalid tennis set score.");
+          showError(loc.invalidSetScore); // "Invalid tennis set score."
           return;
         }
       }
@@ -130,27 +132,27 @@ class _AddMatchResultScreenState
     }
 
     if (formattedSets.isEmpty) {
-      showError("Add at least one set.");
+      showError(loc.addAtLeastOneSet); // "Add at least one set."
       return;
     }
 
     if (p1Wins == p2Wins) {
-      showError("There must be a winner.");
+      showError(loc.mustHaveWinner); // "There must be a winner."
       return;
     }
 
     if (durationController.text.isEmpty) {
-      showError("Enter match duration.");
+      showError(loc.enterDuration); // "Enter match duration."
       return;
     }
 
     if (locationController.text.trim().isEmpty) {
-      showError("Enter match location.");
+      showError(loc.enterLocation); // "Enter match location."
       return;
     }
 
     if (selectedMatchDate == null) {
-      showError("Select match date.");
+      showError(loc.selectDateError); // "Select match date."
       return;
     }
 
@@ -311,7 +313,7 @@ class _AddMatchResultScreenState
     Navigator.pop(context);
 
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Match completed 🎾')),
+      SnackBar(content: Text(loc.matchCompleted)), // 'Match completed 🎾'
     );
   }
 
@@ -336,14 +338,15 @@ class _AddMatchResultScreenState
 
   @override
   Widget build(BuildContext context) {
+    final loc = AppLocalizations.of(context)!;
     return Scaffold(
-      appBar: AppBar(title: const Text('Add Match Result')),
+      appBar: AppBar(title: Text(loc.addMatchResult)), // 'Add Match Result'
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: ListView(
           children: [
             SwitchListTile(
-              title: const Text("Use official tennis scoring"),
+              title: Text(loc.useOfficialScoring), // "Use official tennis scoring"
               value: useOfficialScoring,
               onChanged: (value) {
                 setState(() {
@@ -351,8 +354,8 @@ class _AddMatchResultScreenState
                 });
               },
             ),
-            const Text(
-              'Sets',
+            Text(
+              loc.sets,
               style:
                   TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
@@ -370,7 +373,7 @@ class _AddMatchResultScreenState
                       controller: set['p1'],
                       keyboardType: TextInputType.number,
                       decoration: InputDecoration(
-                        labelText: player1Name ?? "Loading...",
+                        labelText: player1Name ?? loc.loading, // "Loading..."
                       ),
                     ),
                   ),
@@ -381,7 +384,7 @@ class _AddMatchResultScreenState
                       controller: set['p2'],
                       keyboardType: TextInputType.number,
                       decoration: InputDecoration(
-                        labelText: player2Name ?? "Loading...",
+                        labelText: player2Name ?? loc.loading, // "Loading..."
                       ),
                     ),
                   ),
@@ -405,7 +408,7 @@ class _AddMatchResultScreenState
                   addSet();
                 });
               },
-              child: const Text('+ Add Set'),
+              child: Text(loc.addSet),
             ),
 
              const SizedBox(height: 20),
@@ -413,8 +416,10 @@ class _AddMatchResultScreenState
               ListTile(
                 title: Text(
                   selectedMatchDate == null
-                      ? "Select match date"
-                      : "Match Date: ${selectedMatchDate!.day}/${selectedMatchDate!.month}/${selectedMatchDate!.year}",
+                      ? loc.selectMatchDate
+                      : loc.matchDateLabel(
+                          "${selectedMatchDate!.day}/${selectedMatchDate!.month}/${selectedMatchDate!.year}",
+                        )
                 ),
                 trailing: const Icon(Icons.calendar_today),
                 onTap: pickMatchDate,
@@ -426,7 +431,7 @@ class _AddMatchResultScreenState
               controller: durationController,
               keyboardType: TextInputType.number,
               decoration:
-                  const InputDecoration(labelText: 'Duration (minutes)'),
+                  InputDecoration(labelText: loc.durationMinutes), // 'Duration (minutes)'
             ),
 
             const SizedBox(height: 10),
@@ -434,14 +439,14 @@ class _AddMatchResultScreenState
             TextField(
               controller: locationController,
               decoration:
-                  const InputDecoration(labelText: 'Location'),
+                  InputDecoration(labelText: loc.location), // 'Location'
             ),
 
             const SizedBox(height: 30),
 
             ElevatedButton(
               onPressed: saveResult,
-              child: const Text('Save Result'),
+              child: Text(loc.saveResult), // 'Save Result'
             ),
           ],
         ),
