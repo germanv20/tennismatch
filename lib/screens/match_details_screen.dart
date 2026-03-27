@@ -121,14 +121,7 @@ class _MatchDetailsScreenState extends State<MatchDetailsScreen> {
                     style: const TextStyle(color: Colors.black, fontSize: 16),
                     children: [
                       TextSpan(
-                        text: winnerName,
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      TextSpan(
                         text: loc.matchResultSentence(winnerName, loserName),
-                      ),
-                      TextSpan(
-                        text: loserName,
                       ),
                     ],
                   ),

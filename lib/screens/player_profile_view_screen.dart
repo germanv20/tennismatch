@@ -84,152 +84,97 @@ class PlayerProfileViewScreen extends StatefulWidget {
         title: Text(loc.playerProfile), // "Player Profile"
       ),
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
+        child: Center(
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
 
-              CircleAvatar(
-                radius: 50,
-                backgroundImage: (userData['photoUrl'] != null &&
-                        userData['photoUrl'].toString().isNotEmpty)
-                    ? NetworkImage(userData['photoUrl'])
-                    : null,
-                child: userData['photoUrl'] == null
-                    ? const Icon(Icons.person, size: 50)
-                    : null,
-              ),
-
-              const SizedBox(height: 16),
-
-              Text(
-                name,
-                style: const TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-
-              const SizedBox(height: 8),
-
-              Text(
-                "🎾 ${loc.level}: $level",
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ), // Level
-
-              const SizedBox(height: 8),
-
-              Text(
-                "📅 ${loc.availability}: $availabilityText",
-                style: const TextStyle(
-                  fontSize: 15,
-                ),
-              ), // Availability
-
-              const SizedBox(height: 24),
-
-              // 🔹 Request Match (Available Players)
-              if (widget.onRequestMatch != null)
-                StreamBuilder<QuerySnapshot>(
-                  stream: FirebaseFirestore.instance
-                      .collection('match_requests')
-                      .where('fromUid', isEqualTo: currentUid)
-                      .where('toUid', isEqualTo: viewedUid)
-                      .where('status', isEqualTo: 'pending')
-                      .snapshots(),
-                  builder: (context, snapshot) {
-
-                    final hasRequest =
-                        snapshot.hasData && snapshot.data!.docs.isNotEmpty;
-
-                    return ElevatedButton(
-                      onPressed: (isLoading || hasRequest)
-                          ? null
-                          : () async {
-                              setState(() => isLoading = true);
-
-                              if (widget.onRequestMatch != null) {
-                                await widget.onRequestMatch!();
-                              }
-
-                              if (mounted) setState(() => isLoading = false);
-                            },
-                      child: isLoading
-                          ? const SizedBox(
-                              width: 16,
-                              height: 16,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : Text(hasRequest ? loc.requested : loc.requestMatch),
-                    );
-                  },
-                ),
-              
-              if (widget.onCancel != null) ...[
-                const SizedBox(height: 20),
-
-                ElevatedButton.icon(
-                  onPressed: isLoading
-                      ? null
-                      : () async {
-                          setState(() => isLoading = true);
-
-                          if (widget.onCancel != null) {
-                            await widget.onCancel!();
-                          }
-
-                          if (mounted) Navigator.pop(context);
-                        },
-                  icon: isLoading
-                      ? const SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Icon(Icons.cancel),
-                  label: Text(isLoading ? loc.processing : loc.cancelRequest),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red,
+                  CircleAvatar(
+                    radius: 50,
+                    backgroundImage: (userData['photoUrl'] != null &&
+                            userData['photoUrl'].toString().isNotEmpty)
+                        ? NetworkImage(userData['photoUrl'])
+                        : null,
+                    child: userData['photoUrl'] == null
+                        ? const Icon(Icons.person, size: 50)
+                        : null,
                   ),
-                ),
-              ],
 
-              if (widget.showActions) ...[
-                const SizedBox(height: 20),
+                  const SizedBox(height: 16),
 
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    ElevatedButton.icon(
-                      onPressed: isLoading
-                          ? null
-                          : () async {
-                              setState(() => isLoading = true);
-
-                              if (widget.onAccept != null) {
-                                await widget.onAccept!();
-                              }
-
-                              if (mounted) Navigator.pop(context);
-                            },
-                      icon: isLoading
-                          ? const SizedBox(
-                              width: 16,
-                              height: 16,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : const Icon(Icons.check),
-                      label: Text(isLoading ? loc.processing : loc.accept),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green,
-                      ),
+                  Text(
+                    name,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
                     ),
+                  ),
 
-                    const SizedBox(width: 16),
+                  const SizedBox(height: 8),
+
+                  Text(
+                    "🎾 ${loc.level}: $level",
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ), // Level
+
+                  const SizedBox(height: 8),
+
+                  Text(
+                    "📅 ${loc.availability}: $availabilityText",
+                    style: const TextStyle(
+                      fontSize: 15,
+                    ),
+                  ), // Availability
+
+                  const SizedBox(height: 24),
+
+                  // 🔹 Request Match (Available Players)
+                  if (widget.onRequestMatch != null)
+                    StreamBuilder<QuerySnapshot>(
+                      stream: FirebaseFirestore.instance
+                          .collection('match_requests')
+                          .where('fromUid', isEqualTo: currentUid)
+                          .where('toUid', isEqualTo: viewedUid)
+                          .where('status', isEqualTo: 'pending')
+                          .snapshots(),
+                      builder: (context, snapshot) {
+
+                        final hasRequest =
+                            snapshot.hasData && snapshot.data!.docs.isNotEmpty;
+
+                        return ElevatedButton(
+                          onPressed: (isLoading || hasRequest)
+                              ? null
+                              : () async {
+                                  setState(() => isLoading = true);
+
+                                  if (widget.onRequestMatch != null) {
+                                    await widget.onRequestMatch!();
+                                  }
+
+                                  if (mounted) setState(() => isLoading = false);
+                                },
+                          child: isLoading
+                              ? const SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                )
+                              : Text(hasRequest ? loc.requested : loc.requestMatch),
+                        );
+                      },
+                    ),
+                  
+                  if (widget.onCancel != null) ...[
+                    const SizedBox(height: 20),
 
                     ElevatedButton.icon(
                       onPressed: isLoading
@@ -237,8 +182,8 @@ class PlayerProfileViewScreen extends StatefulWidget {
                           : () async {
                               setState(() => isLoading = true);
 
-                              if (widget.onReject != null) {
-                                await widget.onReject!();
+                              if (widget.onCancel != null) {
+                                await widget.onCancel!();
                               }
 
                               if (mounted) Navigator.pop(context);
@@ -249,17 +194,78 @@ class PlayerProfileViewScreen extends StatefulWidget {
                               height: 16,
                               child: CircularProgressIndicator(strokeWidth: 2),
                             )
-                          : const Icon(Icons.close),
-                      label: Text(isLoading ? loc.processing : loc.reject),
+                          : const Icon(Icons.cancel),
+                      label: Text(isLoading ? loc.processing : loc.cancelRequest),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.red,
                       ),
                     ),
                   ],
-                )
-              ]
-            ],
-          ),
+
+                  if (widget.showActions) ...[
+                    const SizedBox(height: 20),
+
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        ElevatedButton.icon(
+                          onPressed: isLoading
+                              ? null
+                              : () async {
+                                  setState(() => isLoading = true);
+
+                                  if (widget.onAccept != null) {
+                                    await widget.onAccept!();
+                                  }
+
+                                  if (mounted) Navigator.pop(context);
+                                },
+                          icon: isLoading
+                              ? const SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                )
+                              : const Icon(Icons.check),
+                          label: Text(isLoading ? loc.processing : loc.accept),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.green,
+                          ),
+                        ),
+
+                        const SizedBox(width: 16),
+
+                        ElevatedButton.icon(
+                          onPressed: isLoading
+                              ? null
+                              : () async {
+                                  setState(() => isLoading = true);
+
+                                  if (widget.onReject != null) {
+                                    await widget.onReject!();
+                                  }
+
+                                  if (mounted) Navigator.pop(context);
+                                },
+                          icon: isLoading
+                              ? const SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                )
+                              : const Icon(Icons.close),
+                          label: Text(isLoading ? loc.processing : loc.reject),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.red,
+                          ),
+                        ),
+                      ],
+                    )
+                  ]
+                ],
+              ),
+            ),
+          )
         ),
       ),
     );
