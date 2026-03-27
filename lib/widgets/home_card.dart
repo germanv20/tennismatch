@@ -4,12 +4,14 @@ class HomeCard extends StatelessWidget {
   final String title;
   final IconData icon;
   final VoidCallback onTap;
+  final Color? color;
 
   const HomeCard({
     super.key,
     required this.title,
     required this.icon,
     required this.onTap,
+    this.color,
   });
 
   @override

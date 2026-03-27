@@ -5,6 +5,8 @@ import 'match_chat_screen.dart';
 import 'add_match_result_screen.dart';
 
 
+
+
 class MatchDetailScreen extends StatelessWidget {
   final DocumentSnapshot matchDoc;
   final Map<String, dynamic> opponentData;
@@ -18,7 +20,7 @@ class MatchDetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context)!;
-    final data = matchDoc.data() as Map<String, dynamic>;
+    final data = matchDoc.data() as Map<String, dynamic>? ?? {};
     final String otherPlayerUid = opponentData['uid'];
     final String otherPlayerName = opponentData['name'] ?? loc.unknown; // 'Player'
     final String otherPlayerPhotoUrl = opponentData['photoUrl'] ?? '';
@@ -28,7 +30,7 @@ class MatchDetailScreen extends StatelessWidget {
         title: Text(loc.matchDetailsTitle), // 'Match Details'
         actions: [
           IconButton(
-            icon: const Icon(Icons.block, color: Colors.red),
+            icon: const Icon(Icons.link_off),
             onPressed: () async {
               final confirm = await showDialog(
                 context: context,
@@ -57,119 +59,130 @@ class MatchDetailScreen extends StatelessWidget {
                   'status': 'cancelled',
                 });
 
-                Navigator.pop(context); // Exit chat screen
+                if (Navigator.canPop(context)) {
+                  Navigator.pop(context);
+                } // Exit chat screen
               }
             },
           ),
         ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Opponent header
-            Row(
+      body: SafeArea(
+          child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                CircleAvatar(
-                  radius: 30,
-                  backgroundImage:
-                      NetworkImage(opponentData['photoUrl'] ?? ''),
-                ),
-                const SizedBox(width: 16),
-                Text(
-                  opponentData['name'] ?? loc.unknown, // 'Unknown'
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 24),
-
-            Text(
-              '${loc.statusLabel}: ${data['status']}', // Status
-              style: const TextStyle(fontSize: 16),
-            ),
-
-            const SizedBox(height: 8),
-
-            if (data['createdAt'] != null)
-              Text(
-                '${loc.createdAtLabel}: ${(data['createdAt'] as Timestamp).toDate()}',
-                style: const TextStyle(color: Colors.grey),
-              ),
-
-            const SizedBox(height: 30),
-
-            const Divider(),
-
-            ElevatedButton.icon(
-              icon: const Icon(Icons.chat),
-              label: Text(loc.openChat), // 'Open Chat'
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => MatchChatScreen(
-                      matchId: matchDoc.id,
-                      otherPlayerUid: otherPlayerUid,
-                      otherPlayerName: otherPlayerName,
-                      otherPlayerPhotoUrl: otherPlayerPhotoUrl,
+                // Opponent header
+                Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 30,
+                      backgroundImage: (opponentData['photoUrl'] != null &&
+                              opponentData['photoUrl'].toString().isNotEmpty)
+                          ? NetworkImage(opponentData['photoUrl'])
+                          : null,
+                      child: opponentData['photoUrl'] == null
+                          ? const Icon(Icons.person)
+                          : null,
                     ),
-                  ),
-                );
-              },
-            ),
-
-            const SizedBox(height: 10),
-
-            if (data['status'] == 'active') ...[
-              const SizedBox(height: 20),
-
-              ElevatedButton.icon(
-                icon: const Icon(Icons.emoji_events),
-                label: Text(loc.addMatchResult), // 'Add Match Result'
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => AddMatchResultScreen(
-                        matchId: matchDoc.id,
-                        matchData: data,
+                    const SizedBox(width: 16),
+                    Text(
+                      opponentData['name'] ?? loc.unknown, // 'Unknown'
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
-                  );
-                },
-              ),
-            ],
+                  ],
+                ),
 
-            if (data['status'] == 'completed' && data['result'] != null) ...[
-              const SizedBox(height: 20),
-              Text(
-                loc.matchResult, //'Match Result'
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 10),
+                const SizedBox(height: 24),
 
-              ...List.generate(
-                (data['result']['sets'] as List).length,
-                (index) {
-                  final set = data['result']['sets'][index];
-                  return Text(
-                    '${loc.setLabel(index + 1)}: ${set['p1']} - ${set['p2']}', // Set
-                  );
-                },
-              ),
+                Text(
+                  '${loc.statusLabel}: ${data['status']}', // Status
+                  style: const TextStyle(fontSize: 16),
+                ),
 
-              const SizedBox(height: 10),
-              Text('${loc.locationLabel}: ${data['result']['location']}'), // Location
-              Text('${loc.durationLabel}: ${data['result']['durationMinutes']} min'), // Duration
-            ],
+                const SizedBox(height: 8),
 
-          ],
+                if (data['createdAt'] != null)
+                  Text(
+                    '${loc.createdAtLabel}: ${(data['createdAt'] as Timestamp).toDate()}',
+                    style: const TextStyle(color: Colors.grey),
+                  ),
+
+                const SizedBox(height: 30),
+
+                const Divider(),
+
+                ElevatedButton.icon(
+                  icon: const Icon(Icons.chat),
+                  label: Text(loc.openChat), // 'Open Chat'
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => MatchChatScreen(
+                          matchId: matchDoc.id,
+                          otherPlayerUid: otherPlayerUid,
+                          otherPlayerName: otherPlayerName,
+                          otherPlayerPhotoUrl: otherPlayerPhotoUrl,
+                        ),
+                      ),
+                    );
+                  },
+                ),
+
+                const SizedBox(height: 10),
+
+                if (data['status'] == 'active') ...[
+                  const SizedBox(height: 20),
+
+                  ElevatedButton.icon(
+                    icon: const Icon(Icons.emoji_events),
+                    label: Text(loc.addMatchResult), // 'Add Match Result'
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => AddMatchResultScreen(
+                            matchId: matchDoc.id,
+                            matchData: data,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ],
+
+                if (data['status'] == 'completed' && data['result'] != null) ...[
+                  const SizedBox(height: 20),
+                  Text(
+                    loc.matchResult, //'Match Result'
+                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 10),
+
+                  ...List.generate(
+                    (data['result']['sets'] as List).length,
+                    (index) {
+                      final set = data['result']['sets'][index];
+                      return Text(
+                        '${loc.setLabel(index + 1)}: ${set['p1']} - ${set['p2']}', // Set
+                      );
+                    },
+                  ),
+
+                  const SizedBox(height: 10),
+                  Text('${loc.locationLabel}: ${data['result']['location']}'), // Location
+                  Text('${loc.durationLabel}: ${data['result']['durationMinutes']} min'), // Duration
+                ],
+
+              ],
+            ),
+          ),
         ),
       ),
     );

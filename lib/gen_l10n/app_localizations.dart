@@ -200,6 +200,48 @@ abstract class AppLocalizations {
   /// **'Sun'**
   String get sun;
 
+  /// No description provided for @monFull.
+  ///
+  /// In en, this message translates to:
+  /// **'Monday'**
+  String get monFull;
+
+  /// No description provided for @tueFull.
+  ///
+  /// In en, this message translates to:
+  /// **'Tuesday'**
+  String get tueFull;
+
+  /// No description provided for @wedFull.
+  ///
+  /// In en, this message translates to:
+  /// **'Wednesday'**
+  String get wedFull;
+
+  /// No description provided for @thuFull.
+  ///
+  /// In en, this message translates to:
+  /// **'Thursday'**
+  String get thuFull;
+
+  /// No description provided for @friFull.
+  ///
+  /// In en, this message translates to:
+  /// **'Friday'**
+  String get friFull;
+
+  /// No description provided for @satFull.
+  ///
+  /// In en, this message translates to:
+  /// **'Saturday'**
+  String get satFull;
+
+  /// No description provided for @sunFull.
+  ///
+  /// In en, this message translates to:
+  /// **'Sunday'**
+  String get sunFull;
+
   /// No description provided for @levelBeginner.
   ///
   /// In en, this message translates to:
@@ -289,6 +331,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Match accepted'**
   String get matchAccepted;
+
+  /// No description provided for @availabilityHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Select the days you are available to play'**
+  String get availabilityHint;
 
   /// No description provided for @noIncomingRequests.
   ///
@@ -799,6 +847,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Failed to load stats'**
   String get failedToLoadStats;
+
+  /// No description provided for @failedToOpenFeedbackForm.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open feedback form'**
+  String get failedToOpenFeedbackForm;
 
   /// No description provided for @setLabel.
   ///

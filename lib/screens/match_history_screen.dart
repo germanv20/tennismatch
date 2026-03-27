@@ -30,19 +30,26 @@ class _MatchHistoryScreenState extends State<MatchHistoryScreen> {
   @override
   void initState() {
     super.initState();
-    loadCurrentUserName();
-    loadMatches();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final loc = AppLocalizations.of(context)!;
+
+      loadCurrentUserName(loc.failedToLoadUser);
+      loadMatches(loc.failedToLoadMatches);
+    });
 
     scrollController.addListener(() {
       if (scrollController.position.pixels >=
-          scrollController.position.maxScrollExtent - 200) {
-        loadMatches();
+          scrollController.position.maxScrollExtent - 100) {
+
+        final loc = AppLocalizations.of(context)!;
+        loadMatches(loc.failedToLoadMatches);
       }
     });
   }
 
-  Future<void> loadCurrentUserName() async {
-    final loc = AppLocalizations.of(context)!;
+  Future<void> loadCurrentUserName(String errorMessage) async {
+
     try {
       final uid = FirebaseAuth.instance.currentUser!.uid;
 
@@ -57,13 +64,13 @@ class _MatchHistoryScreenState extends State<MatchHistoryScreen> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(loc.failedToLoadUser)), // "Failed to load user info"
+        SnackBar(content: Text(errorMessage)), // "Failed to load user info"
       );
     }
   }
 
-  Future<void> loadMatches() async {
-    final loc = AppLocalizations.of(context)!;
+  Future<void> loadMatches(String errorMessage) async {
+    
     if (isLoading || !hasMore) return;
 
     setState(() {
@@ -94,18 +101,24 @@ class _MatchHistoryScreenState extends State<MatchHistoryScreen> {
         hasMore = false;
       }
 
+      if (!mounted) return;
+
       setState(() {
         matches.addAll(snapshot.docs);
         isLoading = false;
       });
 
     } catch (e) {
+
+      if (!mounted) return;
+
       setState(() {
         isLoading = false;
       });
+
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(loc.failedToLoadMatches)), // "Error loading match history"
+        SnackBar(content: Text(errorMessage)), // "Error loading match history"
       );
     }
   }
@@ -121,7 +134,8 @@ class _MatchHistoryScreenState extends State<MatchHistoryScreen> {
       appBar: AppBar(
         title: Text(loc.matchHistory), // "Match History"
       ),
-      body: matches.isEmpty && isLoading
+      body: SafeArea(
+        child: matches.isEmpty && isLoading
           ? Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -206,22 +220,26 @@ class _MatchHistoryScreenState extends State<MatchHistoryScreen> {
                     final duration =
                         match['result']?['durationMinutes'] ?? 0;
 
-                    return MatchCard(
-                      playerName: currentUserName,
-                      opponentName: opponentName,
-                      opponentUid: opponentUid, 
-                      sets: sets,
-                      location: location,
-                      duration: duration,
-                      matchDate: matchDate,
-                      winnerUid: match['winnerUid'],
-                      currentUserUid: currentUid,
-                      currentUserIsP1: currentUserIsP1,
-                      player1Uid: player1Uid,
-                      player2Uid: player2Uid,
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      child: MatchCard(
+                        playerName: currentUserName,
+                        opponentName: opponentName,
+                        opponentUid: opponentUid, 
+                        sets: sets,
+                        location: location,
+                        duration: duration,
+                        matchDate: matchDate,
+                        winnerUid: match['winnerUid'],
+                        currentUserUid: currentUid,
+                        currentUserIsP1: currentUserIsP1,
+                        player1Uid: player1Uid,
+                        player2Uid: player2Uid,
+                      ),
                     );
                   },
                 ),
+      ),
     );
   }
 }

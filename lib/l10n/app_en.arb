@@ -19,6 +19,14 @@
   "sat": "Sat",
   "sun": "Sun",
 
+  "monFull": "Monday",
+  "tueFull": "Tuesday",
+  "wedFull": "Wednesday",
+  "thuFull": "Thursday",
+  "friFull": "Friday",
+  "satFull": "Saturday",
+  "sunFull": "Sunday",
+
   "levelBeginner": "Begginer",
   "levelIntermediate": "Intermediate",
   "levelAdvanced": "Advanced",
@@ -36,6 +44,7 @@
   "requestAlreadySent": "Match request already sent",
   "requestRejected": "Request rejected",
   "matchAccepted": "Match accepted",
+  "availabilityHint": "Select the days you are available to play",
 
   "noIncomingRequests": "No incoming match requests",
   "noOutgoingRequests": "No outgoing requests",
@@ -139,6 +148,7 @@
   "totalSetsLost": "Total Sets Lost",
   "averageMatchDuration": "Average Match Duration",
   "failedToLoadStats": "Failed to load stats",
+  "failedToOpenFeedbackForm": "Could not open feedback form",
 
   "setLabel": "Set {number}",
   "@setLabel": {

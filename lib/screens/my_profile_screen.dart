@@ -14,46 +14,6 @@ class MyProfileScreen extends StatelessWidget {
     required this.userData,
   });
 
-  Future<void> requestMatch(BuildContext context) async {
-    final loc = AppLocalizations.of(context)!;
-    final fromUid = currentUid;
-    final toUid = userData['uid'];
-
-    debugPrint('📨 Sending match request from $fromUid to $toUid');
-
-    // Prevent requesting yourself
-    if (fromUid == toUid) return;
-
-    final query = await FirebaseFirestore.instance
-        .collection('match_requests')
-        .where('fromUid', isEqualTo: fromUid)
-        .where('toUid', isEqualTo: toUid)
-        .where('status', isEqualTo: 'pending')
-        .get();
-
-    if (!context.mounted) return; // ✅ FIX #1
-
-    if (query.docs.isNotEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(loc.requestAlreadySent)), // 'Match request already sent'
-      );
-      return;
-    }
-
-    await FirebaseFirestore.instance.collection('match_requests').add({
-      'fromUid': fromUid,
-      'toUid': toUid,
-      'status': 'pending',
-      'createdAt': FieldValue.serverTimestamp(),
-    });
-
-    if (!context.mounted) return; // ✅ FIX #1
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(loc.requestSent)), // 'Match request sent 🎾'
-    );
-  }
-
   String translateLevel(String level, AppLocalizations loc) {
     switch (level) {
       case 'Beginner':
@@ -103,59 +63,61 @@ class MyProfileScreen extends StatelessWidget {
       appBar: AppBar(
         title: Text(loc.myProfile),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            CircleAvatar(
-              radius: 50,
-              backgroundImage:
-                  photoUrl != null ? NetworkImage(photoUrl) : null,
-              child: photoUrl == null ? const Icon(Icons.person, size: 50) : null,
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: SingleChildScrollView(
+            child: Column(
+              children: [
+                CircleAvatar(
+                  radius: 50,
+                  backgroundImage:
+                      photoUrl != null ? NetworkImage(photoUrl) : null,
+                  child: photoUrl == null ? const Icon(Icons.person, size: 50) : null,
+                ),
+                const SizedBox(height: 24),
+
+                Text(
+                  name,
+                  style: const TextStyle(
+                    color: Colors.black,
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                Text(
+                  email,
+                  style: const TextStyle(
+                    color: Colors.black87,
+                    fontSize: 14,
+                  ),
+                ),
+                const SizedBox(height: 24),
+
+                Text(
+                  '${loc.level}: $tennisLevel', // Tennis level
+                  style: const TextStyle(fontSize: 16),
+                ),
+                const SizedBox(height: 24),
+
+                availability.isEmpty
+                    ? Text(
+                        loc.noAvailability,
+                        style: const TextStyle(color: Colors.grey),
+                      )
+                    : Wrap(
+                        spacing: 8,
+                        children: availability.map<Widget>((day) {
+                          return Chip(
+                            label: Text(translateDay(day.toString(), loc)),
+                          );
+                        }).toList(),
+                      ),
+              ],
             ),
-            const SizedBox(height: 16),
-
-            Text(
-              name,
-              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
-
-            Text(email),
-            const SizedBox(height: 16),
-
-            Text(
-              '${loc.level}: $tennisLevel', // Tennis level
-              style: const TextStyle(fontSize: 16),
-            ),
-            const SizedBox(height: 16),
-
-            Text(
-              loc.availability, // 'Availability'
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
-
-            const SizedBox(height: 24),
-
-            /*ElevatedButton.icon(
-              onPressed: () => requestMatch(context),
-              icon: const Icon(Icons.sports_tennis),
-              label: const Text('Request Match'),
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              ),
-            ),*/
-
-            Wrap(
-              spacing: 8,
-              children: availability.map<Widget>((day) {
-                return Chip(
-                  label: Text(translateDay(day.toString(), loc)), // ✅ FIX
-                );
-              }).toList(),
-            ),
-          ],
+          ),
         ),
       ),
     );

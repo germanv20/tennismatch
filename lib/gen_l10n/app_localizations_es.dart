@@ -60,6 +60,27 @@ class AppLocalizationsEs extends AppLocalizations {
   String get sun => 'Dom';
 
   @override
+  String get monFull => 'Lunes';
+
+  @override
+  String get tueFull => 'Martes';
+
+  @override
+  String get wedFull => 'Miércoles';
+
+  @override
+  String get thuFull => 'Jueves';
+
+  @override
+  String get friFull => 'Viernes';
+
+  @override
+  String get satFull => 'Sábado';
+
+  @override
+  String get sunFull => 'Domingo';
+
+  @override
   String get levelBeginner => 'Principiante';
 
   @override
@@ -103,6 +124,10 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get matchAccepted => 'Partido aceptado';
+
+  @override
+  String get availabilityHint =>
+      'Selecciona los días en los que estás disponible para jugar';
 
   @override
   String get noIncomingRequests => 'No tienes solicitudes recibidas';
@@ -368,6 +393,10 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get failedToLoadStats => 'Error al cargar estadísticas';
+
+  @override
+  String get failedToOpenFeedbackForm =>
+      'No se pudo abrir el formulario de comentarios';
 
   @override
   String setLabel(Object number) {

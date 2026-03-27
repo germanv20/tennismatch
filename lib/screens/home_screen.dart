@@ -104,6 +104,19 @@ class HomeScreen extends StatelessWidget {
     }
   }
 
+  String translateDayFull(String day, AppLocalizations loc) {
+    switch (day) {
+      case 'Mon': return loc.monFull;
+      case 'Tue': return loc.tueFull;
+      case 'Wed': return loc.wedFull;
+      case 'Thu': return loc.thuFull;
+      case 'Fri': return loc.friFull;
+      case 'Sat': return loc.satFull;
+      case 'Sun': return loc.sunFull;
+      default: return day;
+    }
+  }
+
   List<String> normalizeDays(List rawDays) {
     final map = {
       'Mon': 'Mon', 'Tue': 'Tue', 'Wed': 'Wed',
@@ -170,26 +183,29 @@ class HomeScreen extends StatelessWidget {
                     style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
+                      color: Colors.white,
                     ),
                   ),
 
                   const SizedBox(height: 4),
 
                   Text(
-                    "🎾 $level",
-                    style: TextStyle(
-                      color: Colors.black,
+                    "${loc.level}: $level",
+                    style: const TextStyle(
+                      color: Colors.white,
                       fontSize: 14,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
 
                   const SizedBox(height: 2),
 
                   Text(
-                    "📅 $availabilityText",
-                    style: TextStyle(
-                      color: Colors.black,
+                    "${loc.availability}: $availabilityText",
+                    style: const TextStyle(
+                      color: Colors.white,
                       fontSize: 14,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ],
@@ -221,14 +237,15 @@ class HomeScreen extends StatelessWidget {
 
   Future<void> openFeedbackForm(BuildContext context) async {
     final url = Uri.parse("https://docs.google.com/forms/d/e/1FAIpQLScGcT2eC2znik4ndofkiExqAN1k7LL_A3eOOQfjeCkl-5RO-A/viewform");
+    final loc = AppLocalizations.of(context)!;
 
     if (!await launchUrl(
       url,
       mode: LaunchMode.externalApplication,
     )) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Could not open feedback form"),
+        SnackBar(
+          content: Text(loc.failedToOpenFeedbackForm),
         ),
       );
     }
@@ -273,13 +290,13 @@ class HomeScreen extends StatelessWidget {
     final loc = AppLocalizations.of(context)!;
 
     final dayMap = {
-      'Mon': loc.mon,
-      'Tue': loc.tue,
-      'Wed': loc.wed,
-      'Thu': loc.thu,
-      'Fri': loc.fri,
-      'Sat': loc.sat,
-      'Sun': loc.sun,
+      'Mon': loc.monFull,
+      'Tue': loc.tueFull,
+      'Wed': loc.wedFull,
+      'Thu': loc.thuFull,
+      'Fri': loc.friFull,
+      'Sat': loc.satFull,
+      'Sun': loc.sunFull,
     };
 
     final levelMap = {
@@ -308,234 +325,249 @@ class HomeScreen extends StatelessWidget {
       appBar: AppBar(
         title: Text(loc.appTitle),
       ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            children: [
+      body: SafeArea(
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              children: [
 
-              buildProfileCard(loc),
+                buildProfileCard(loc),
 
-              const SizedBox(height: 24),
+                const SizedBox(height: 24),
 
-              Text(loc.yourTennisLevel),
+                Text(loc.yourTennisLevel),
 
-              const SizedBox(height: 8),
+                const SizedBox(height: 8),
 
-              DropdownButton<String>(
-                value: tennisLevel,
-                hint: Text(loc.selectLevel),
-                items: levelMap.entries.map((entry) {
-                  return DropdownMenuItem<String>(
-                    value: entry.key,        // ✅ stored in Firestore
-                    child: Text(entry.value) // ✅ translated label
-                  );
-                }).toList(),
-                onChanged: (value) async {
-                  if (value == null) return;
-                  await updateTennisLevel(value);
-                },
-              ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
 
-              const SizedBox(height: 32),
+                    DropdownButton<String>(
+                      value: tennisLevel,
+                      hint: Text(loc.selectLevel),
+                      items: levelMap.entries.map((entry) {
+                        return DropdownMenuItem<String>(
+                          value: entry.key,        // ✅ stored in Firestore
+                          child: Text(entry.value) // ✅ translated label
+                        );
+                      }).toList(),
+                      onChanged: (value) async {
+                        if (value == null) return;
+                        await updateTennisLevel(value);
+                      },
+                    ),
+                  ],
+                ),
 
-              Text(loc.availability), // Your availability
+                const SizedBox(height: 32),
 
-              const SizedBox(height: 8),
+                Text(loc.availability),
 
-              ListView(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                children: dayMap.entries.map((entry) {
-                  final key = entry.key;     // 'Mon'
-                  final label = entry.value; // 'Lun'
+                const SizedBox(height: 4),
 
-                  final isSelected = availability.contains(key); // ✅ FIX
+                Text(
+                  loc.availabilityHint,
+                  style: const TextStyle(color: Colors.black),
+                ), // Your availability
 
-                  return CheckboxListTile(
-                    title: Text(label), // already translated
-                    value: isSelected,
-                    onChanged: (checked) async {
-                      final updated = List<String>.from(availability);
+                const SizedBox(height: 8),
 
-                      if (checked == true) {
-                        if (!updated.contains(key)) {
-                          updated.add(key);
+                ListView(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  children: dayMap.entries.map((entry) {
+                    final key = entry.key;     // 'Mon'
+                    final label = entry.value; // 'Lun'
+
+                    final isSelected = availability.contains(key); // ✅ FIX
+
+                    return CheckboxListTile(
+                      title: Text(label), // already translated
+                      value: isSelected,
+                      onChanged: (checked) async {
+                        final updated = List<String>.from(availability);
+
+                        if (checked == true) {
+                          if (!updated.contains(key)) {
+                            updated.add(key);
+                          }
+                        } else {
+                          updated.remove(key);
                         }
-                      } else {
-                        updated.remove(key);
-                      }
 
-                      await updateAvailability(updated);
-                    },
-                  );
-                }).toList(),
-              ),
+                        await updateAvailability(updated);
+                      },
+                    );
+                  }).toList(),
+                ),
 
-              const SizedBox(height: 24),
+                const SizedBox(height: 24),
 
-              GridView.count(
-                crossAxisCount: 2,
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                crossAxisSpacing: 12,
-                mainAxisSpacing: 12,
-                children: [
+                GridView.count(
+                  crossAxisCount: 2,
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  crossAxisSpacing: 12,
+                  mainAxisSpacing: 12,
+                  children: [
 
-                  AspectRatio(
-                    aspectRatio: 1,
-                    child: HomeCard(
-                      title: loc.findPlayers,
-                      icon: Icons.sports_tennis,
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                            MaterialPageRoute(
-                              builder: (_) => const AvailablePlayersScreen(),
-                            ),
+                    AspectRatio(
+                      aspectRatio: 1,
+                      child: HomeCard(
+                        title: loc.findPlayers,
+                        icon: Icons.sports_tennis,
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                              MaterialPageRoute(
+                                builder: (_) => const AvailablePlayersScreen(),
+                              ),
+                          );
+                        },
+                      ),
+                    ),
+
+                    StreamBuilder<int>(
+                      stream: getNewMatchesCount(currentUser.uid),
+                      builder: (context, snapshot) {
+                        final count = snapshot.data ?? 0;
+
+                          return AspectRatio(
+                            aspectRatio: 1, 
+                            child: NotificationBadge(
+                              count: count,
+                              child: HomeCard(
+                                title: loc.myMatches,
+                                icon: Icons.calendar_today,
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => MyMatchesScreen(
+                                        currentUser: currentUser,
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                            )
                         );
                       },
                     ),
-                  ),
-
-                  StreamBuilder<int>(
-                    stream: getNewMatchesCount(currentUser.uid),
-                    builder: (context, snapshot) {
-                      final count = snapshot.data ?? 0;
-
-                        return AspectRatio(
-                          aspectRatio: 1, 
-                          child: NotificationBadge(
-                            count: count,
-                            child: HomeCard(
-                              title: loc.myMatches,
-                              icon: Icons.calendar_today,
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => MyMatchesScreen(
-                                      currentUser: currentUser,
-                                    ),
-                                  ),
-                                );
-                              },
-                            ),
-                          )
-                       );
-                    },
-                  ),
 
 
-                  AspectRatio(
-                    aspectRatio: 1,
+                    AspectRatio(
+                      aspectRatio: 1,
+                        child: HomeCard(
+                          title: loc.matchHistory,
+                          icon: Icons.history,
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const MatchHistoryScreen(),
+                              ),
+                            );
+                          },
+                        ),
+                    ),
+
+                    AspectRatio(
+                      aspectRatio: 1,
                       child: HomeCard(
-                        title: loc.matchHistory,
-                        icon: Icons.history,
+                        title: loc.myStats,
+                        icon: Icons.bar_chart,
                         onTap: () {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (_) => const MatchHistoryScreen(),
+                              builder: (_) => PlayerStatisticsScreen(
+                                userId: currentUser.uid,
+                              ),
                             ),
                           );
                         },
                       ),
-                  ),
+                    ),
 
-                  AspectRatio(
-                    aspectRatio: 1,
-                    child: HomeCard(
-                      title: loc.myStats,
-                      icon: Icons.bar_chart,
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => PlayerStatisticsScreen(
-                              userId: currentUser.uid,
-                            ),
-                          ),
+
+                    StreamBuilder<int>(
+                      stream: getIncomingRequestsCount(currentUser.uid),
+                      builder: (context, snapshot) {
+                        final count = snapshot.data ?? 0;
+
+                        return AspectRatio(
+                            aspectRatio: 1, 
+                            child: NotificationBadge(
+                              count: count,
+                              child: HomeCard(
+                                title: loc.incomingRequests,
+                                icon: Icons.mail,
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => const IncomingRequestsScreen(),
+                                    ),
+                                  );
+                                },
+                              ),
+                            )
                         );
                       },
                     ),
-                  ),
 
-
-                  StreamBuilder<int>(
-                    stream: getIncomingRequestsCount(currentUser.uid),
-                    builder: (context, snapshot) {
-                      final count = snapshot.data ?? 0;
-
-                      return AspectRatio(
-                          aspectRatio: 1, 
-                          child: NotificationBadge(
-                            count: count,
-                            child: HomeCard(
-                              title: loc.incomingRequests,
-                              icon: Icons.mail,
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => const IncomingRequestsScreen(),
-                                  ),
-                                );
-                              },
+                    AspectRatio(
+                      aspectRatio: 1,
+                      child: HomeCard(
+                        title: loc.outgoingRequests,
+                        icon: Icons.outbox,
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => OutgoingRequestsScreen(
+                                currentUser: currentUser,
+                              ),
                             ),
-                          )
-                      );
-                    },
-                  ),
+                          );
+                        },
+                      ),
+                    ),
 
-                  AspectRatio(
-                    aspectRatio: 1,
-                    child: HomeCard(
-                      title: loc.outgoingRequests,
-                      icon: Icons.outbox,
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => OutgoingRequestsScreen(
-                              currentUser: currentUser,
+                    AspectRatio(
+                      aspectRatio: 1,
+                      child: HomeCard(
+                        title: loc.myProfile,
+                        icon: Icons.person,
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => MyProfileScreen(
+                                userData: userData,
+                              ),
                             ),
-                          ),
-                        );
-                      },
+                          );
+                        },
+                      ),
                     ),
-                  ),
 
-                  AspectRatio(
-                    aspectRatio: 1,
-                    child: HomeCard(
-                      title: loc.myProfile,
-                      icon: Icons.person,
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => MyProfileScreen(
-                              userData: userData,
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
+                    AspectRatio(
+                      aspectRatio: 1,
+                      child: HomeCard(
+                        title: loc.sendFeedback,
+                        icon: Icons.feedback,
+                        onTap: () => openFeedbackForm(context),
+                      ),
+                    )
 
-                  AspectRatio(
-                    aspectRatio: 1,
-                    child: HomeCard(
-                      title: loc.sendFeedback,
-                      icon: Icons.feedback,
-                      onTap: () => openFeedbackForm(context),
-                    ),
-                  )
-
-                ],
-              ),
-            ],
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),

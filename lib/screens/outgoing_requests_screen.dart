@@ -38,104 +38,119 @@ class OutgoingRequestsScreen extends StatelessWidget {
       appBar: AppBar(
         title: Text(loc.outgoingRequests), // 'Outgoing Requests'
       ),
-      body: StreamBuilder<QuerySnapshot>(
-        stream: requestsRef
-            .where('fromUid', isEqualTo: currentUser.uid)
-            .where('status', isEqualTo: 'pending')
-            .orderBy('createdAt', descending: true)
-            .snapshots(),
-        builder: (context, snapshot) {
+      body: SafeArea(
+          child: StreamBuilder<QuerySnapshot>(
+          stream: requestsRef
+              .where('fromUid', isEqualTo: currentUser.uid)
+              .where('status', isEqualTo: 'pending')
+              .orderBy('createdAt', descending: true)
+              .snapshots(),
+          builder: (context, snapshot) {
 
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
 
-          if (snapshot.hasError) {
-            return ErrorState(
-              message: loc.failedToLoadOutgoing, // "Failed to load outgoing requests"
-            );
-          }
+            if (snapshot.hasError) {
+              return ErrorState(
+                message: loc.failedToLoadOutgoing, // "Failed to load outgoing requests"
+              );
+            }
 
-          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-            return EmptyState(
-              icon: Icons.outbox,
-              title: loc.noOutgoingRequests, // "No outgoing requests"
-              subtitle: loc.outgoingRequestsSubtitle, // "Requests you send will appear here"
-            );
-          }
+            if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+              return EmptyState(
+                icon: Icons.outbox,
+                title: loc.noOutgoingRequests, // "No outgoing requests"
+                subtitle: loc.outgoingRequestsSubtitle, // "Requests you send will appear here"
+              );
+            }
 
-          final requests = snapshot.data!.docs;
+            final requests = snapshot.data!.docs;
 
-          return ListView.builder(
-            itemCount: requests.length,
-            itemBuilder: (context, index) {
-              final request = requests[index];
-              final data = request.data() as Map<String, dynamic>;
+            return ListView.builder(
+              itemCount: requests.length,
+              itemBuilder: (context, index) {
+                final request = requests[index];
+                final data = request.data() as Map<String, dynamic>;
 
-              final toUid = data['toUid'];
+                final toUid = data['toUid'];
 
-              return FutureBuilder<DocumentSnapshot>(
-                future: FirebaseFirestore.instance
-                    .collection('users')
-                    .doc(toUid)
-                    .get(),
-                builder: (context, userSnapshot) {
+                return FutureBuilder<DocumentSnapshot>(
+                  future: FirebaseFirestore.instance
+                      .collection('users')
+                      .doc(toUid)
+                      .get(),
+                  builder: (context, userSnapshot) {
 
-                  if (userSnapshot.hasError) {
-                    return ListTile(
-                      title: Text(loc.failedToLoadUser), // 'Failed to load user'
-                    );
-                  }
+                    if (userSnapshot.hasError) {
+                      return ListTile(
+                        title: Text(loc.failedToLoadUser), // 'Failed to load user'
+                      );
+                    }
 
-                  if (!userSnapshot.hasData) {
-                    return ListTile(
-                      leading: CircleAvatar(
-                        child: Icon(Icons.person),
-                      ),
-                      title: Text(loc.loading), // 'Loading...'
-                    );
-                  }
-
-                  final userData =
-                      userSnapshot.data!.data() as Map<String, dynamic>? ?? {};
-
-                  return Card(
-                    child: ListTile(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => PlayerProfileViewScreen(
-                              userData: userData,
-
-                              onCancel: () async {
-                                await cancelRequest(request.id); // ✅ no context
-                              },
+                    if (!userSnapshot.hasData) {
+                      return const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        child: Card(
+                          child: ListTile(
+                            leading: CircleAvatar(
+                              child: Icon(Icons.person),
+                            ),
+                            title: SizedBox(
+                              height: 12,
+                              child: LinearProgressIndicator(),
                             ),
                           ),
-                        );
-                      },
+                        ),
+                      );
+                    }
 
-                      leading: CircleAvatar(
-                        backgroundImage: (userData['photoUrl'] != null &&
-                                userData['photoUrl'].toString().isNotEmpty)
-                            ? NetworkImage(userData['photoUrl'])
-                            : null,
-                        child: userData['photoUrl'] == null
-                            ? const Icon(Icons.person)
-                            : null,
+                    final userData =
+                        userSnapshot.data!.data() as Map<String, dynamic>? ?? {};
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      child: Card(
+                        child: ListTile(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => PlayerProfileViewScreen(
+                                  userData: userData,
+
+                                  onCancel: () async {
+                                    await cancelRequest(request.id); // ✅ no context
+                                  },
+                                ),
+                              ),
+                            );
+                          },
+
+                          leading: CircleAvatar(
+                            backgroundImage: (userData['photoUrl'] != null &&
+                                    userData['photoUrl'].toString().isNotEmpty)
+                                ? NetworkImage(userData['photoUrl'])
+                                : null,
+                            child: userData['photoUrl'] == null
+                                ? const Icon(Icons.person)
+                                : null,
+                          ),
+                          title: Text(
+                            userData['name'] ?? loc.unknown,
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ), // Unknown
+                          subtitle: Text(loc.waitingForResponse), // 'Waiting for response'
+
+                          trailing: const Icon(Icons.arrow_forward_ios),
+                        ),
                       ),
-                      title: Text(userData['name'] ?? loc.unknown), // Unknown
-                      subtitle: Text(loc.waitingForResponse), // 'Waiting for response'
-
-                      trailing: const Icon(Icons.arrow_forward_ios),
-                    ),
-                  );
-                },
-              );
-            },
-          );
-        },
+                    );
+                  },
+                );
+              },
+            );
+          },
+        ),
       ),
     );
   }

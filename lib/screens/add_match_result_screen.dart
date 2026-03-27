@@ -29,6 +29,7 @@ class _AddMatchResultScreenState
   DateTime? selectedMatchDate;
   String? player1Name;
   String? player2Name;
+  bool isSaving = false;
 
 
  @override
@@ -55,6 +56,19 @@ class _AddMatchResultScreenState
     setState(() {
       sets.removeAt(index);
     });
+  }
+
+  @override
+  void dispose() {
+    for (var set in sets) {
+      set['p1']?.dispose();
+      set['p2']?.dispose();
+    }
+
+    durationController.dispose();
+    locationController.dispose();
+
+    super.dispose();
   }
 
   void showError(String message) {
@@ -141,10 +155,13 @@ class _AddMatchResultScreenState
       return;
     }
 
-    if (durationController.text.isEmpty) {
+    final duration = int.tryParse(durationController.text);
+
+    if (duration == null || duration <= 0) {
       showError(loc.enterDuration); // "Enter match duration."
       return;
     }
+      
 
     if (locationController.text.trim().isEmpty) {
       showError(loc.enterLocation); // "Enter match location."
@@ -217,8 +234,6 @@ class _AddMatchResultScreenState
         });
 
         // --- STATS ENGINE ---
-
-          final duration = int.parse(durationController.text);
 
           // Current user stats reference
           final userRef = FirebaseFirestore.instance
@@ -330,6 +345,8 @@ class _AddMatchResultScreenState
         .doc(players[1])
         .get();
 
+    if (!mounted) return;
+
     setState(() {
       player1Name = user1['name'];
       player2Name = user2['name'];
@@ -357,7 +374,7 @@ class _AddMatchResultScreenState
             Text(
               loc.sets,
               style:
-                  TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
 
             const SizedBox(height: 10),
@@ -372,8 +389,10 @@ class _AddMatchResultScreenState
                     child: TextField(
                       controller: set['p1'],
                       keyboardType: TextInputType.number,
+                      textAlign: TextAlign.center,
                       decoration: InputDecoration(
                         labelText: player1Name ?? loc.loading, // "Loading..."
+                        border: OutlineInputBorder(),
                       ),
                     ),
                   ),
@@ -383,8 +402,10 @@ class _AddMatchResultScreenState
                     child: TextField(
                       controller: set['p2'],
                       keyboardType: TextInputType.number,
+                      textAlign: TextAlign.center,
                       decoration: InputDecoration(
                         labelText: player2Name ?? loc.loading, // "Loading..."
+                        border: OutlineInputBorder(),
                       ),
                     ),
                   ),
@@ -402,13 +423,14 @@ class _AddMatchResultScreenState
 
             const SizedBox(height: 10),
 
-            TextButton(
+            ElevatedButton.icon(
               onPressed: () {
                 setState(() {
                   addSet();
                 });
               },
-              child: Text(loc.addSet),
+              icon: const Icon(Icons.add),
+              label: Text(loc.addSet),
             ),
 
              const SizedBox(height: 20),
@@ -445,8 +467,16 @@ class _AddMatchResultScreenState
             const SizedBox(height: 30),
 
             ElevatedButton(
-              onPressed: saveResult,
-              child: Text(loc.saveResult), // 'Save Result'
+              onPressed: isSaving
+                  ? null
+                  : () async {
+                      setState(() => isSaving = true);
+                      await saveResult();
+                      if (mounted) setState(() => isSaving = false);
+                    },
+              child: isSaving
+                  ? const CircularProgressIndicator()
+                  : Text(loc.saveResult),
             ),
           ],
         ),

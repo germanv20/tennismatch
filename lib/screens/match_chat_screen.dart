@@ -244,7 +244,14 @@ class _MatchChatScreenState extends State<MatchChatScreen> {
 
                 if (messages.isEmpty) {
                   return Center(
-                    child: Text(loc.noMessagesYet),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.chat_bubble_outline, size: 50, color: Colors.grey),
+                        SizedBox(height: 10),
+                        Text(loc.noMessagesYet),
+                      ],
+                    ),
                   );
                 }
 

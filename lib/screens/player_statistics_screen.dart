@@ -31,11 +31,16 @@ class _PlayerStatisticsScreenState extends State<PlayerStatisticsScreen> {
   @override
   void initState() {
     super.initState();
-    loadStats();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final loc = AppLocalizations.of(context)!;
+      loadStats(loc.failedToLoadStats);
+    });
   }
 
-  Future<void> loadStats() async {
+  Future<void> loadStats(String errorMessage) async {
     final uid = widget.userId;
+    final loc = AppLocalizations.of(context)!;
 
     try {
       debugPrint("📊 Loading stats for user: $uid");
@@ -108,7 +113,7 @@ class _PlayerStatisticsScreenState extends State<PlayerStatisticsScreen> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Failed to load stats")),
+          SnackBar(content: Text(errorMessage)), // Failed to load stats
         );
       }
     } finally {
@@ -153,24 +158,27 @@ class _PlayerStatisticsScreenState extends State<PlayerStatisticsScreen> {
 
     return Scaffold(
       appBar: AppBar(title: Text(loc.playerStatisticsTitle)),
-      body: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          children: [
+      body: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: SingleChildScrollView(
+              child: Column(
+                children: [
 
-            StatTile(loc.matchesPlayed, matchesPlayed.toString()),
-            StatTile(loc.wins, wins.toString()),
-            StatTile(loc.losses, losses.toString()),
-            StatTile(loc.winRate, "${winRate.toStringAsFixed(1)}%"),
-            StatTile(loc.totalSetsWon, setsWon.toString()),
-            StatTile(loc.totalSetsLost, setsLost.toString()),
-            StatTile(
-              loc.averageMatchDuration,
-              "$averageDuration ${loc.minutesShort}",
+                  StatTile(loc.matchesPlayed, matchesPlayed.toString()),
+                  StatTile(loc.wins, wins.toString()),
+                  StatTile(loc.losses, losses.toString()),
+                  StatTile(loc.winRate, "${winRate.toStringAsFixed(1)}%"),
+                  StatTile(loc.totalSetsWon, setsWon.toString()),
+                  StatTile(loc.totalSetsLost, setsLost.toString()),
+                  StatTile(
+                    loc.averageMatchDuration,
+                    "$averageDuration ${loc.minutesShort}",
+                  ),
+               ],
+              ),
             ),
-
-          ],
-        ),
+          ),
       ),
     );
   }
@@ -189,7 +197,12 @@ class StatTile extends StatelessWidget {
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 8),
       child: ListTile(
-        title: Text(label),
+        title: Text(
+          label,
+          style: const TextStyle(
+            fontWeight: FontWeight.w500,
+          ),
+        ),
         trailing: Text(
           value,
           style: const TextStyle(

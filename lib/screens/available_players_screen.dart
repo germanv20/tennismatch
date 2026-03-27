@@ -8,6 +8,33 @@ import '../widgets/error_state.dart';
 
 const weekOrder = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
+String translateDay(String day, AppLocalizations loc) {
+  switch (day) {
+    case 'Mon': return loc.mon;
+    case 'Tue': return loc.tue;
+    case 'Wed': return loc.wed;
+    case 'Thu': return loc.thu;
+    case 'Fri': return loc.fri;
+    case 'Sat': return loc.sat;
+    case 'Sun': return loc.sun;
+    default: return day;
+  }
+}
+
+List<String> normalizeDays(List rawDays) {
+  final map = {
+    'Mon': 'Mon', 'Tue': 'Tue', 'Wed': 'Wed',
+    'Thu': 'Thu', 'Fri': 'Fri', 'Sat': 'Sat', 'Sun': 'Sun',
+    'Lun': 'Mon', 'Mar': 'Tue', 'Mié': 'Wed',
+    'Jue': 'Thu', 'Vie': 'Fri', 'Sáb': 'Sat', 'Dom': 'Sun',
+  };
+
+  return rawDays
+      .map<String>((day) => map[day.toString()] ?? day.toString())
+      .toSet()
+      .toList();
+}
+
 class AvailablePlayersScreen extends StatelessWidget {
   const AvailablePlayersScreen({super.key});
 
@@ -72,169 +99,188 @@ class AvailablePlayersScreen extends StatelessWidget {
       appBar: AppBar(
         title: Text(loc.availablePlayers), // "Available Players"
       ),
-      body: StreamBuilder<DocumentSnapshot>(
-        stream: FirebaseFirestore.instance
-            .collection('users')
-            .doc(user.uid)
-            .snapshots(),
-        builder: (context, userSnapshot) {
+      body: SafeArea(
+          child: StreamBuilder<DocumentSnapshot>(
+          stream: FirebaseFirestore.instance
+              .collection('users')
+              .doc(user.uid)
+              .snapshots(),
+          builder: (context, userSnapshot) {
 
-          if (userSnapshot.hasError){
-            return ErrorState(
-              message: loc.failedToLoadProfile,
-            );
-          }
+            if (userSnapshot.hasError){
+              return ErrorState(
+                message: loc.failedToLoadProfile,
+              );
+            }
 
-          if (!userSnapshot.hasData) {
-            return const Center(child: CircularProgressIndicator());
-          }
+            if (!userSnapshot.hasData) {
+              return const Center(child: CircularProgressIndicator());
+            }
 
-          final rawData = userSnapshot.data!.data();
+            final rawData = userSnapshot.data!.data();
 
-          if (rawData == null) {
-            return ErrorState(
-              message: loc.invalidUserData, // "Invalid user data"
-            );
-          }
+            if (rawData == null) {
+              return ErrorState(
+                message: loc.invalidUserData, // "Invalid user data"
+              );
+            }
 
-          final data = rawData as Map<String, dynamic>;
+            final data = rawData as Map<String, dynamic>;
 
-          final tennisLevel = data['tennisLevel'];
-          final List availability = data['availability'] ?? [];
+            final tennisLevel = data['tennisLevel'];
+            final List<String> availability =
+                normalizeDays(data['availability'] ?? []);
 
-          if (tennisLevel == null) {
-            return EmptyState(
-              icon: Icons.info,
-              title: loc.setYourLevel,
-              subtitle: loc.setLevelToFindPlayers,
-            );
-          }
+            if (tennisLevel == null) {
+              return EmptyState(
+                icon: Icons.info,
+                title: loc.setYourLevel,
+                subtitle: loc.setLevelToFindPlayers,
+              );
+            }
 
-          return StreamBuilder<QuerySnapshot>(
-            stream: FirebaseFirestore.instance
-                .collection('users')
-                .where('tennisLevel', isEqualTo: tennisLevel)
-                .snapshots(),
-            builder: (context, snapshot) {
+            return StreamBuilder<QuerySnapshot>(
+              stream: FirebaseFirestore.instance
+                  .collection('users')
+                  .where('tennisLevel', isEqualTo: tennisLevel)
+                  .snapshots(),
+              builder: (context, snapshot) {
 
-              if (snapshot.hasError){
-                return ErrorState(
-                  message: loc.failedToLoadPlayers,
+                if (snapshot.hasError){
+                  return ErrorState(
+                    message: loc.failedToLoadPlayers,
+                    );
+                }
+
+                if (!snapshot.hasData) {
+                  return const Center(
+                      child: CircularProgressIndicator());
+                }
+
+                final docs = snapshot.data!.docs;
+
+                final matches = docs.where((doc) {
+
+                  final data =
+                      doc.data() as Map<String, dynamic>;
+
+                  if (data['uid'] == user.uid) return false;
+
+                  final List<String> otherAvailability =
+                      normalizeDays(data['availability'] ?? []);
+
+                  return otherAvailability.any(
+                    (day) => availability.contains(day),
                   );
-              }
 
-              if (!snapshot.hasData) {
-                return const Center(
-                    child: CircularProgressIndicator());
-              }
+                }).toList();
 
-              final docs = snapshot.data!.docs;
+                if (matches.isEmpty) {
+                  return EmptyState(
+                    icon: Icons.people,
+                    title: loc.noPlayersAvailable, // "No players available"
+                    subtitle: loc.tryChangingAvailability, // "Try changing your availability or check later"
+                  );
+                }
 
-              final matches = docs.where((doc) {
+                  return StreamBuilder<QuerySnapshot>(
+                    stream: getMyPendingRequests(user.uid),
+                    builder: (context, requestSnapshot) {
 
-                final data =
-                    doc.data() as Map<String, dynamic>;
+                      if (!requestSnapshot.hasData) {
+                        return const Center(child: CircularProgressIndicator());
+                      }
 
-                if (data['uid'] == user.uid) return false;
+                      final pendingRequests = requestSnapshot.data!.docs;
 
-                final List otherAvailability =
-                    data['availability'] ?? [];
+                      // 🔥 Create a Set of requested user IDs
+                      final requestedUserIds = pendingRequests
+                          .map((doc) => doc['toUid'] as String)
+                          .toSet();
 
-                return otherAvailability.any(
-                  (day) => availability.contains(day),
-                );
+                      return ListView(
+                        children: matches.map((doc) {
 
-              }).toList();
+                          final data = doc.data() as Map<String, dynamic>;
 
-              if (matches.isEmpty) {
-                return EmptyState(
-                  icon: Icons.people,
-                  title: loc.noPlayersAvailable, // "No players available"
-                  subtitle: loc.tryChangingAvailability, // "Try changing your availability or check later"
-                );
-              }
+                          final List availabilityRaw = data['availability'] ?? [];
 
-                return StreamBuilder<QuerySnapshot>(
-                  stream: getMyPendingRequests(user.uid),
-                  builder: (context, requestSnapshot) {
+                          final List<String> sortedAvailability = List<String>.from(availabilityRaw)
+                            ..sort((a, b) => weekOrder.indexOf(a).compareTo(weekOrder.indexOf(b)));
 
-                    if (!requestSnapshot.hasData) {
-                      return const Center(child: CircularProgressIndicator());
-                    }
+                          final String availabilityText = sortedAvailability.isEmpty
+                              ? loc.noAvailability // "No availability"
+                              : sortedAvailability
+                                .map((day) => translateDay(day, loc))
+                                .join(', ');
 
-                    final pendingRequests = requestSnapshot.data!.docs;
+                          final isAlreadyRequested = requestedUserIds.contains(data['uid']);
 
-                    // 🔥 Create a Set of requested user IDs
-                    final requestedUserIds = pendingRequests
-                        .map((doc) => doc['toUid'] as String)
-                        .toSet();
-
-                    return ListView(
-                      children: matches.map((doc) {
-
-                        final data = doc.data() as Map<String, dynamic>;
-
-                        final List availabilityRaw = data['availability'] ?? [];
-
-                        final List<String> sortedAvailability = List<String>.from(availabilityRaw)
-                          ..sort((a, b) => weekOrder.indexOf(a).compareTo(weekOrder.indexOf(b)));
-
-                        final String availabilityText = sortedAvailability.isEmpty
-                            ? loc.noAvailability // "No availability"
-                            : sortedAvailability.join(', ');
-
-                        final isAlreadyRequested = requestedUserIds.contains(data['uid']);
-
-                        return GestureDetector(
-                          onTap: isAlreadyRequested
-                              ? null
-                              : () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => PlayerProfileViewScreen(
-                                  userData: data,
-                                  onRequestMatch: () async {
-                                    await requestMatch(context, data['uid']);
-                                    Navigator.pop(context);
+                          return GestureDetector(
+                            onTap: isAlreadyRequested
+                                ? null
+                                : () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) => PlayerProfileViewScreen(
+                                          userData: data,
+                                          onRequestMatch: () async {
+                                            await requestMatch(context, data['uid']);
+                                            Navigator.pop(context);
+                                          },
+                                        ),
+                                      ),
+                                    );
                                   },
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                              child: Card(
+                                color: isAlreadyRequested ? Colors.grey[300] : null,
+                                child: ListTile(
+                                  leading: CircleAvatar(
+                                    backgroundImage: (data['photoUrl'] != null &&
+                                            data['photoUrl'].toString().isNotEmpty)
+                                        ? NetworkImage(data['photoUrl'])
+                                        : null,
+                                    child: data['photoUrl'] == null
+                                        ? const Icon(Icons.person)
+                                        : null,
+                                  ),
+                                  title: Text(
+                                    data['name'] ?? loc.unknown,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  subtitle: Text(
+                                    '${loc.availableLabel}: $availabilityText',
+                                    style: const TextStyle(
+                                      color: Colors.grey,
+                                    ),
+                                  ),
+                                  trailing: isAlreadyRequested
+                                      ? Text(
+                                          loc.requested,
+                                          style: const TextStyle(
+                                            color: Colors.grey,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        )
+                                      : const Icon(Icons.sports_tennis),
                                 ),
                               ),
-                            );
-                          },
-                          child: Card(
-                            color: isAlreadyRequested ? Colors.grey[200] : null,
-                            child: ListTile(
-                              leading: CircleAvatar(
-                                backgroundImage: (data['photoUrl'] != null &&
-                                      data['photoUrl'].toString().isNotEmpty)
-                                  ? NetworkImage(data['photoUrl'])
-                                  : null,
-                              child: data['photoUrl'] == null
-                                  ? const Icon(Icons.person)
-                                  : null,
-                              ),
-                              title: Text(data['name'] ?? loc.unknown),
-                              subtitle: Text(
-                                '${loc.availableLabel}: $availabilityText',
-                              ),
-                              trailing: isAlreadyRequested
-                                  ? Text(
-                                      loc.requested, // "Requested"
-                                      style: TextStyle(color: Colors.grey),
-                                    )
-                                  : const Icon(Icons.sports_tennis),
                             ),
-                          ),
-                        );
+                          );
 
-                      }).toList(),
-                    );
-                 },
-               );
-            },
-          );
-        },
+                        }).toList(),
+                      );
+                  },
+                );
+              },
+            );
+          },
+        ),
       ),
     );
   }
