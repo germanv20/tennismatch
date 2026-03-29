@@ -237,13 +237,17 @@ class HomeScreen extends StatelessWidget {
 
   Future<void> openFeedbackForm(BuildContext context) async {
     final url = Uri.parse("https://docs.google.com/forms/d/e/1FAIpQLScGcT2eC2znik4ndofkiExqAN1k7LL_A3eOOQfjeCkl-5RO-A/viewform");
+
+    final messenger = ScaffoldMessenger.of(context);
     final loc = AppLocalizations.of(context)!;
 
-    if (!await launchUrl(
+    final success = await launchUrl(
       url,
       mode: LaunchMode.externalApplication,
-    )) {
-      ScaffoldMessenger.of(context).showSnackBar(
+    );
+
+    if (!success) {
+      messenger.showSnackBar(
         SnackBar(
           content: Text(loc.failedToOpenFeedbackForm),
         ),
@@ -304,22 +308,6 @@ class HomeScreen extends StatelessWidget {
       'Intermediate': loc.levelIntermediate,
       'Advanced': loc.levelAdvanced,
     };
-
-    final tennisLevels = [
-      loc.levelBeginner,
-      loc.levelIntermediate,
-      loc.levelAdvanced,
-    ];
-
-    final availableDays = [
-      loc.mon,
-      loc.tue,
-      loc.wed,
-      loc.thu,
-      loc.fri,
-      loc.sat,
-      loc.sun,
-    ];
 
     return Scaffold(
       appBar: AppBar(

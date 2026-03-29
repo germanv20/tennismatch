@@ -7,14 +7,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'firebase_options.dart';
-import 'screens/my_profile_screen.dart';
-import 'screens/incoming_requests_screen.dart';
-import 'screens/my_matches_screen.dart';
-import 'screens/match_detail_screen.dart';
 import 'screens/match_chat_screen.dart';
-import 'screens/match_history_screen.dart';
-import '../screens/player_statistics_screen.dart';
-import '../screens/available_players_screen.dart';
 import 'screens/home_screen.dart';
 
 
@@ -36,7 +29,7 @@ void main() async {
     sound: true,
   );
 
-  print("🔔 Permission status: ${settings.authorizationStatus}");
+  debugPrint("🔔 Permission status: ${settings.authorizationStatus}");
 
   runApp(const MyApp());
 }

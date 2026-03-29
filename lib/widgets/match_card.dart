@@ -54,19 +54,8 @@ class MatchCard extends StatelessWidget {
       ),
     );
 
-    int p1Sets = 0;
-    int p2Sets = 0;
-
-    for (var set in sets) {
-      if (set['p1'] > set['p2']) {
-        p1Sets++;
-      } else {
-        p2Sets++;
-      }
-    }
-
-    bool viewerWon = winnerUid == currentUserUid;
-    bool opponentWon = winnerUid == opponentUid;
+    bool viewerWon = isWin;
+    bool opponentWon = !isWin;
 
     return InkWell(
       onTap: () {

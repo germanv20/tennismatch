@@ -50,6 +50,8 @@ class AvailablePlayersScreen extends StatelessWidget {
         .where('toUid', isEqualTo: toUid)
         .where('status', isEqualTo: 'pending')
         .get();
+    
+    if (!context.mounted) return;
 
     if (query.docs.isNotEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -64,6 +66,8 @@ class AvailablePlayersScreen extends StatelessWidget {
       'status': 'pending',
       'createdAt': FieldValue.serverTimestamp(),
     });
+
+    if (!context.mounted) return;
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(loc.requestSent)), // 'Match request sent 🎾'
@@ -227,6 +231,9 @@ class AvailablePlayersScreen extends StatelessWidget {
                                           userData: data,
                                           onRequestMatch: () async {
                                             await requestMatch(context, data['uid']);
+
+                                            if (!context.mounted) return;
+                                            
                                             Navigator.pop(context);
                                           },
                                         ),

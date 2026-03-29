@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:tennismatch/gen_l10n/app_localizations.dart';
+import '../utils/day_utils.dart';
 
+const weekOrder = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
 class MyProfileScreen extends StatelessWidget {
   final Map<String, dynamic> userData;
@@ -56,7 +57,8 @@ class MyProfileScreen extends StatelessWidget {
     final String rawLevel = userData['tennisLevel'] ?? '';
     final String tennisLevel =
         rawLevel.isEmpty ? loc.notSet : translateLevel(rawLevel, loc);
-    final List<dynamic> availability = userData['availability'] ?? [];
+    final List<String> availability =
+        sortDays(userData['availability'] ?? []);
     final String? photoUrl = userData['photoUrl'];
 
     return Scaffold(

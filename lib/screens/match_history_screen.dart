@@ -167,7 +167,7 @@ class _MatchHistoryScreenState extends State<MatchHistoryScreen> {
                     final match =
                         matches[index].data() as Map<String, dynamic>;
 
-                    final players = match['players'] ?? [];
+                    final List players = match['players'] ?? [];
                     final playerNames = match['playerNames'] ?? {};
 
                     final opponentUid =
@@ -184,15 +184,9 @@ class _MatchHistoryScreenState extends State<MatchHistoryScreen> {
 
                     final bool currentUserIsP1 = currentUid == player1Uid;
 
-                    final p1Sets = summary['p1Sets'] ?? 0;
-                    final p2Sets = summary['p2Sets'] ?? 0;
-
                     // Safe match date handling
-                    Timestamp? matchDateTs = summary['matchDate'];
-
-                    if (matchDateTs == null) {
-                      matchDateTs = match['result']?['matchDate'];
-                    }
+                   Timestamp? matchDateTs =
+                      summary['matchDate'] ?? match['result']?['matchDate'];
 
                     final DateTime matchDate =
                         matchDateTs != null

@@ -151,16 +151,20 @@ class PlayerProfileViewScreen extends StatefulWidget {
                             snapshot.hasData && snapshot.data!.docs.isNotEmpty;
 
                         return ElevatedButton(
-                          onPressed: (isLoading || hasRequest)
+                          onPressed: isLoading
                               ? null
                               : () async {
+                                  final navigator = Navigator.of(context);
+
                                   setState(() => isLoading = true);
 
                                   if (widget.onRequestMatch != null) {
                                     await widget.onRequestMatch!();
                                   }
 
-                                  if (mounted) setState(() => isLoading = false);
+                                  if (!mounted) return;
+
+                                  navigator.pop();
                                 },
                           child: isLoading
                               ? const SizedBox(
@@ -180,13 +184,17 @@ class PlayerProfileViewScreen extends StatefulWidget {
                       onPressed: isLoading
                           ? null
                           : () async {
+                              final navigator = Navigator.of(context);
+
                               setState(() => isLoading = true);
 
                               if (widget.onCancel != null) {
                                 await widget.onCancel!();
                               }
 
-                              if (mounted) Navigator.pop(context);
+                              if (!mounted) return;
+
+                              navigator.pop();
                             },
                       icon: isLoading
                           ? const SizedBox(
@@ -212,13 +220,17 @@ class PlayerProfileViewScreen extends StatefulWidget {
                           onPressed: isLoading
                               ? null
                               : () async {
+                                  final navigator = Navigator.of(context);
+
                                   setState(() => isLoading = true);
 
                                   if (widget.onAccept != null) {
                                     await widget.onAccept!();
                                   }
 
-                                  if (mounted) Navigator.pop(context);
+                                  if (!mounted) return;
+
+                                  navigator.pop();
                                 },
                           icon: isLoading
                               ? const SizedBox(
@@ -239,13 +251,17 @@ class PlayerProfileViewScreen extends StatefulWidget {
                           onPressed: isLoading
                               ? null
                               : () async {
+                                  final navigator = Navigator.of(context);
+
                                   setState(() => isLoading = true);
 
                                   if (widget.onReject != null) {
                                     await widget.onReject!();
                                   }
 
-                                  if (mounted) Navigator.pop(context);
+                                  if (!mounted) return;
+
+                                  navigator.pop();
                                 },
                           icon: isLoading
                               ? const SizedBox(

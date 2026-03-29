@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:tennismatch/gen_l10n/app_localizations.dart';
 import '../widgets/empty_state.dart';
 
@@ -40,7 +39,6 @@ class _PlayerStatisticsScreenState extends State<PlayerStatisticsScreen> {
 
   Future<void> loadStats(String errorMessage) async {
     final uid = widget.userId;
-    final loc = AppLocalizations.of(context)!;
 
     try {
       debugPrint("📊 Loading stats for user: $uid");

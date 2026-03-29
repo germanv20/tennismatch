@@ -5,8 +5,6 @@ import 'match_chat_screen.dart';
 import 'add_match_result_screen.dart';
 
 
-
-
 class MatchDetailScreen extends StatelessWidget {
   final DocumentSnapshot matchDoc;
   final Map<String, dynamic> opponentData;
@@ -51,6 +49,8 @@ class MatchDetailScreen extends StatelessWidget {
                 ),
               );
 
+              if (!context.mounted) return;
+
               if (confirm == true) {
                 await FirebaseFirestore.instance
                     .collection('matches')
@@ -59,7 +59,9 @@ class MatchDetailScreen extends StatelessWidget {
                   'status': 'cancelled',
                 });
 
-                if (Navigator.canPop(context)) {
+                if (!context.mounted) return;
+
+                if (context.mounted && Navigator.canPop(context)) {
                   Navigator.pop(context);
                 } // Exit chat screen
               }
