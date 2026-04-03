@@ -60,7 +60,7 @@ class NotificationBadge extends StatelessWidget {
 
 const weekOrder = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   final User currentUser;
   final Map<String, dynamic> userData;
 
@@ -69,6 +69,18 @@ class HomeScreen extends StatelessWidget {
     required this.currentUser,
     required this.userData,
   });
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+
+  @override
+  void initState() {
+    super.initState();
+  }
+
 
   String translateLevel(String level, AppLocalizations loc) {
     switch (level) {
@@ -132,13 +144,13 @@ class HomeScreen extends StatelessWidget {
   }
 
   Widget buildProfileCard(AppLocalizations loc) {
-    final String name = currentUser.displayName ?? "Player";
-    final String rawLevel = userData['tennisLevel'] ?? "";
+    final String name = widget.currentUser.displayName ?? "Player";
+    final String rawLevel = widget.userData['tennisLevel'] ?? "";
     final String level = rawLevel.isEmpty
         ? loc.notSet
         : translateLevel(rawLevel, loc);
     final List availabilityRaw =
-        normalizeDays(userData['availability'] ?? []);
+        normalizeDays(widget.userData['availability'] ?? []);
 
     final List<String> sortedAvailability = List<String>.from(availabilityRaw)
       ..sort((a, b) => weekOrder.indexOf(a).compareTo(weekOrder.indexOf(b)));
@@ -163,11 +175,11 @@ class HomeScreen extends StatelessWidget {
             CircleAvatar(
               radius: 30,
               backgroundColor: Colors.deepPurple.shade100,
-              backgroundImage: (userData['photoUrl'] != null &&
-                      userData['photoUrl'].toString().isNotEmpty)
-                  ? NetworkImage(userData['photoUrl'])
+              backgroundImage: (widget.userData['photoUrl'] != null &&
+                      widget.userData['photoUrl'].toString().isNotEmpty)
+                  ? NetworkImage(widget.userData['photoUrl'])
                   : null,
-              child: userData['photoUrl'] == null
+              child: widget.userData['photoUrl'] == null
                   ? const Icon(Icons.person, size: 30)
                   : null,
             ),
@@ -220,7 +232,7 @@ class HomeScreen extends StatelessWidget {
   Future<void> updateTennisLevel(String level) async {
     await FirebaseFirestore.instance
         .collection('users')
-        .doc(currentUser.uid)
+        .doc(widget.currentUser.uid)
         .update({
       'tennisLevel': level,
     });
@@ -229,7 +241,7 @@ class HomeScreen extends StatelessWidget {
   Future<void> updateAvailability(List<String> days) async {
     await FirebaseFirestore.instance
         .collection('users')
-        .doc(currentUser.uid)
+        .doc(widget.currentUser.uid)
         .update({
       'availability': days,
     });
@@ -255,6 +267,32 @@ class HomeScreen extends StatelessWidget {
     }
   }
 
+  Future<void> fixBrokenNotifications(String userId) async {
+    final snapshot = await FirebaseFirestore.instance
+        .collection('matches')
+        .where('players', arrayContains: userId)
+        .get();
+
+    for (var doc in snapshot.docs) {
+      final players = List<String>.from(doc['players']);
+
+      await doc.reference.update({
+        'notifiedPlayers': players,
+      });
+    }
+  }
+
+  Future<void> signOut(BuildContext context) async {
+    await FirebaseAuth.instance.signOut();
+
+    if (!mounted) return;
+
+    Navigator.of(context).pushNamedAndRemoveUntil(
+      '/login', // ⚠️ Make sure this route exists
+      (route) => false,
+    );
+  }
+
   Stream<int> getIncomingRequestsCount(String userId) {
     return FirebaseFirestore.instance
         .collection('match_requests')
@@ -268,6 +306,7 @@ class HomeScreen extends StatelessWidget {
     return FirebaseFirestore.instance
         .collection('matches')
         .where('players', arrayContains: userId)
+        .where('status', whereIn: ['pending', 'confirmed'])
         .snapshots()
         .map((snapshot) {
           int count = 0;
@@ -287,8 +326,8 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final String? tennisLevel = userData['tennisLevel'];
-    final List<dynamic> availabilityRaw = userData['availability'] ?? [];
+    final String? tennisLevel = widget.userData['tennisLevel'];
+    final List<dynamic> availabilityRaw = widget.userData['availability'] ?? [];
     final List<String> availability =
         normalizeDays(availabilityRaw);
     final loc = AppLocalizations.of(context)!;
@@ -312,6 +351,35 @@ class HomeScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(loc.appTitle),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout),
+            tooltip: loc.signOut, // optional localization
+            onPressed: () async {
+              final confirm = await showDialog(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: Text(loc.signOut),
+                  content: Text(loc.signOutConfirmation),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context, false),
+                      child: Text(loc.cancel),
+                    ),
+                    TextButton(
+                      onPressed: () => Navigator.pop(context, true),
+                      child: Text(loc.signOut),
+                    ),
+                  ],
+                ),
+              );
+
+              if (confirm == true) {
+                await signOut(context);
+              }
+            },
+          ),
+        ],
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -418,8 +486,10 @@ class HomeScreen extends StatelessWidget {
                     ),
 
                     StreamBuilder<int>(
-                      stream: getNewMatchesCount(currentUser.uid),
+                      stream: getNewMatchesCount(widget.currentUser.uid),
                       builder: (context, snapshot) {
+
+                        // 🔥 Use local override AFTER visiting
                         final count = snapshot.data ?? 0;
 
                           return AspectRatio(
@@ -429,15 +499,17 @@ class HomeScreen extends StatelessWidget {
                               child: HomeCard(
                                 title: loc.myMatches,
                                 icon: Icons.calendar_today,
-                                onTap: () {
-                                  Navigator.push(
+                                onTap: () async {
+                                  await Navigator.push(
                                     context,
                                     MaterialPageRoute(
                                       builder: (_) => MyMatchesScreen(
-                                        currentUser: currentUser,
+                                        currentUser: widget.currentUser,
                                       ),
                                     ),
                                   );
+
+                                 setState(() {}); // ✅ just trigger rebuild
                                 },
                               ),
                             )
@@ -472,7 +544,7 @@ class HomeScreen extends StatelessWidget {
                             context,
                             MaterialPageRoute(
                               builder: (_) => PlayerStatisticsScreen(
-                                userId: currentUser.uid,
+                                userId: widget.currentUser.uid,
                               ),
                             ),
                           );
@@ -482,7 +554,7 @@ class HomeScreen extends StatelessWidget {
 
 
                     StreamBuilder<int>(
-                      stream: getIncomingRequestsCount(currentUser.uid),
+                      stream: getIncomingRequestsCount(widget.currentUser.uid),
                       builder: (context, snapshot) {
                         final count = snapshot.data ?? 0;
 
@@ -517,7 +589,7 @@ class HomeScreen extends StatelessWidget {
                             context,
                             MaterialPageRoute(
                               builder: (_) => OutgoingRequestsScreen(
-                                currentUser: currentUser,
+                                currentUser: widget.currentUser,
                               ),
                             ),
                           );
@@ -535,7 +607,7 @@ class HomeScreen extends StatelessWidget {
                             context,
                             MaterialPageRoute(
                               builder: (_) => MyProfileScreen(
-                                userData: userData,
+                                userData: widget.userData,
                               ),
                             ),
                           );

@@ -1,5 +1,10 @@
 {
   "appTitle": "Tennis Match",
+  
+  "loginTitle": "TennisMatch Login",
+  "signInWithGoogle": "Sign in with Google",
+  "userProfileNotFound": "User profile not found",
+  "signOutConfirmation": "Are you sure you want to sign out?",
 
   "findPlayers": "Find Players",
   "myMatches": "My Matches",
@@ -30,6 +35,11 @@
   "levelBeginner": "Begginer",
   "levelIntermediate": "Intermediate",
   "levelAdvanced": "Advanced",
+
+  "statusPending": "Pending",
+  "statusConfirmed": "Confirmed",
+  "statusCompleted": "Completed",
+  "statusCancelled": "Cancelled",
 
   "accept": "Accept",
   "reject": "Reject",
@@ -71,6 +81,7 @@
   "setYourLevel": "Set your tennis level",
   "setLevelToFindPlayers": "Go back and select your level to find players",
   "tryChangingAvailability": "Try changing your availability or check later",
+  "setAvailabilityToFindPlayers": "Set availability to find players",
   "playMatchesToSeeHistory": "Play some matches to see them here 🎾",
   "requested": "Requested",
   "invalidUserData": "Invalid user data",
@@ -85,6 +96,9 @@
   "unmatchConfirmation": "Are you sure you want to unmatch? This will remove the chat.",
   "unmatchTitle": "Unmatch?",
   "unmatch": "Unmatch",
+  "signOut": "Sign Out",
+  "signOutConfirmation": "Are you sure you want to sign out?",
+
 
   "myMatchesTitle": "My Matches",
   "failedToLoadMatches": "Failed to load matches",

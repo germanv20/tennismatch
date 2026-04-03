@@ -131,22 +131,20 @@ class AvailablePlayersScreen extends StatelessWidget {
 
             final data = rawData as Map<String, dynamic>;
 
-            final tennisLevel = data['tennisLevel'];
             final List<String> availability =
                 normalizeDays(data['availability'] ?? []);
 
-            if (tennisLevel == null) {
+            if (availability.isEmpty) {
               return EmptyState(
-                icon: Icons.info,
-                title: loc.setYourLevel,
-                subtitle: loc.setLevelToFindPlayers,
+                icon: Icons.event_busy,
+                title: loc.noAvailability,
+                subtitle: loc.setAvailabilityToFindPlayers,
               );
             }
 
             return StreamBuilder<QuerySnapshot>(
               stream: FirebaseFirestore.instance
                   .collection('users')
-                  .where('tennisLevel', isEqualTo: tennisLevel)
                   .snapshots(),
               builder: (context, snapshot) {
 

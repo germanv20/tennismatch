@@ -12,6 +12,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get appTitle => 'Tennis Match';
 
   @override
+  String get loginTitle => 'TennisMatch Login';
+
+  @override
+  String get signInWithGoogle => 'Sign in with Google';
+
+  @override
+  String get userProfileNotFound => 'User profile not found';
+
+  @override
+  String get signOutConfirmation => 'Are you sure you want to sign out?';
+
+  @override
   String get findPlayers => 'Find Players';
 
   @override
@@ -88,6 +100,18 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get levelAdvanced => 'Advanced';
+
+  @override
+  String get statusPending => 'Pending';
+
+  @override
+  String get statusConfirmed => 'Confirmed';
+
+  @override
+  String get statusCompleted => 'Completed';
+
+  @override
+  String get statusCancelled => 'Cancelled';
 
   @override
   String get accept => 'Accept';
@@ -204,6 +228,9 @@ class AppLocalizationsEn extends AppLocalizations {
       'Try changing your availability or check later';
 
   @override
+  String get setAvailabilityToFindPlayers => 'Set availability to find players';
+
+  @override
   String get playMatchesToSeeHistory => 'Play some matches to see them here 🎾';
 
   @override
@@ -245,6 +272,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get unmatch => 'Unmatch';
+
+  @override
+  String get signOut => 'Sign Out';
 
   @override
   String get myMatchesTitle => 'My Matches';

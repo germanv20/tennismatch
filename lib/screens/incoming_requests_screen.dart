@@ -27,15 +27,19 @@ class IncomingRequestsScreen extends StatelessWidget {
           data['fromUid'],
           data['toUid'],
         ],
+
+        'player1Uid': data['fromUid'],
+        'player2Uid': data['toUid'],
+
         'createdAt': FieldValue.serverTimestamp(),
-        'status': 'active',
+        'status': 'confirmed',
 
         'lastMessage': '',
         'lastMessageTime': FieldValue.serverTimestamp(),
         'lastSenderUid': null,
 
         // 🔥 NEW FIELD
-        'notifiedPlayers': [data['toUid']], // receiver already "knows"
+        'notifiedPlayers': [],
       });
 
     }
@@ -131,11 +135,20 @@ class IncomingRequestsScreen extends StatelessWidget {
                                   requestRef: request.reference,
 
                                   onAccept: () async {
-                                    await updateRequestStatus(
-                                      request.reference,
-                                      'accepted',
-                                    );
+                                    try {
+                                      await updateRequestStatus(
+                                        request.reference,
+                                        'accepted',
+                                      );
+                                    } catch (e) {
+                                      debugPrint('❌ Error accepting request: $e');
 
+                                      if (!context.mounted) return;
+
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(content: Text('Something went wrong')),
+                                      );
+                                    }
                                   },
 
                                   onReject: () async {

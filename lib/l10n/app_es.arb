@@ -1,6 +1,11 @@
 {
   "appTitle": "Tennis Match",
 
+  "loginTitle": "Inicio de sesión",
+  "signInWithGoogle": "Iniciar sesión con Google",
+  "userProfileNotFound": "Perfil de usuario no encontrado",
+  "signOutConfirmation": "¿Seguro que quieres cerrar sesión?",
+
   "findPlayers": "Buscar jugadores",
   "myMatches": "Mis partidos",
   "matchHistory": "Historial",
@@ -30,6 +35,11 @@
   "levelBeginner": "Principiante",
   "levelIntermediate": "Intermedio",
   "levelAdvanced": "Avanzado",
+
+  "statusPending": "Pendiente",
+  "statusConfirmed": "Confirmado",
+  "statusCompleted": "Completado",
+  "statusCancelled": "Cancelado",
 
   "accept": "Aceptar",
   "reject": "Rechazar",
@@ -71,6 +81,7 @@
   "setYourLevel": "Configura tu nivel de tenis",
   "setLevelToFindPlayers": "Regresa y selecciona tu nivel",
   "tryChangingAvailability": "Intenta cambiar tu disponibilidad o vuelve más tarde",
+  "setAvailabilityToFindPlayers": "Configura tu disponibilidad para encontrar jugadores",
   "playMatchesToSeeHistory": "Juega algunos partidos para verlos aquí 🎾",
   "requested": "Solicitado",
   "invalidUserData": "Datos inválidos",
@@ -85,6 +96,8 @@
   "unmatchConfirmation": "¿Seguro que quieres eliminar la coincidencia? Esto cerrará el chat.",
   "unmatchTitle": "¿Eliminar emparejamiento?",
   "unmatch": "Eliminar",
+  "signOut": "Cerrar sesión",
+  "signOutConfirmation": "¿Estás seguro de que quieres cerrar sesión?",
 
   "myMatchesTitle": "Mis partidos",
   "failedToLoadMatches": "Error al cargar partidos",

@@ -104,6 +104,30 @@ abstract class AppLocalizations {
   /// **'Tennis Match'**
   String get appTitle;
 
+  /// No description provided for @loginTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'TennisMatch Login'**
+  String get loginTitle;
+
+  /// No description provided for @signInWithGoogle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in with Google'**
+  String get signInWithGoogle;
+
+  /// No description provided for @userProfileNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'User profile not found'**
+  String get userProfileNotFound;
+
+  /// No description provided for @signOutConfirmation.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to sign out?'**
+  String get signOutConfirmation;
+
   /// No description provided for @findPlayers.
   ///
   /// In en, this message translates to:
@@ -259,6 +283,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Advanced'**
   String get levelAdvanced;
+
+  /// No description provided for @statusPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending'**
+  String get statusPending;
+
+  /// No description provided for @statusConfirmed.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirmed'**
+  String get statusConfirmed;
+
+  /// No description provided for @statusCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed'**
+  String get statusCompleted;
+
+  /// No description provided for @statusCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancelled'**
+  String get statusCancelled;
 
   /// No description provided for @accept.
   ///
@@ -482,6 +530,12 @@ abstract class AppLocalizations {
   /// **'Try changing your availability or check later'**
   String get tryChangingAvailability;
 
+  /// No description provided for @setAvailabilityToFindPlayers.
+  ///
+  /// In en, this message translates to:
+  /// **'Set availability to find players'**
+  String get setAvailabilityToFindPlayers;
+
   /// No description provided for @playMatchesToSeeHistory.
   ///
   /// In en, this message translates to:
@@ -565,6 +619,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Unmatch'**
   String get unmatch;
+
+  /// No description provided for @signOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign Out'**
+  String get signOut;
 
   /// No description provided for @myMatchesTitle.
   ///

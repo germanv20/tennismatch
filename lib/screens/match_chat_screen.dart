@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:tennismatch/gen_l10n/app_localizations.dart';
 import 'dart:async';
 
+
 final ScrollController _scrollController = ScrollController();
 
 class MatchChatScreen extends StatefulWidget {
@@ -48,7 +49,7 @@ class _MatchChatScreenState extends State<MatchChatScreen> {
 
       // Reset timer every keystroke
       _typingTimer?.cancel();
-      _typingTimer = Timer(const Duration(seconds: 2), () {
+      _typingTimer = Timer(const Duration(seconds: 3), () {
         setTyping(false);
       });
     } else {
@@ -62,32 +63,38 @@ class _MatchChatScreenState extends State<MatchChatScreen> {
     final text = _messageController.text.trim();
     if (text.isEmpty) return;
 
+    _messageController.clear();
+
     final matchRef = FirebaseFirestore.instance
         .collection('matches')
         .doc(widget.matchId);
 
     // 1️⃣ Add message to subcollection
-    await matchRef
-        .collection('messages')
-        .add({
-      'text': text,
-      'senderUid': currentUid,
-      'createdAt': FieldValue.serverTimestamp(),
-      'readBy': {
-        currentUid: true,
-      },
-    });
+    try {
+      await matchRef
+          .collection('messages')
+          .add({
+        'text': text,
+        'senderUid': currentUid,
+        'createdAt': FieldValue.serverTimestamp(),
+        'readBy': {
+          currentUid: true,
+        },
+      });
 
-    // 2️⃣ Update parent match document (NEW PART 🔥)
-    await matchRef.update({
-      'lastMessage': text,
-      'lastMessageTime': FieldValue.serverTimestamp(),
-      'lastSenderUid': currentUid,
-    });
+      // 2️⃣ Update parent match document (NEW PART 🔥)
+      await matchRef.update({
+        'lastMessage': text,
+        'lastMessageTime': FieldValue.serverTimestamp(),
+        'lastSenderUid': currentUid,
+      });
 
-    _messageController.clear();
-    _typingTimer?.cancel();
-    await setTyping(false);
+      
+      _typingTimer?.cancel();
+      await setTyping(false);
+    } catch (e) {
+      debugPrint("❌ sendMessage error: $e");
+    }
   }
 
 
@@ -240,6 +247,12 @@ class _MatchChatScreenState extends State<MatchChatScreen> {
                   return const Center(child: CircularProgressIndicator());
                 }
 
+                if (snapshot.hasData && snapshot.data!.docs.isNotEmpty) {
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    markMessagesAsRead();
+                  });
+                }
+
                 final messages = snapshot.data!.docs;
 
                 if (messages.isEmpty) {
@@ -276,7 +289,7 @@ class _MatchChatScreenState extends State<MatchChatScreen> {
                         messages[index].data() as Map<String, dynamic>;
                     final isMe = data['senderUid'] == currentUid;
                     final readBy = Map<String, dynamic>.from(data['readBy'] ?? {});
-                    final isReadByOther = readBy.length > 1;
+                    final isReadByOther = readBy[widget.otherPlayerUid] == true;
                     final Timestamp? timestamp = data['createdAt'] as Timestamp?;
                     final DateTime? dateTime = timestamp?.toDate();
 

@@ -42,7 +42,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Tennis Match',
+      onGenerateTitle: (context) => AppLocalizations.of(context)!.appTitle,
 
       localizationsDelegates: const [
         AppLocalizations.delegate,
@@ -331,11 +331,13 @@ class _AuthTestState extends State<AuthTest> {
 
         if (user == null) {
           return Scaffold(
-            appBar: AppBar(title: const Text('TennisMatch Login')),
+            appBar: AppBar(
+              title: Text(AppLocalizations.of(context)!.loginTitle),
+            ),
             body: Center(
               child: ElevatedButton(
                 onPressed: signInWithGoogle,
-                child: const Text('Sign in with Google'),
+                child: Text(AppLocalizations.of(context)!.signInWithGoogle),
               ),
             ),
           );
@@ -355,8 +357,8 @@ class _AuthTestState extends State<AuthTest> {
             }
 
             if (!userSnapshot.hasData || !userSnapshot.data!.exists) {
-              return const Scaffold(
-                body: Center(child: Text('User profile not found')),
+              return Scaffold(
+                body: Center(child: Text(AppLocalizations.of(context)!.userProfileNotFound)),
               );
             }
 

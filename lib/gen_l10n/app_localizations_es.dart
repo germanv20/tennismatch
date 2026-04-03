@@ -12,6 +12,19 @@ class AppLocalizationsEs extends AppLocalizations {
   String get appTitle => 'Tennis Match';
 
   @override
+  String get loginTitle => 'Inicio de sesión';
+
+  @override
+  String get signInWithGoogle => 'Iniciar sesión con Google';
+
+  @override
+  String get userProfileNotFound => 'Perfil de usuario no encontrado';
+
+  @override
+  String get signOutConfirmation =>
+      '¿Estás seguro de que quieres cerrar sesión?';
+
+  @override
   String get findPlayers => 'Buscar jugadores';
 
   @override
@@ -88,6 +101,18 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get levelAdvanced => 'Avanzado';
+
+  @override
+  String get statusPending => 'Pendiente';
+
+  @override
+  String get statusConfirmed => 'Confirmado';
+
+  @override
+  String get statusCompleted => 'Completado';
+
+  @override
+  String get statusCancelled => 'Cancelado';
 
   @override
   String get accept => 'Aceptar';
@@ -205,6 +230,10 @@ class AppLocalizationsEs extends AppLocalizations {
       'Intenta cambiar tu disponibilidad o vuelve más tarde';
 
   @override
+  String get setAvailabilityToFindPlayers =>
+      'Configura tu disponibilidad para encontrar jugadores';
+
+  @override
   String get playMatchesToSeeHistory =>
       'Juega algunos partidos para verlos aquí 🎾';
 
@@ -247,6 +276,9 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get unmatch => 'Eliminar';
+
+  @override
+  String get signOut => 'Cerrar sesión';
 
   @override
   String get myMatchesTitle => 'Mis partidos';

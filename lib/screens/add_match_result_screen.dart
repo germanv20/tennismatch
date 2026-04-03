@@ -468,12 +468,28 @@ class _AddMatchResultScreenState
 
             ElevatedButton(
               onPressed: isSaving
-                  ? null
-                  : () async {
+                ? null
+                : () async {
+                    try {
                       setState(() => isSaving = true);
+
                       await saveResult();
-                      if (mounted) setState(() => isSaving = false);
-                    },
+
+                    } catch (e) {
+                      debugPrint('❌ Save result error: $e');
+
+                      if (!mounted) return;
+
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Failed to save result')),
+                      );
+
+                    } finally {
+                      if (mounted) {
+                        setState(() => isSaving = false);
+                      }
+                    }
+                  },
               child: isSaving
                   ? const CircularProgressIndicator()
                   : Text(loc.saveResult),

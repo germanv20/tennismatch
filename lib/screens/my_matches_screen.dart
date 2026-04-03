@@ -20,28 +20,33 @@ class _MyMatchesScreenState extends State<MyMatchesScreen> {
     @override
     void initState() {
       super.initState();
-      markMatchesAsSeen(widget.currentUser.uid);
+
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        markMatchesAsSeen(widget.currentUser.uid);
+      });
     }
 
   Future<void> markMatchesAsSeen(String userId) async {
     final snapshot = await FirebaseFirestore.instance
         .collection('matches')
         .where('players', arrayContains: userId)
+        .where('status', whereIn: ['pending', 'confirmed'])
         .get();
 
     for (var doc in snapshot.docs) {
-      final data = doc.data();
-      final notified = List<String>.from(data['notifiedPlayers'] ?? []);
+      final players = List<String>.from(doc['players']);
 
-      if (!notified.contains(userId)) {
-        notified.add(userId);
-
+      try {
         await doc.reference.update({
-          'notifiedPlayers': notified,
+          'notifiedPlayers': FieldValue.arrayUnion([userId]),
         });
+        print("✅ Updated notifiedPlayers for match ${doc.id}");
+      } catch (e) {
+        print("❌ ERROR updating match ${doc.id}: $e");
       }
     }
   }
+  
 
   @override
   Widget build(BuildContext context) {
@@ -56,7 +61,7 @@ class _MyMatchesScreenState extends State<MyMatchesScreen> {
           child: StreamBuilder<QuerySnapshot>(
           stream: matchesRef
               .where('players', arrayContains: widget.currentUser.uid)
-              .where('status', isEqualTo: 'active')
+              .where('status', whereIn: ['pending', 'confirmed'])
               .orderBy('lastMessageTime', descending: true)
               .snapshots(),
 

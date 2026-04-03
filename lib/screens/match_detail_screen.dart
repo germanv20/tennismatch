@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:tennismatch/gen_l10n/app_localizations.dart';
 import 'match_chat_screen.dart';
 import 'add_match_result_screen.dart';
@@ -14,6 +15,21 @@ class MatchDetailScreen extends StatelessWidget {
     required this.matchDoc,
     required this.opponentData,
   });
+
+  String translateStatus(String status, AppLocalizations loc) {
+    switch (status) {
+      case 'pending':
+        return loc.statusPending;
+      case 'confirmed':
+        return loc.statusConfirmed;
+      case 'completed':
+        return loc.statusCompleted;
+      case 'cancelled':
+        return loc.statusCancelled;
+      default:
+        return status;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -103,7 +119,7 @@ class MatchDetailScreen extends StatelessWidget {
                 const SizedBox(height: 24),
 
                 Text(
-                  '${loc.statusLabel}: ${data['status']}', // Status
+                  '${loc.statusLabel}: ${translateStatus(data['status'], loc)}', // Status
                   style: const TextStyle(fontSize: 16),
                 ),
 
@@ -119,27 +135,95 @@ class MatchDetailScreen extends StatelessWidget {
 
                 const Divider(),
 
-                ElevatedButton.icon(
-                  icon: const Icon(Icons.chat),
-                  label: Text(loc.openChat), // 'Open Chat'
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => MatchChatScreen(
-                          matchId: matchDoc.id,
-                          otherPlayerUid: otherPlayerUid,
-                          otherPlayerName: otherPlayerName,
-                          otherPlayerPhotoUrl: otherPlayerPhotoUrl,
+                StreamBuilder<QuerySnapshot>(
+                  stream: FirebaseFirestore.instance
+                      .collection('matches')
+                      .doc(matchDoc.id)
+                      .collection('messages')
+                      .snapshots(),
+                  builder: (context, snapshot) {
+                    if (!snapshot.hasData) {
+                      return ElevatedButton.icon(
+                        icon: const Icon(Icons.chat),
+                        label: Text(loc.openChat),
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => MatchChatScreen(
+                                matchId: matchDoc.id,
+                                otherPlayerUid: otherPlayerUid,
+                                otherPlayerName: otherPlayerName,
+                                otherPlayerPhotoUrl: otherPlayerPhotoUrl,
+                              ),
+                            ),
+                          );
+                        },
+                      );
+                    }
+
+                    final currentUid = FirebaseAuth.instance.currentUser!.uid;
+
+                    int unreadCount = snapshot.data!.docs.where((doc) {
+                      final data = doc.data() as Map<String, dynamic>;
+
+                      if (data['senderUid'] == currentUid) return false;
+
+                      final readBy = Map<String, dynamic>.from(data['readBy'] ?? {});
+                      return readBy[currentUid] != true;
+                    }).length;
+
+                    final hasUnread = unreadCount > 0;
+
+                    return Stack(
+                      children: [
+                        ElevatedButton.icon(
+                          icon: const Icon(Icons.chat),
+                          label: Text(loc.openChat),
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => MatchChatScreen(
+                                  matchId: matchDoc.id,
+                                  otherPlayerUid: otherPlayerUid,
+                                  otherPlayerName: otherPlayerName,
+                                  otherPlayerPhotoUrl: otherPlayerPhotoUrl,
+                                ),
+                              ),
+                            );
+                          },
                         ),
-                      ),
+
+                       // 🔴 Badge
+                      if (hasUnread)
+                        Positioned(
+                          right: 2,
+                          top: 2,
+                          child: Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: const BoxDecoration(
+                              color: Colors.red,
+                              shape: BoxShape.circle,
+                            ),
+                            child: Text(
+                              unreadCount > 9 ? '9+' : unreadCount.toString(),
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     );
                   },
                 ),
 
                 const SizedBox(height: 10),
 
-                if (data['status'] == 'active') ...[
+                if (data['status'] != 'completed' && data['status'] != 'cancelled') ...[
                   const SizedBox(height: 20),
 
                   ElevatedButton.icon(
