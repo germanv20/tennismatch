@@ -76,6 +76,8 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
 
+  int? outgoingOverrideCount;
+
   @override
   void initState() {
     super.initState();
@@ -322,6 +324,15 @@ class _HomeScreenState extends State<HomeScreen> {
 
           return count;
         });
+  }
+
+  Stream<int> getOutgoingRequestsCount(String userId) {
+    return FirebaseFirestore.instance
+        .collection('match_requests')
+        .where('fromUid', isEqualTo: userId)
+        .where('status', isEqualTo: 'pending')
+        .snapshots()
+        .map((snapshot) => snapshot.docs.length);
   }
 
   @override
@@ -579,22 +590,49 @@ class _HomeScreenState extends State<HomeScreen> {
                       },
                     ),
 
-                    AspectRatio(
-                      aspectRatio: 1,
-                      child: HomeCard(
-                        title: loc.outgoingRequests,
-                        icon: Icons.outbox,
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => OutgoingRequestsScreen(
-                                currentUser: widget.currentUser,
-                              ),
+                    StreamBuilder<int>(
+                      stream: getOutgoingRequestsCount(widget.currentUser.uid),
+                      builder: (context, snapshot) {
+
+                        final firestoreCount = snapshot.data ?? 0;
+
+                        // Reset override if new requests appear
+                        if (outgoingOverrideCount != null &&
+                            outgoingOverrideCount! > 0 &&
+                            firestoreCount > outgoingOverrideCount!) {
+                          outgoingOverrideCount = null;
+                        }
+
+                        // 🔥 Use override if exists
+                        final displayCount = outgoingOverrideCount ?? firestoreCount;
+
+
+                        return AspectRatio(
+                          aspectRatio: 1,
+                          child: NotificationBadge(
+                            count: displayCount,
+                            child: HomeCard(
+                              title: loc.outgoingRequests,
+                              icon: Icons.outbox,
+                              onTap: () async {
+                                await Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => OutgoingRequestsScreen(
+                                      currentUser: widget.currentUser,
+                                    ),
+                                  ),
+                                );
+
+                                // ✅ Clear badge after visiting
+                                setState(() {
+                                  outgoingOverrideCount = 0;
+                                });
+                              },
                             ),
-                          );
-                        },
-                      ),
+                          ),
+                        );
+                      },
                     ),
 
                     AspectRatio(
