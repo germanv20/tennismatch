@@ -1,6 +1,6 @@
 {
   "appTitle": "Tennis Match",
-  
+
   "loginTitle": "TennisMatch Login",
   "signInWithGoogle": "Sign in with Google",
   "userProfileNotFound": "User profile not found",
@@ -52,8 +52,11 @@
   "cancelRequest": "Cancel Request",
   "requestSent": "Match request sent 🎾",
   "requestAlreadySent": "Match request already sent",
+  "matchRequestAccepted": "Match request accepted",
+  "matchRequestRejected": "Match request rejected",
   "requestRejected": "Request rejected",
   "matchAccepted": "Match accepted",
+  "matchCancelled": "Match cancelled",
   "availabilityHint": "Select the days you are available to play",
 
   "noIncomingRequests": "No incoming match requests",

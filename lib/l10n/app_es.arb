@@ -52,8 +52,11 @@
   "cancelRequest": "Cancelar solicitud",
   "requestSent": "Solicitud enviada 🎾",
   "requestAlreadySent": "Solicitud ya enviada",
+  "matchRequestAccepted": "Solicitud de partido aceptada",
+  "matchRequestRejected": "Solicitud de partido rechazada",
   "requestRejected": "Solicitud rechazada",
   "matchAccepted": "Partido aceptado",
+  "matchCancelled": "Partido cancelado",
   "availabilityHint": "Selecciona los días en los que estás disponible para jugar",
 
   "noIncomingRequests": "No tienes solicitudes recibidas",

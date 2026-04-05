@@ -220,8 +220,6 @@ class PlayerProfileViewScreen extends StatefulWidget {
                           onPressed: isLoading
                               ? null
                               : () async {
-                                  final navigator = Navigator.of(context);
-
                                   setState(() => isLoading = true);
 
                                   if (widget.onAccept != null) {
@@ -230,7 +228,7 @@ class PlayerProfileViewScreen extends StatefulWidget {
 
                                   if (!mounted) return;
 
-                                  navigator.pop();
+                                  Navigator.pop(context, 'accepted'); // 🔥 RETURN VALUE
                                 },
                           icon: isLoading
                               ? const SizedBox(
@@ -251,8 +249,6 @@ class PlayerProfileViewScreen extends StatefulWidget {
                           onPressed: isLoading
                               ? null
                               : () async {
-                                  final navigator = Navigator.of(context);
-
                                   setState(() => isLoading = true);
 
                                   if (widget.onReject != null) {
@@ -261,7 +257,7 @@ class PlayerProfileViewScreen extends StatefulWidget {
 
                                   if (!mounted) return;
 
-                                  navigator.pop();
+                                  Navigator.pop(context, 'rejected'); // 🔥 RETURN VALUE
                                 },
                           icon: isLoading
                               ? const SizedBox(

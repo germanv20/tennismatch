@@ -78,7 +78,7 @@ class MatchDetailScreen extends StatelessWidget {
                 if (!context.mounted) return;
 
                 if (context.mounted && Navigator.canPop(context)) {
-                  Navigator.pop(context);
+                  Navigator.pop(context, 'cancelled');
                 } // Exit chat screen
               }
             },

@@ -145,10 +145,19 @@ class AppLocalizationsEs extends AppLocalizations {
   String get requestAlreadySent => 'Solicitud ya enviada';
 
   @override
+  String get matchRequestAccepted => 'Solicitud de partido aceptada';
+
+  @override
+  String get matchRequestRejected => 'Solicitud de partido rechazada';
+
+  @override
   String get requestRejected => 'Solicitud rechazada';
 
   @override
   String get matchAccepted => 'Partido aceptado';
+
+  @override
+  String get matchCancelled => 'Partido cancelado';
 
   @override
   String get availabilityHint =>

@@ -5,6 +5,7 @@ import 'package:tennismatch/widgets/error_state.dart';
 import 'package:tennismatch/gen_l10n/app_localizations.dart';
 import 'match_detail_screen.dart';
 import '../widgets/empty_state.dart';
+import '../main.dart';
 
 class MyMatchesScreen extends StatefulWidget {
   final User currentUser;
@@ -213,8 +214,9 @@ class _MyMatchesScreenState extends State<MyMatchesScreen> {
                               const Icon(Icons.sports_tennis),
                             ],
                           ),
-                          onTap: () {
-                            Navigator.push(
+                          onTap: () async {
+                            final message = AppLocalizations.of(context)!.matchCancelled;
+                            final result = await Navigator.push(
                               context,
                               MaterialPageRoute(
                                 builder: (_) => MatchDetailScreen(
@@ -223,6 +225,20 @@ class _MyMatchesScreenState extends State<MyMatchesScreen> {
                                 ),
                               ),
                             );
+
+                            debugPrint("👉 Match detail result: $result");
+
+                            if (result == 'cancelled') {
+                              debugPrint("🔥 Showing cancel snackbar");
+
+                              rootScaffoldMessengerKey.currentState?.clearSnackBars();
+                              rootScaffoldMessengerKey.currentState?.showSnackBar(
+                                SnackBar(
+                                  backgroundColor: Colors.red,
+                                  content: Text(message),
+                                ),
+                              );
+                            }
                           },
                         ),
                       ),

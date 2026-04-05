@@ -144,10 +144,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get requestAlreadySent => 'Match request already sent';
 
   @override
+  String get matchRequestAccepted => 'Match request accepted';
+
+  @override
+  String get matchRequestRejected => 'Match request rejected';
+
+  @override
   String get requestRejected => 'Request rejected';
 
   @override
   String get matchAccepted => 'Match accepted';
+
+  @override
+  String get matchCancelled => 'Match cancelled';
 
   @override
   String get availabilityHint => 'Select the days you are available to play';

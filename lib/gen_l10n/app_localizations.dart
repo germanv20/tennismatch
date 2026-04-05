@@ -368,6 +368,18 @@ abstract class AppLocalizations {
   /// **'Match request already sent'**
   String get requestAlreadySent;
 
+  /// No description provided for @matchRequestAccepted.
+  ///
+  /// In en, this message translates to:
+  /// **'Match request accepted'**
+  String get matchRequestAccepted;
+
+  /// No description provided for @matchRequestRejected.
+  ///
+  /// In en, this message translates to:
+  /// **'Match request rejected'**
+  String get matchRequestRejected;
+
   /// No description provided for @requestRejected.
   ///
   /// In en, this message translates to:
@@ -379,6 +391,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Match accepted'**
   String get matchAccepted;
+
+  /// No description provided for @matchCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Match cancelled'**
+  String get matchCancelled;
 
   /// No description provided for @availabilityHint.
   ///
