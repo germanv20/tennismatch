@@ -1,19 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:tennismatch/gen_l10n/app_localizations.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../utils/day_utils.dart';
-
-const weekOrder = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+import 'edit_profile_screen.dart';
 
 class MyProfileScreen extends StatelessWidget {
-  final Map<String, dynamic> userData;
-
-  String get currentUid => FirebaseAuth.instance.currentUser!.uid;
-
-  const MyProfileScreen({
-    super.key,
-    required this.userData,
-  });
+  const MyProfileScreen({super.key});
 
   String translateLevel(String level, AppLocalizations loc) {
     switch (level) {
@@ -49,78 +42,133 @@ class MyProfileScreen extends StatelessWidget {
     }
   }
 
+  String formatDate(DateTime date) {
+    return "${date.day}/${date.month}/${date.year}";
+  }
+
   @override
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context)!;
-    final String name = userData['name'] ?? loc.unknown; // 'Unknown'
-    final String email = userData['email'] ?? '';
-    final String rawLevel = userData['tennisLevel'] ?? '';
-    final String tennisLevel =
-        rawLevel.isEmpty ? loc.notSet : translateLevel(rawLevel, loc);
-    final List<String> availability =
-        sortDays(userData['availability'] ?? []);
-    final String? photoUrl = userData['photoUrl'];
+    final uid = FirebaseAuth.instance.currentUser!.uid;
 
     return Scaffold(
       appBar: AppBar(
         title: Text(loc.myProfile),
-      ),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: SingleChildScrollView(
-            child: Column(
-              children: [
-                CircleAvatar(
-                  radius: 50,
-                  backgroundImage:
-                      photoUrl != null ? NetworkImage(photoUrl) : null,
-                  child: photoUrl == null ? const Icon(Icons.person, size: 50) : null,
-                ),
-                const SizedBox(height: 24),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.edit),
+            onPressed: () async {
+              final doc = await FirebaseFirestore.instance
+                  .collection('users')
+                  .doc(uid)
+                  .get();
 
-                Text(
-                  name,
-                  style: const TextStyle(
-                    color: Colors.black,
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 16),
+              final data = doc.data() as Map<String, dynamic>;
 
-                Text(
-                  email,
-                  style: const TextStyle(
-                    color: Colors.black87,
-                    fontSize: 14,
-                  ),
+              await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => EditProfileScreen(userData: data),
                 ),
-                const SizedBox(height: 24),
-
-                Text(
-                  '${loc.level}: $tennisLevel', // Tennis level
-                  style: const TextStyle(fontSize: 16),
-                ),
-                const SizedBox(height: 24),
-
-                availability.isEmpty
-                    ? Text(
-                        loc.noAvailability,
-                        style: const TextStyle(color: Colors.grey),
-                      )
-                    : Wrap(
-                        spacing: 8,
-                        children: availability.map<Widget>((day) {
-                          return Chip(
-                            label: Text(translateDay(day.toString(), loc)),
-                          );
-                        }).toList(),
-                      ),
-              ],
-            ),
+              );
+            },
           ),
-        ),
+        ],
+      ),
+      body: StreamBuilder<DocumentSnapshot>(
+        stream: FirebaseFirestore.instance
+            .collection('users')
+            .doc(uid)
+            .snapshots(),
+        builder: (context, snapshot) {
+          if (!snapshot.hasData) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          final userData = snapshot.data!.data() as Map<String, dynamic>;
+
+          final String name = userData['name'] ?? loc.unknown;
+          final String email = userData['email'] ?? '';
+          final String rawLevel = userData['tennisLevel'] ?? '';
+          final String tennisLevel =
+              rawLevel.isEmpty ? loc.notSet : translateLevel(rawLevel, loc);
+
+          final List<String> availability =
+              sortDays(userData['availability'] ?? []);
+
+          final String? photoUrl = userData['photoUrl'];
+          final Timestamp? birthTimestamp = userData['birthDate'];
+          final int? age = userData['age'];
+          final String city = userData['city'] ?? loc.notSet;
+          final String country = userData['country'] ?? loc.notSet;
+
+          return SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: SingleChildScrollView(
+                child: Column(
+                  children: [
+                    CircleAvatar(
+                      radius: 50,
+                      backgroundImage:
+                          photoUrl != null ? NetworkImage(photoUrl) : null,
+                      child: photoUrl == null
+                          ? const Icon(Icons.person, size: 50)
+                          : null,
+                    ),
+                    const SizedBox(height: 24),
+
+                    Text(
+                      name,
+                      style: const TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    Text(email),
+                    const SizedBox(height: 24),
+
+                    if (age != null)
+                      Text('${loc.age}: $age'),
+
+                    const SizedBox(height: 12),
+
+                    Text('${loc.city}: $city'),
+                    const SizedBox(height: 12),
+
+                    Text('${loc.country}: $country'),
+                    const SizedBox(height: 12),
+
+                    if (birthTimestamp != null)
+                      Text(
+                        '${loc.birthDate}: ${formatDate(birthTimestamp.toDate())}',
+                      ),
+
+                    const SizedBox(height: 24),
+
+                    Text('${loc.level}: $tennisLevel'),
+                    const SizedBox(height: 24),
+
+                    availability.isEmpty
+                        ? Text(loc.noAvailability,
+                            style: const TextStyle(color: Colors.grey))
+                        : Wrap(
+                            spacing: 8,
+                            children: availability.map<Widget>((day) {
+                              return Chip(
+                                label:
+                                    Text(translateDay(day.toString(), loc)),
+                              );
+                            }).toList(),
+                          ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
       ),
     );
   }

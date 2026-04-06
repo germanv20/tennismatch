@@ -644,9 +644,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (_) => MyProfileScreen(
-                                userData: widget.userData,
-                              ),
+                              builder: (_) => const MyProfileScreen(),
                             ),
                           );
                         },

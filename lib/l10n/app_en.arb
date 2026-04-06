@@ -41,6 +41,7 @@
   "statusCompleted": "Completed",
   "statusCancelled": "Cancelled",
 
+  "age": "Age",
   "accept": "Accept",
   "reject": "Reject",
   "cancel": "Cancel",
@@ -69,6 +70,7 @@
 
   "playerProfile": "Player Profile",
   "level": "Level",
+  "birthDate": "Birth date",
   "yourTennisLevel": "Your tennis level",
   "availability": "Availability",
   "noAvailability": "No availability set",
@@ -144,6 +146,7 @@
   "durationMinutes": "Duration (minutes)",
   "location": "Location",
   "saveResult": "Save Result",
+  "profileUpdated": "Profile updated",
 
   "setScoresZeroError": "Set scores cannot both be zero.",
   "invalidSetScore": "Invalid tennis set score.",
@@ -180,5 +183,47 @@
       "winnerName": {},
       "loserName": {}
     }
+  },
+
+  
+  "completeProfile": "Complete Profile",
+  "@completeProfile": {
+    "description": "Title for complete profile screen"
+  },
+
+  "selectBirthdate": "Select birthdate",
+  "@selectBirthdate": {
+    "description": "Label for selecting birthdate"
+  },
+
+  "city": "City",
+  "@city": {
+    "description": "City field label"
+  },
+
+  "country": "Country",
+  "@country": {
+    "description": "Country field label"
+  },
+
+  "requiredField": "This field is required",
+  "@requiredField": {
+    "description": "Validation message for required fields"
+  },
+
+  "selectAvailability": "Select your availability",
+  "@selectAvailability": {
+    "description": "Availability selection label"
+  },
+
+  "save": "Save",
+  "@save": {
+    "description": "Save button text"
+  },
+
+  "editProfile": "Edit Profile",
+  "@editProfile": {
+    "description": "Edit profile screen title/button"
   }
+
 }

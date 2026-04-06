@@ -41,6 +41,7 @@
   "statusCompleted": "Completado",
   "statusCancelled": "Cancelado",
 
+  "age": "Edad",
   "accept": "Aceptar",
   "reject": "Rechazar",
   "cancel": "Cancelar",
@@ -69,6 +70,7 @@
 
   "playerProfile": "Perfil del jugador",
   "level": "Nivel",
+  "birthDate": "Fecha de nacimiento",
   "yourTennisLevel": "Tu nivel de tenis",
   "availability": "Disponibilidad",
   "noAvailability": "Sin disponibilidad",
@@ -143,6 +145,7 @@
   "durationMinutes": "Duración (minutos)",
   "location": "Ubicación",
   "saveResult": "Guardar resultado",
+  "profileUpdated": "Perfil actualizado",
 
   "setScoresZeroError": "Los puntajes no pueden ser ambos cero.",
   "invalidSetScore": "Puntuación inválida.",
@@ -179,5 +182,47 @@
       "winnerName": {},
       "loserName": {}
     }
+  },
+
+  
+  "completeProfile": "Completar perfil",
+  "@completeProfile": {
+    "description": "Título de la pantalla de completar perfil"
+  },
+
+  "selectBirthdate": "Seleccionar fecha de nacimiento",
+  "@selectBirthdate": {
+    "description": "Etiqueta para seleccionar fecha de nacimiento"
+  },
+
+  "city": "Ciudad",
+  "@city": {
+    "description": "Etiqueta del campo ciudad"
+  },
+
+  "country": "País",
+  "@country": {
+    "description": "Etiqueta del campo país"
+  },
+
+  "requiredField": "Este campo es obligatorio",
+  "@requiredField": {
+    "description": "Mensaje de validación para campos obligatorios"
+  },
+
+  "selectAvailability": "Selecciona tu disponibilidad",
+  "@selectAvailability": {
+    "description": "Etiqueta para seleccionar disponibilidad"
+  },
+
+  "save": "Guardar",
+  "@save": {
+    "description": "Texto del botón guardar"
+  },
+
+  "editProfile": "Editar perfil",
+  "@editProfile": {
+    "description": "Título/botón de editar perfil"
   }
+
 }

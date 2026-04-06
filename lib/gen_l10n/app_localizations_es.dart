@@ -115,6 +115,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get statusCancelled => 'Cancelado';
 
   @override
+  String get age => 'Edad';
+
+  @override
   String get accept => 'Aceptar';
 
   @override
@@ -189,6 +192,9 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get level => 'Nivel';
+
+  @override
+  String get birthDate => 'Fecha de nacimiento';
 
   @override
   String get yourTennisLevel => 'Tu nivel de tenis';
@@ -378,6 +384,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get saveResult => 'Guardar resultado';
 
   @override
+  String get profileUpdated => 'Perfil actualizado';
+
+  @override
   String get setScoresZeroError => 'Los puntajes no pueden ser ambos cero.';
 
   @override
@@ -448,4 +457,28 @@ class AppLocalizationsEs extends AppLocalizations {
   String matchResultSentence(Object winnerName, Object loserName) {
     return '$winnerName derrotó a $loserName';
   }
+
+  @override
+  String get completeProfile => 'Completar perfil';
+
+  @override
+  String get selectBirthdate => 'Seleccionar fecha de nacimiento';
+
+  @override
+  String get city => 'Ciudad';
+
+  @override
+  String get country => 'País';
+
+  @override
+  String get requiredField => 'Este campo es obligatorio';
+
+  @override
+  String get selectAvailability => 'Selecciona tu disponibilidad';
+
+  @override
+  String get save => 'Guardar';
+
+  @override
+  String get editProfile => 'Editar perfil';
 }

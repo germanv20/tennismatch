@@ -308,6 +308,12 @@ abstract class AppLocalizations {
   /// **'Cancelled'**
   String get statusCancelled;
 
+  /// No description provided for @age.
+  ///
+  /// In en, this message translates to:
+  /// **'Age'**
+  String get age;
+
   /// No description provided for @accept.
   ///
   /// In en, this message translates to:
@@ -457,6 +463,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Level'**
   String get level;
+
+  /// No description provided for @birthDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Birth date'**
+  String get birthDate;
 
   /// No description provided for @yourTennisLevel.
   ///
@@ -812,6 +824,12 @@ abstract class AppLocalizations {
   /// **'Save Result'**
   String get saveResult;
 
+  /// No description provided for @profileUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile updated'**
+  String get profileUpdated;
+
   /// No description provided for @setScoresZeroError.
   ///
   /// In en, this message translates to:
@@ -943,6 +961,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{winnerName} defeated {loserName}'**
   String matchResultSentence(Object winnerName, Object loserName);
+
+  /// Title for complete profile screen
+  ///
+  /// In en, this message translates to:
+  /// **'Complete Profile'**
+  String get completeProfile;
+
+  /// Label for selecting birthdate
+  ///
+  /// In en, this message translates to:
+  /// **'Select birthdate'**
+  String get selectBirthdate;
+
+  /// City field label
+  ///
+  /// In en, this message translates to:
+  /// **'City'**
+  String get city;
+
+  /// Country field label
+  ///
+  /// In en, this message translates to:
+  /// **'Country'**
+  String get country;
+
+  /// Validation message for required fields
+  ///
+  /// In en, this message translates to:
+  /// **'This field is required'**
+  String get requiredField;
+
+  /// Availability selection label
+  ///
+  /// In en, this message translates to:
+  /// **'Select your availability'**
+  String get selectAvailability;
+
+  /// Save button text
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get save;
+
+  /// Edit profile screen title/button
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Profile'**
+  String get editProfile;
 }
 
 class _AppLocalizationsDelegate

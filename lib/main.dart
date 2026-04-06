@@ -9,6 +9,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'firebase_options.dart';
 import 'screens/match_chat_screen.dart';
 import 'screens/home_screen.dart';
+import 'screens/complete_profile_screen.dart';
 
 
 final GlobalKey<NavigatorState> navigatorKey =
@@ -271,6 +272,9 @@ class _AuthTestState extends State<AuthTest> {
         'photoUrl': user.photoURL,
         'tennisLevel': null,
         'availability': [],
+        'birthdate': null,
+        'city': null,
+        'country': null,
         'createdAt': FieldValue.serverTimestamp(),
       });
     }
@@ -378,6 +382,18 @@ class _AuthTestState extends State<AuthTest> {
                 rawData as Map<String, dynamic>;
 
             // ✅ THIS is the ONLY place HomeScreen should be called
+            bool isEmpty(value) => value == null || value.toString().isEmpty;
+
+            final isProfileIncomplete =
+                isEmpty(data['tennisLevel']) ||
+                data['birthDate'] == null ||
+                isEmpty(data['city']) ||
+                isEmpty(data['country']);
+
+            if (isProfileIncomplete) {
+              return const CompleteProfileScreen();
+            }
+
             return HomeScreen(
               currentUser: user,
               userData: data,
