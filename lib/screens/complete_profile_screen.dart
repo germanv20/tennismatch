@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:country_picker/country_picker.dart';
 import '../utils/day_utils.dart';
 import '../gen_l10n/app_localizations.dart';
 
@@ -23,6 +24,15 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
   final List<String> levels = ['Beginner', 'Intermediate', 'Advanced'];
   final List<String> days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
+  String getFlagEmoji(String countryName) {
+    try {
+      final countryObj = Country.tryParse(countryName);
+      return countryObj?.flagEmoji ?? '';
+    } catch (_) {
+      return '';
+    }
+  }
+
   int getAge(DateTime birthdate) {
     final today = DateTime.now();
     int age = today.year - birthdate.year;
@@ -34,9 +44,18 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
   }
 
   Future<void> saveProfile() async {
+    final loc = AppLocalizations.of(context)!;
+
     if (!_formKey.currentState!.validate() ||
         birthdate == null ||
         tennisLevel == null) {
+      return;
+    }
+
+    if (country == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(loc.requiredField)),
+      );
       return;
     }
 
@@ -47,7 +66,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
           .collection('users')
           .doc(uid)
           .update({
-        'birthDate': Timestamp.fromDate(birthdate!), // ⚠️ fix key
+        'birthDate': Timestamp.fromDate(birthdate!),
         'age': getAge(birthdate!),
         'city': city,
         'country': country,
@@ -117,12 +136,45 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
 
               const SizedBox(height: 12),
 
+              Text(
+                loc.country,
+                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+              ),
+              const SizedBox(height: 6),
+
               // Country
-              TextFormField(
-                decoration: InputDecoration(labelText: loc.country),
-                onChanged: (value) => country = value,
-                validator: (value) =>
-                    value == null || value.isEmpty ? loc.requiredField : null,
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                title: Row(
+                  children: [
+                    if (country != null) ...[
+                      Text(
+                        getFlagEmoji(country!),
+                        style: const TextStyle(fontSize: 20),
+                      ),
+                      const SizedBox(width: 8),
+                    ],
+                    Text(
+                      country ?? loc.selectCountry,
+                      style: TextStyle(
+                        color: country == null ? Colors.grey : Colors.black,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ],
+                ),
+                trailing: const Icon(Icons.arrow_drop_down),
+                onTap: () {
+                  showCountryPicker(
+                    context: context,
+                    showPhoneCode: false,
+                    onSelect: (Country selectedCountry) {
+                      setState(() {
+                        country = selectedCountry.name;
+                      });
+                    },
+                  );
+                },
               ),
 
               const SizedBox(height: 12),

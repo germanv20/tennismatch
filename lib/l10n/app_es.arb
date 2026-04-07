@@ -59,6 +59,7 @@
   "matchAccepted": "Partido aceptado",
   "matchCancelled": "Partido cancelado",
   "availabilityHint": "Selecciona los días en los que estás disponible para jugar",
+  "selectCountry": "Seleccionar país",
 
   "noIncomingRequests": "No tienes solicitudes recibidas",
   "noOutgoingRequests": "No tienes solicitudes enviadas",
@@ -145,7 +146,7 @@
   "durationMinutes": "Duración (minutos)",
   "location": "Ubicación",
   "saveResult": "Guardar resultado",
-  "profileUpdated": "Perfil actualizado",
+  "profileUpdatedSuccessfully": "Perfil actualizado exitosamente",
 
   "setScoresZeroError": "Los puntajes no pueden ser ambos cero.",
   "invalidSetScore": "Puntuación inválida.",

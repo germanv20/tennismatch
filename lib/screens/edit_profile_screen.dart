@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:country_picker/country_picker.dart';
 import '../utils/day_utils.dart';
 import '../gen_l10n/app_localizations.dart';
 
@@ -25,6 +26,15 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   final List<String> levels = ['Beginner', 'Intermediate', 'Advanced'];
   final List<String> days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
+  String getFlagEmoji(String countryName) {
+    try {
+      final countryObj = Country.tryParse(countryName);
+      return countryObj?.flagEmoji ?? '';
+    } catch (_) {
+      return '';
+    }
+  }
+
   int getAge(DateTime birthdate) {
     final today = DateTime.now();
     int age = today.year - birthdate.year;
@@ -41,8 +51,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
     final data = widget.userData;
 
-    if (data['birthdate'] != null) {
-      birthdate = (data['birthdate'] as Timestamp).toDate();
+    if (data['birthDate'] != null) {
+      birthdate = (data['birthDate'] as Timestamp).toDate();
     }
 
     city = data['city'];
@@ -62,24 +72,39 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       return;
     }
 
+    if (country == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(loc.requiredField)),
+      );
+      return;
+    }
+
     setState(() => isSaving = true);
 
     try {
       final uid = FirebaseAuth.instance.currentUser!.uid;
 
-      await FirebaseFirestore.instance.collection('users').doc(uid).update({
-        'birthDate': Timestamp.fromDate(birthdate!),
-        'age': getAge(birthdate!),
+      final updateData = {
         'city': city,
         'country': country,
         'tennisLevel': tennisLevel,
         'availability': availability,
-      });
+      };
+
+      if (birthdate != null) {
+        updateData['birthDate'] = Timestamp.fromDate(birthdate!);
+        updateData['age'] = getAge(birthdate!);
+      }
+
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(uid)
+          .update(updateData);
 
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(loc.profileUpdated)),
+        SnackBar(content: Text(loc.profileUpdatedSuccessfully)),
       );
 
       Navigator.pop(context);
@@ -95,7 +120,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   Future<void> pickBirthdate() async {
     final picked = await showDatePicker(
       context: context,
-      initialDate: birthdate ?? DateTime(2000),
+      initialDate: birthdate ?? DateTime.now().subtract(const Duration(days: 365 * 25)),
       firstDate: DateTime(1940),
       lastDate: DateTime.now(),
     );
@@ -121,7 +146,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 title: Text(
                   birthdate == null
                       ? loc.selectBirthdate
-                      : "${birthdate!.toLocal()}".split(' ')[0],
+                      : "${birthdate!.day}/${birthdate!.month}/${birthdate!.year}",
                 ),
                 trailing: const Icon(Icons.calendar_today),
                 onTap: pickBirthdate,
@@ -137,10 +162,38 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
               const SizedBox(height: 12),
 
-              TextFormField(
-                initialValue: country,
-                decoration: InputDecoration(labelText: loc.country),
-                onChanged: (value) => country = value,
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                title: Row(
+                  children: [
+                    if (country != null) ...[
+                      Text(
+                        getFlagEmoji(country!),
+                        style: const TextStyle(fontSize: 20),
+                      ),
+                      const SizedBox(width: 8),
+                    ],
+                    Text(
+                      country ?? loc.selectCountry,
+                      style: TextStyle(
+                        color: country == null ? Colors.grey : Colors.black,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ],
+                ),
+                trailing: const Icon(Icons.arrow_drop_down),
+                onTap: () {
+                  showCountryPicker(
+                    context: context,
+                    showPhoneCode: false,
+                    onSelect: (Country selectedCountry) {
+                      setState(() {
+                        country = selectedCountry.name;
+                      });
+                    },
+                  );
+                },
               ),
 
               const SizedBox(height: 12),

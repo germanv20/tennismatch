@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:tennismatch/gen_l10n/app_localizations.dart';
+import 'package:country_picker/country_picker.dart';
 
 const weekOrder = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
@@ -57,6 +58,19 @@ class PlayerProfileViewScreen extends StatefulWidget {
   class _PlayerProfileViewScreenState extends State<PlayerProfileViewScreen> {
     bool isLoading = false;
 
+    String formatDate(DateTime date) {
+      return "${date.day}/${date.month}/${date.year}";
+    }
+
+    String getCountryFlag(String countryName) {
+      try {
+        final country = Country.tryParse(countryName);
+        return country?.flagEmoji ?? '';
+      } catch (_) {
+        return '';
+      }
+    }
+
   @override
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context)!;
@@ -78,6 +92,11 @@ class PlayerProfileViewScreen extends StatefulWidget {
         : sortedAvailability
             .map((day) => translateDay(day, loc))
             .join(', ');
+
+    final Timestamp? birthTimestamp = userData['birthDate'];
+    final int? age = userData['age'];
+    final String city = userData['city'] ?? loc.notSet;
+    final String country = userData['country'] ?? loc.notSet;
 
     return Scaffold(
       appBar: AppBar(
@@ -114,6 +133,46 @@ class PlayerProfileViewScreen extends StatefulWidget {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
+
+                  const SizedBox(height: 16),
+
+                  if (age != null)
+                    Text(
+                      "🎂 ${loc.age}: $age",
+                      style: const TextStyle(fontSize: 15),
+                    ),
+
+                  const SizedBox(height: 8),
+
+                  Text(
+                    "📍 ${loc.city}: $city",
+                    style: const TextStyle(fontSize: 15),
+                  ),
+
+                  const SizedBox(height: 8),
+
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        "🌍 ${loc.country}: $country",
+                        style: const TextStyle(fontSize: 15),
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        getCountryFlag(country),
+                        style: const TextStyle(fontSize: 18),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 8),
+
+                  if (birthTimestamp != null)
+                    Text(
+                      "📅 ${loc.birthDate}: ${formatDate(birthTimestamp.toDate())}",
+                      style: const TextStyle(fontSize: 15),
+                    ),
 
                   const SizedBox(height: 8),
 

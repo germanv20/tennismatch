@@ -59,6 +59,7 @@
   "matchAccepted": "Match accepted",
   "matchCancelled": "Match cancelled",
   "availabilityHint": "Select the days you are available to play",
+  "selectCountry": "Select country",
 
   "noIncomingRequests": "No incoming match requests",
   "noOutgoingRequests": "No outgoing requests",
@@ -146,7 +147,7 @@
   "durationMinutes": "Duration (minutes)",
   "location": "Location",
   "saveResult": "Save Result",
-  "profileUpdated": "Profile updated",
+  "profileUpdatedSuccessfully": "Profile updated successfully",
 
   "setScoresZeroError": "Set scores cannot both be zero.",
   "invalidSetScore": "Invalid tennis set score.",

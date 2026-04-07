@@ -167,6 +167,9 @@ class AppLocalizationsEs extends AppLocalizations {
       'Selecciona los días en los que estás disponible para jugar';
 
   @override
+  String get selectCountry => 'Seleccionar país';
+
+  @override
   String get noIncomingRequests => 'No tienes solicitudes recibidas';
 
   @override
@@ -384,7 +387,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get saveResult => 'Guardar resultado';
 
   @override
-  String get profileUpdated => 'Perfil actualizado';
+  String get profileUpdatedSuccessfully => 'Perfil actualizado exitosamente';
 
   @override
   String get setScoresZeroError => 'Los puntajes no pueden ser ambos cero.';

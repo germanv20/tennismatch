@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:tennismatch/gen_l10n/app_localizations.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:country_picker/country_picker.dart';
 import '../utils/day_utils.dart';
 import 'edit_profile_screen.dart';
 
@@ -44,6 +45,15 @@ class MyProfileScreen extends StatelessWidget {
 
   String formatDate(DateTime date) {
     return "${date.day}/${date.month}/${date.year}";
+  }
+
+  String getFlagEmoji(String countryName) {
+    try {
+      final countryObj = Country.tryParse(countryName);
+      return countryObj?.flagEmoji ?? '';
+    } catch (_) {
+      return '';
+    }
   }
 
   @override
@@ -131,24 +141,49 @@ class MyProfileScreen extends StatelessWidget {
                     const SizedBox(height: 24),
 
                     if (age != null)
-                      Text('${loc.age}: $age'),
+                      Text("🎂 ${loc.age}: $age",
+                      style: const TextStyle(fontSize: 15),
+                      ),
 
                     const SizedBox(height: 12),
 
-                    Text('${loc.city}: $city'),
-                    const SizedBox(height: 12),
+                    Text("📍 ${loc.city}: $city",
+                    style: const TextStyle(fontSize: 15),
+                    ),
 
-                    Text('${loc.country}: $country'),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        if (country != loc.notSet)
+                          Text(
+                            getFlagEmoji(country),
+                            style: const TextStyle(fontSize: 18),
+                          ),
+                        if (country != loc.notSet) const SizedBox(width: 6),
+                        Text(
+                          "${loc.country}: $country",
+                          style: const TextStyle(fontSize: 15),
+                        ),
+                      ],
+                    ),
                     const SizedBox(height: 12),
 
                     if (birthTimestamp != null)
                       Text(
-                        '${loc.birthDate}: ${formatDate(birthTimestamp.toDate())}',
+                        "📅 ${loc.birthDate}: ${formatDate(birthTimestamp.toDate())}",
+                      style: const TextStyle(fontSize: 15),
                       ),
 
                     const SizedBox(height: 24),
 
-                    Text('${loc.level}: $tennisLevel'),
+                    Text(
+                      "🎾 ${loc.level}: $tennisLevel",
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                     ),
+                    ),
+
                     const SizedBox(height: 24),
 
                     availability.isEmpty

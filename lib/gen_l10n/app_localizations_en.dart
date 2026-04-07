@@ -165,6 +165,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get availabilityHint => 'Select the days you are available to play';
 
   @override
+  String get selectCountry => 'Select country';
+
+  @override
   String get noIncomingRequests => 'No incoming match requests';
 
   @override
@@ -381,7 +384,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get saveResult => 'Save Result';
 
   @override
-  String get profileUpdated => 'Profile updated';
+  String get profileUpdatedSuccessfully => 'Profile updated successfully';
 
   @override
   String get setScoresZeroError => 'Set scores cannot both be zero.';

@@ -410,6 +410,12 @@ abstract class AppLocalizations {
   /// **'Select the days you are available to play'**
   String get availabilityHint;
 
+  /// No description provided for @selectCountry.
+  ///
+  /// In en, this message translates to:
+  /// **'Select country'**
+  String get selectCountry;
+
   /// No description provided for @noIncomingRequests.
   ///
   /// In en, this message translates to:
@@ -824,11 +830,11 @@ abstract class AppLocalizations {
   /// **'Save Result'**
   String get saveResult;
 
-  /// No description provided for @profileUpdated.
+  /// No description provided for @profileUpdatedSuccessfully.
   ///
   /// In en, this message translates to:
-  /// **'Profile updated'**
-  String get profileUpdated;
+  /// **'Profile updated successfully'**
+  String get profileUpdatedSuccessfully;
 
   /// No description provided for @setScoresZeroError.
   ///
