@@ -12,6 +12,18 @@ class AppLocalizationsEs extends AppLocalizations {
   String get appTitle => 'Tennis Match';
 
   @override
+  String get loginSubtitle => 'Encuentra compañeros de tenis cerca de ti';
+
+  @override
+  String get featureMatchByLevel => 'Encuentra jugadores de tu nivel';
+
+  @override
+  String get featureAvailability => 'Juega según tu disponibilidad';
+
+  @override
+  String get featureChat => 'Chatea y organiza partidos';
+
+  @override
   String get loginTitle => 'Inicio de sesión';
 
   @override

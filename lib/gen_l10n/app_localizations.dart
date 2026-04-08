@@ -104,6 +104,30 @@ abstract class AppLocalizations {
   /// **'Tennis Match'**
   String get appTitle;
 
+  /// No description provided for @loginSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Find tennis partners near you'**
+  String get loginSubtitle;
+
+  /// No description provided for @featureMatchByLevel.
+  ///
+  /// In en, this message translates to:
+  /// **'Match with players at your level'**
+  String get featureMatchByLevel;
+
+  /// No description provided for @featureAvailability.
+  ///
+  /// In en, this message translates to:
+  /// **'Play based on your availability'**
+  String get featureAvailability;
+
+  /// No description provided for @featureChat.
+  ///
+  /// In en, this message translates to:
+  /// **'Chat and organize matches'**
+  String get featureChat;
+
   /// No description provided for @loginTitle.
   ///
   /// In en, this message translates to:

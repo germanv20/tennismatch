@@ -1,6 +1,11 @@
 {
   "appTitle": "Tennis Match",
 
+  "loginSubtitle": "Encuentra compañeros de tenis cerca de ti",
+  "featureMatchByLevel": "Encuentra jugadores de tu nivel",
+  "featureAvailability": "Juega según tu disponibilidad",
+  "featureChat": "Chatea y organiza partidos",
+
   "loginTitle": "Inicio de sesión",
   "signInWithGoogle": "Iniciar sesión con Google",
   "userProfileNotFound": "Perfil de usuario no encontrado",

@@ -338,14 +338,82 @@ class _AuthTestState extends State<AuthTest> {
         final user = authSnapshot.data;
 
         if (user == null) {
+          final loc = AppLocalizations.of(context)!;
+
           return Scaffold(
-            appBar: AppBar(
-              title: Text(AppLocalizations.of(context)!.loginTitle),
-            ),
-            body: Center(
-              child: ElevatedButton(
-                onPressed: signInWithGoogle,
-                child: Text(AppLocalizations.of(context)!.signInWithGoogle),
+            body: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(24),
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Color(0xFF2E7D32), Color(0xFF66BB6A)],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                ),
+              ),
+              child: SafeArea(
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.sports_tennis, size: 80, color: Colors.white),
+
+                      const SizedBox(height: 20),
+
+                      Text(
+                        "TennisMatch",
+                        style: const TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+
+                      const SizedBox(height: 16),
+
+                      Text(
+                        loc.loginSubtitle, // NEW STRING
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          color: Colors.white70,
+                        ),
+                      ),
+
+                      const SizedBox(height: 30),
+
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text("🎾 ${loc.featureMatchByLevel}",
+                              style: const TextStyle(color: Colors.white)),
+                          const SizedBox(height: 8),
+                          Text("📅 ${loc.featureAvailability}",
+                              style: const TextStyle(color: Colors.white)),
+                          const SizedBox(height: 8),
+                          Text("💬 ${loc.featureChat}",
+                              style: const TextStyle(color: Colors.white)),
+                        ],
+                      ),
+
+                      const SizedBox(height: 40),
+
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: signInWithGoogle,
+                          style: ElevatedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            backgroundColor: Colors.white,
+                            foregroundColor: Colors.black,
+                          ),
+                          child: Text(loc.signInWithGoogle),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ),
           );
