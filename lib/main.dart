@@ -200,8 +200,13 @@ class _AuthTestState extends State<AuthTest> {
 
   Future<void> signInWithGoogle() async {
     try {
+      final GoogleSignIn googleSignIn = GoogleSignIn();
+
+      // 🔥 Force account picker
+      await googleSignIn.signOut();
+
       final GoogleSignInAccount? googleUser =
-          await GoogleSignIn(scopes: ['email']).signIn();
+          await googleSignIn.signIn();
 
       if (googleUser == null) return;
 
@@ -401,15 +406,14 @@ class _AuthTestState extends State<AuthTest> {
 
                       SizedBox(
                         width: double.infinity,
-                        child: ElevatedButton(
+                        child: ElevatedButton.icon(
                           onPressed: signInWithGoogle,
-                          style: ElevatedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            backgroundColor: Colors.white,
-                            foregroundColor: Colors.black,
+                          icon: Image.network(
+                            "https://developers.google.com/identity/images/g-logo.png",
+                            height: 20,
                           ),
-                          child: Text(loc.signInWithGoogle),
-                        ),
+                          label: Text(loc.signInWithGoogle),
+                        )
                       ),
                     ],
                   ),

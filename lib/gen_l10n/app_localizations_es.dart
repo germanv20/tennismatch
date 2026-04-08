@@ -61,6 +61,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get sendFeedback => 'Enviar comentarios';
 
   @override
+  String get loggedOutSuccessfully => 'Sesión cerrada correctamente';
+
+  @override
   String get selectLevel => 'Selecciona nivel';
 
   @override

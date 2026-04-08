@@ -19,6 +19,7 @@
   "outgoingRequests": "Outgoing Requests",
   "myProfile": "My Profile",
   "sendFeedback": "Send Feedback",
+  "loggedOutSuccessfully": "Logged out successfully",
 
   "selectLevel": "Choose level",
   "mon": "Mon",

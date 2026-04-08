@@ -285,13 +285,12 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> signOut(BuildContext context) async {
+    final loc = AppLocalizations.of(context)!;
+
     await FirebaseAuth.instance.signOut();
 
-    if (!mounted) return;
-
-    Navigator.of(context).pushNamedAndRemoveUntil(
-      '/login', // ⚠️ Make sure this route exists
-      (route) => false,
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(loc.loggedOutSuccessfully)),
     );
   }
 

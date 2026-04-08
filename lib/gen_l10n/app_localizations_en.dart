@@ -60,6 +60,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sendFeedback => 'Send Feedback';
 
   @override
+  String get loggedOutSuccessfully => 'Logged out successfully';
+
+  @override
   String get selectLevel => 'Choose level';
 
   @override
