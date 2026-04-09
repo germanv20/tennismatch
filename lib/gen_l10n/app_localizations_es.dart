@@ -64,6 +64,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get loggedOutSuccessfully => 'Sesión cerrada correctamente';
 
   @override
+  String get loginDisclaimer => 'Nunca publicaremos nada sin tu permiso.';
+
+  @override
   String get selectLevel => 'Selecciona nivel';
 
   @override

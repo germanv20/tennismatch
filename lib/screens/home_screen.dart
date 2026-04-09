@@ -12,6 +12,12 @@ import '../widgets/home_card.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:tennismatch/gen_l10n/app_localizations.dart';
 
+const double spaceXS = 4;
+const double spaceS = 8;
+const double spaceM = 16;
+const double spaceL = 24;
+const double spaceXL = 32;
+
 class NotificationBadge extends StatelessWidget {
   final Widget child;
   final int count;
@@ -151,32 +157,37 @@ class _HomeScreenState extends State<HomeScreen> {
     final String level = rawLevel.isEmpty
         ? loc.notSet
         : translateLevel(rawLevel, loc);
+
     final List availabilityRaw =
         normalizeDays(widget.userData['availability'] ?? []);
 
     final List<String> sortedAvailability = List<String>.from(availabilityRaw)
       ..sort((a, b) => weekOrder.indexOf(a).compareTo(weekOrder.indexOf(b)));
 
-    final String availabilityText = sortedAvailability.isEmpty
-        ? loc.noAvailability
-        : sortedAvailability
-            .map((day) => translateDay(day, loc))
-            .join(', ');
-
-    return Card(
-      color: const Color(0xFF2E7D32),
-      elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
+    return Container(
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF2E7D32), Color(0xFF4CAF50)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.15),
+            blurRadius: 10,
+            offset: const Offset(0, 6),
+          ),
+        ],
       ),
-      //elevation: 4,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          children: [
-            CircleAvatar(
-              radius: 30,
-              backgroundColor: Colors.deepPurple.shade100,
+      padding: const EdgeInsets.all(16),
+      child: Row(
+        children: [
+          CircleAvatar(
+            radius: 32,
+            backgroundColor: Colors.white,
+            child: CircleAvatar(
+              radius: 29,
               backgroundImage: (widget.userData['photoUrl'] != null &&
                       widget.userData['photoUrl'].toString().isNotEmpty)
                   ? NetworkImage(widget.userData['photoUrl'])
@@ -185,48 +196,68 @@ class _HomeScreenState extends State<HomeScreen> {
                   ? const Icon(Icons.person, size: 30)
                   : null,
             ),
-            const SizedBox(width: 16),
+          ),
 
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
+          const SizedBox(width: spaceM),
 
-                  Text(
-                    name,
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+
+                Text(
+                  name,
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
                   ),
+                ),
 
-                  const SizedBox(height: 4),
+                const SizedBox(height: spaceS),
 
-                  Text(
-                    "${loc.level}: $level",
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                    ),
+                // 🎾 LEVEL CHIP
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(12),
                   ),
-
-                  const SizedBox(height: 2),
-
-                  Text(
-                    "${loc.availability}: $availabilityText",
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                    ),
+                  child: Text(
+                    "🎾 $level",
+                    style: const TextStyle(color: Colors.white),
                   ),
-                ],
-              ),
+                ),
+
+                const SizedBox(height: spaceS),
+
+                // 📅 AVAILABILITY CHIPS
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 6,
+                  children: sortedAvailability.map((day) {
+                    return Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Text(
+                        translateDay(day, loc),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -400,76 +431,161 @@ class _HomeScreenState extends State<HomeScreen> {
 
                 buildProfileCard(loc),
 
-                const SizedBox(height: 24),
+                const SizedBox(height: spaceL),
 
-                Text(loc.yourTennisLevel),
-
-                const SizedBox(height: 8),
-
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-
-                    DropdownButton<String>(
-                      value: tennisLevel,
-                      hint: Text(loc.selectLevel),
-                      items: levelMap.entries.map((entry) {
-                        return DropdownMenuItem<String>(
-                          value: entry.key,        // ✅ stored in Firestore
-                          child: Text(entry.value) // ✅ translated label
-                        );
-                      }).toList(),
-                      onChanged: (value) async {
-                        if (value == null) return;
-                        await updateTennisLevel(value);
-                      },
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    loc.yourTennisLevel,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
                     ),
-                  ],
+                  ),
                 ),
 
-                const SizedBox(height: 32),
+                const SizedBox(height: spaceS),
 
-                Text(loc.availability),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(spaceM),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 8,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
 
-                const SizedBox(height: 4),
+                      Text(
+                        loc.yourTennisLevel,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
 
-                Text(
-                  loc.availabilityHint,
-                  style: const TextStyle(color: Colors.black),
-                ), // Your availability
+                      const SizedBox(height: spaceS),
 
-                const SizedBox(height: 8),
-
-                ListView(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  children: dayMap.entries.map((entry) {
-                    final key = entry.key;     // 'Mon'
-                    final label = entry.value; // 'Lun'
-
-                    final isSelected = availability.contains(key); // ✅ FIX
-
-                    return CheckboxListTile(
-                      title: Text(label), // already translated
-                      value: isSelected,
-                      onChanged: (checked) async {
-                        final updated = List<String>.from(availability);
-
-                        if (checked == true) {
-                          if (!updated.contains(key)) {
-                            updated.add(key);
-                          }
-                        } else {
-                          updated.remove(key);
-                        }
-
-                        await updateAvailability(updated);
-                      },
-                    );
-                  }).toList(),
+                      DropdownButton<String>(
+                        value: tennisLevel,
+                        hint: Text(loc.selectLevel),
+                        isExpanded: true, // 🔥 important improvement
+                        items: levelMap.entries.map((entry) {
+                          return DropdownMenuItem<String>(
+                            value: entry.key,
+                            child: Text(entry.value),
+                          );
+                        }).toList(),
+                        onChanged: (value) async {
+                          if (value == null) return;
+                          await updateTennisLevel(value);
+                        },
+                      ),
+                    ],
+                  ),
                 ),
 
-                const SizedBox(height: 24),
+                const SizedBox(height: spaceXL),
+
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(spaceM),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 8,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+
+                      Row(
+                        children: [
+                          const Icon(Icons.calendar_today, size: 18),
+                          const SizedBox(width: spaceS),
+                          Text(
+                            loc.availability,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      const SizedBox(height: spaceXS),
+
+                      Text(
+                        loc.availabilityHint,
+                        style: TextStyle(
+                          color: Colors.grey.shade600,
+                          fontSize: 13,
+                        ),
+                      ),
+
+                      const SizedBox(height: spaceM),
+
+                      Wrap(
+                        spacing: spaceS,
+                        runSpacing: spaceS,
+                        children: dayMap.entries.map((entry) {
+                          final key = entry.key;
+                          final label = entry.value;
+
+                          final isSelected = availability.contains(key);
+
+                          return GestureDetector(
+                            onTap: () async {
+                              final updated = List<String>.from(availability);
+
+                              if (isSelected) {
+                                updated.remove(key);
+                              } else {
+                                updated.add(key);
+                              }
+
+                              await updateAvailability(updated);
+                            },
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 200),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 14, vertical: 10),
+                              decoration: BoxDecoration(
+                                color: isSelected
+                                    ? const Color(0xFF2E7D32)
+                                    : Colors.grey.shade200,
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Text(
+                                label,
+                                style: TextStyle(
+                                  color: isSelected ? Colors.white : Colors.black87,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: spaceL),
 
                 GridView.count(
                   crossAxisCount: 2,

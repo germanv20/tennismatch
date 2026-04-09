@@ -63,6 +63,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get loggedOutSuccessfully => 'Logged out successfully';
 
   @override
+  String get loginDisclaimer =>
+      'We never post anything without your permission.';
+
+  @override
   String get selectLevel => 'Choose level';
 
   @override

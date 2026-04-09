@@ -20,6 +20,7 @@
   "myProfile": "My Profile",
   "sendFeedback": "Send Feedback",
   "loggedOutSuccessfully": "Logged out successfully",
+  "loginDisclaimer": "We never post anything without your permission.",
 
   "selectLevel": "Choose level",
   "mon": "Mon",

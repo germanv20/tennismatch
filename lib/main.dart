@@ -328,6 +328,31 @@ class _AuthTestState extends State<AuthTest> {
     debugPrint('✅ FCM token saved to Firestore');
   }
 
+  Widget _featureItem({required IconData icon, required String text}) {
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.2),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(icon, color: Colors.white, size: 20),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Text(
+            text,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 14,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<User?>(
@@ -348,37 +373,43 @@ class _AuthTestState extends State<AuthTest> {
           return Scaffold(
             body: Container(
               width: double.infinity,
-              padding: const EdgeInsets.all(24),
               decoration: const BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [Color(0xFF2E7D32), Color(0xFF66BB6A)],
+                  colors: [Color(0xFF1B5E20), Color(0xFF66BB6A)],
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                 ),
               ),
               child: SafeArea(
-                child: SingleChildScrollView(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
                   child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(Icons.sports_tennis, size: 80, color: Colors.white),
 
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 40),
 
-                      Text(
-                        "TennisMatch",
-                        style: const TextStyle(
-                          fontSize: 28,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
+                      // 🎾 LOGO + TITLE
+                      Column(
+                        children: const [
+                          Icon(Icons.sports_tennis, size: 90, color: Colors.white),
+                          SizedBox(height: 16),
+                          Text(
+                            "TennisMatch",
+                            style: TextStyle(
+                              fontSize: 32,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                              letterSpacing: 1.2,
+                            ),
+                          ),
+                        ],
                       ),
 
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 12),
 
+                      // 🧠 TAGLINE
                       Text(
-                        loc.loginSubtitle, // NEW STRING
+                        loc.loginSubtitle,
                         textAlign: TextAlign.center,
                         style: const TextStyle(
                           fontSize: 16,
@@ -386,35 +417,84 @@ class _AuthTestState extends State<AuthTest> {
                         ),
                       ),
 
-                      const SizedBox(height: 30),
-
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text("🎾 ${loc.featureMatchByLevel}",
-                              style: const TextStyle(color: Colors.white)),
-                          const SizedBox(height: 8),
-                          Text("📅 ${loc.featureAvailability}",
-                              style: const TextStyle(color: Colors.white)),
-                          const SizedBox(height: 8),
-                          Text("💬 ${loc.featureChat}",
-                              style: const TextStyle(color: Colors.white)),
-                        ],
-                      ),
-
                       const SizedBox(height: 40),
 
+                      // 🧊 FEATURE CARD (GLASS STYLE)
+                      Container(
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.15),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Column(
+                          children: [
+                            _featureItem(
+                              icon: Icons.sports_tennis,
+                              text: loc.featureMatchByLevel,
+                            ),
+                            const SizedBox(height: 16),
+                            _featureItem(
+                              icon: Icons.calendar_today,
+                              text: loc.featureAvailability,
+                            ),
+                            const SizedBox(height: 16),
+                            _featureItem(
+                              icon: Icons.chat_bubble,
+                              text: loc.featureChat,
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      const Spacer(),
+
+                      // 🔘 GOOGLE BUTTON (PREMIUM)
                       SizedBox(
                         width: double.infinity,
-                        child: ElevatedButton.icon(
+                        child: ElevatedButton(
                           onPressed: signInWithGoogle,
-                          icon: Image.network(
-                            "https://developers.google.com/identity/images/g-logo.png",
-                            height: 20,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.white,
+                            foregroundColor: Colors.black87,
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                            elevation: 3,
                           ),
-                          label: Text(loc.signInWithGoogle),
-                        )
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Image.network(
+                                "https://developers.google.com/identity/images/g-logo.png",
+                                height: 22,
+                              ),
+                              const SizedBox(width: 12),
+                              Text(
+                                loc.signInWithGoogle,
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
+
+                      const SizedBox(height: 12),
+
+                      // 🔒 TRUST TEXT
+                      Text(
+                        loc.loginDisclaimer,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: Colors.white60,
+                        ),
+                      ),
+
+                      const SizedBox(height: 20),
                     ],
                   ),
                 ),

@@ -206,6 +206,12 @@ abstract class AppLocalizations {
   /// **'Logged out successfully'**
   String get loggedOutSuccessfully;
 
+  /// No description provided for @loginDisclaimer.
+  ///
+  /// In en, this message translates to:
+  /// **'We never post anything without your permission.'**
+  String get loginDisclaimer;
+
   /// No description provided for @selectLevel.
   ///
   /// In en, this message translates to:
