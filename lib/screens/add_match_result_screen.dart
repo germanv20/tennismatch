@@ -257,18 +257,6 @@ class _AddMatchResultScreenState
                 : FieldValue.increment(1),
           });
 
-          // Update opponent stats
-          await opponentRef.update({
-            'matchesPlayed': FieldValue.increment(1),
-            'totalDuration': FieldValue.increment(duration),
-            'wins': winnerUid == opponentUid
-                ? FieldValue.increment(1)
-                : FieldValue.increment(0),
-            'losses': winnerUid == opponentUid
-                ? FieldValue.increment(0)
-                : FieldValue.increment(1),
-          });
-
           // --- HEAD TO HEAD STATS ---
 
     int p1SetsWon = 0;
@@ -306,18 +294,6 @@ class _AddMatchResultScreenState
           : FieldValue.increment(0),
       'setsWon': FieldValue.increment(p1SetsWon),
       'setsLost': FieldValue.increment(p2SetsWon),
-    }, SetOptions(merge: true));
-
-    batch.set(p2H2H, {
-      'matches': FieldValue.increment(1),
-      'wins': winnerUid == opponentUid
-          ? FieldValue.increment(1)
-          : FieldValue.increment(0),
-      'losses': winnerUid != opponentUid
-          ? FieldValue.increment(1)
-          : FieldValue.increment(0),
-      'setsWon': FieldValue.increment(p2SetsWon),
-      'setsLost': FieldValue.increment(p1SetsWon),
     }, SetOptions(merge: true));
 
     await batch.commit();
