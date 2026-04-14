@@ -127,6 +127,7 @@ class _AddMatchResultScreenState
       return;
     }
 
+    if (!mounted) return;
     final loc = AppLocalizations.of(context)!;
     List<Map<String, int>> formattedSets = [];
 
@@ -266,35 +267,6 @@ class _AddMatchResultScreenState
           : FieldValue.increment(1),
     });
 
-    // ------------------
-    // HEAD TO HEAD
-    // ------------------
-    int p1SetsWon = 0;
-    int p2SetsWon = 0;
-
-    for (var set in formattedSets) {
-      if (set['p1']! > set['p2']!) {
-        p1SetsWon++;
-      } else {
-        p2SetsWon++;
-      }
-    }
-
-    final p1H2H = userRef
-        .collection('headToHead')
-        .doc(opponentUid);
-
-    batch.set(p1H2H, {
-      'matches': FieldValue.increment(1),
-      'wins': winnerUid == currentUid
-          ? FieldValue.increment(1)
-          : FieldValue.increment(0),
-      'losses': winnerUid != currentUid
-          ? FieldValue.increment(1)
-          : FieldValue.increment(0),
-      'setsWon': FieldValue.increment(p1SetsWon),
-      'setsLost': FieldValue.increment(p2SetsWon),
-    }, SetOptions(merge: true));
 
     // ------------------
     // COMMIT ONCE
@@ -331,6 +303,28 @@ class _AddMatchResultScreenState
       player1Name = currentUserDoc['name'];
       player2Name = opponentDoc['name'];
     });
+  }
+
+  Future<void> handleSave() async {
+    if (!mounted) return;
+
+    setState(() => isSaving = true);
+
+    try {
+      await saveResult();
+    } catch (e) {
+      debugPrint('❌ Save result error: $e');
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Failed to save result')),
+      );
+    } finally {
+        if (mounted) {
+          setState(() => isSaving = false);
+        }
+      }
   }
 
   @override
@@ -451,29 +445,7 @@ class _AddMatchResultScreenState
             const SizedBox(height: 30),
 
             ElevatedButton(
-              onPressed: isSaving
-                ? null
-                : () async {
-                    try {
-                      setState(() => isSaving = true);
-
-                      await saveResult();
-
-                    } catch (e) {
-                      debugPrint('❌ Save result error: $e');
-
-                      if (!mounted) return;
-
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Failed to save result')),
-                      );
-
-                    } finally {
-                      if (mounted) {
-                        setState(() => isSaving = false);
-                      }
-                    }
-                  },
+              onPressed: isSaving ? null : handleSave,
               child: isSaving
                   ? const CircularProgressIndicator()
                   : Text(loc.saveResult),

@@ -45,30 +45,64 @@ class _MatchDetailsScreenState extends State<MatchDetailsScreen> {
   }
 
   Future<void> loadHeadToHead() async {
-
     final uid = FirebaseAuth.instance.currentUser!.uid;
+    final opponentUid = widget.opponentUid;
 
-    final doc = await FirebaseFirestore.instance
-        .collection('users')
-        .doc(uid)
-        .collection('headToHead')
-        .doc(widget.opponentUid)
+    final snapshot = await FirebaseFirestore.instance
+        .collection('matches')
+        .where('status', isEqualTo: 'completed')
+        .where('players', arrayContains: uid)
         .get();
 
-    if (doc.exists) {
+    int matches = 0;
+    int wins = 0;
+    int losses = 0;
+    int setsWon = 0;
+    int setsLost = 0;
 
-      final data = doc.data()!;
+    for (var doc in snapshot.docs) {
+      final data = doc.data();
+      final players = List<String>.from(data['players'] ?? []);
 
-      h2hMatches = data['matches'] ?? 0;
-      h2hWins = data['wins'] ?? 0;
-      h2hLosses = data['losses'] ?? 0;
-      h2hSetsWon = data['setsWon'] ?? 0;
-      h2hSetsLost = data['setsLost'] ?? 0;
+      // ✅ Only matches between these two players
+      if (!players.contains(opponentUid)) continue;
+
+      matches++;
+
+      if (data['winnerUid'] == uid) {
+        wins++;
+      } else {
+        losses++;
+      }
+
+      final result = data['result'] ?? {};
+      final sets = result['sets'] ?? [];
+
+      final bool userIsP1 = players[0] == uid;
+
+      for (var set in sets) {
+        final p1 = set['p1'] ?? 0;
+        final p2 = set['p2'] ?? 0;
+
+        int myScore = userIsP1 ? p1 : p2;
+        int opponentScore = userIsP1 ? p2 : p1;
+
+        if (myScore > opponentScore) {
+          setsWon++;
+        } else {
+          setsLost++;
+        }
+      }
     }
 
     if (!mounted) return;
 
     setState(() {
+      h2hMatches = matches;
+      h2hWins = wins;
+      h2hLosses = losses;
+      h2hSetsWon = setsWon;
+      h2hSetsLost = setsLost;
       loadingH2H = false;
     });
   }
