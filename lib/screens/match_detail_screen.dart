@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:tennismatch/gen_l10n/app_localizations.dart';
 import 'match_chat_screen.dart';
 import 'add_match_result_screen.dart';
+import 'package:tennismatch/services/h2h_service.dart';
 
 
 class MatchDetailScreen extends StatelessWidget {
@@ -74,6 +75,14 @@ class MatchDetailScreen extends StatelessWidget {
                     .update({
                   'status': 'cancelled',
                 });
+
+                final currentUid = FirebaseAuth.instance.currentUser!.uid;
+                final opponentUid = opponentData['uid'];
+
+                await H2HService.recalculateHeadToHead(
+                  userA: currentUid,
+                  userB: opponentUid,
+                );
 
                 if (!context.mounted) return;
 

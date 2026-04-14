@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:tennismatch/gen_l10n/app_localizations.dart';
+import 'package:tennismatch/services/h2h_service.dart';
 
 class AddMatchResultScreen extends StatefulWidget {
   final String matchId;
@@ -272,6 +273,11 @@ class _AddMatchResultScreenState
     // COMMIT ONCE
     // ------------------
     await batch.commit();
+
+    await H2HService.recalculateHeadToHead(
+      userA: currentUid,
+      userB: opponentUid,
+    );
 
     if (!mounted) return;
 
