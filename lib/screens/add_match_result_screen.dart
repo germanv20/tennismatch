@@ -116,6 +116,17 @@ class _AddMatchResultScreenState
 
 
   Future<void> saveResult() async {
+    final matchRef = FirebaseFirestore.instance
+        .collection('matches')
+        .doc(widget.matchId);
+
+    final matchDoc = await matchRef.get();
+
+    if (matchDoc['status'] == 'completed') {
+      showError("Match already completed");
+      return;
+    }
+
     final loc = AppLocalizations.of(context)!;
     List<Map<String, int>> formattedSets = [];
 
@@ -123,18 +134,24 @@ class _AddMatchResultScreenState
     int p2Wins = 0;
 
     for (var set in sets) {
-      final int p1 = int.tryParse(set['p1']!.text) ?? 0;
-      final int p2 = int.tryParse(set['p2']!.text) ?? 0;
 
+      // ✅ NEW: prevent empty fields
+      if (set['p1']!.text.isEmpty || set['p2']!.text.isEmpty) {
+        showError("Complete all set scores");
+        return;
+      }
+
+      final int p1 = int.parse(set['p1']!.text);
+      final int p2 = int.parse(set['p2']!.text);
 
       if (p1 == 0 && p2 == 0) {
-        showError(loc.setScoresZeroError); // "Set scores cannot both be zero."
+        showError(loc.setScoresZeroError);
         return;
       }
 
       if (useOfficialScoring) {
         if (!isValidTennisSet(p1, p2)) {
-          showError(loc.invalidSetScore); // "Invalid tennis set score."
+          showError(loc.invalidSetScore);
           return;
         }
       }
@@ -198,67 +215,60 @@ class _AddMatchResultScreenState
 
     final opponentName = opponentDoc['name'];
 
-    await FirebaseFirestore.instance
-        .collection('matches')
-        .doc(widget.matchId)
-        .update({
+    final batch = FirebaseFirestore.instance.batch();
 
-          'status': 'completed',
-          'completedAt': FieldValue.serverTimestamp(),
-          'winnerUid': winnerUid,
+    // ------------------
+    // MATCH UPDATE
+    // ------------------
+    batch.update(matchRef, {
+      'status': 'completed',
+      'completedAt': FieldValue.serverTimestamp(),
+      'winnerUid': winnerUid,
+      // IMPORTANT:
+      // p1 ALWAYS represents the current user perspective
+      // NEVER use players[0] directly for UI or results
+      'player1Uid': currentUid,
+      'player2Uid': opponentUid,
+      'playerNames': {
+        currentUid: currentUserName,
+        opponentUid: opponentName,
+      },
+      'result': {
+        'sets': formattedSets,
+        'location': locationController.text.trim(),
+        'durationMinutes': duration,
+        'matchDate': selectedMatchDate,
+      },
+      'summary': {
+        'p1Name': currentUserName,
+        'p2Name': opponentName,
+        'p1Sets': p1Wins,
+        'p2Sets': p2Wins,
+        'matchDate': selectedMatchDate,
+      },
+    });
 
-          // NEW FIELDS
-          'player1Uid': players[0],
-          'player2Uid': players[1],
+    // ------------------
+    // CURRENT USER STATS
+    // ------------------
+    final userRef = FirebaseFirestore.instance
+        .collection('users')
+        .doc(currentUid);
 
-          'playerNames': {
-            currentUid: currentUserName,
-            opponentUid: opponentName,
-          },
+    batch.update(userRef, {
+      'matchesPlayed': FieldValue.increment(1),
+      'totalDuration': FieldValue.increment(duration),
+      'wins': winnerUid == currentUid
+          ? FieldValue.increment(1)
+          : FieldValue.increment(0),
+      'losses': winnerUid == currentUid
+          ? FieldValue.increment(0)
+          : FieldValue.increment(1),
+    });
 
-          'result': {
-            'sets': formattedSets,
-            'location': locationController.text.trim(),
-            'durationMinutes': int.parse(durationController.text),
-            'matchDate': selectedMatchDate,
-          },
-
-          'summary': {
-            'p1Name': currentUserName,
-            'p2Name': opponentName,
-            'p1Sets': p1Wins,
-            'p2Sets': p2Wins,
-            'matchDate': selectedMatchDate,
-          },
-
-        });
-
-        // --- STATS ENGINE ---
-
-          // Current user stats reference
-          final userRef = FirebaseFirestore.instance
-              .collection('users')
-              .doc(currentUid);
-
-          // Opponent stats reference
-          final opponentRef = FirebaseFirestore.instance
-              .collection('users')
-              .doc(opponentUid);
-
-          // Update current user stats
-          await userRef.update({
-            'matchesPlayed': FieldValue.increment(1),
-            'totalDuration': FieldValue.increment(duration),
-            'wins': winnerUid == currentUid
-                ? FieldValue.increment(1)
-                : FieldValue.increment(0),
-            'losses': winnerUid == currentUid
-                ? FieldValue.increment(0)
-                : FieldValue.increment(1),
-          });
-
-          // --- HEAD TO HEAD STATS ---
-
+    // ------------------
+    // HEAD TO HEAD
+    // ------------------
     int p1SetsWon = 0;
     int p2SetsWon = 0;
 
@@ -270,19 +280,9 @@ class _AddMatchResultScreenState
       }
     }
 
-    final batch = FirebaseFirestore.instance.batch();
-
-    final p1H2H = FirebaseFirestore.instance
-        .collection('users')
-        .doc(currentUid)
+    final p1H2H = userRef
         .collection('headToHead')
         .doc(opponentUid);
-
-    final p2H2H = FirebaseFirestore.instance
-        .collection('users')
-        .doc(opponentUid)
-        .collection('headToHead')
-        .doc(currentUid);
 
     batch.set(p1H2H, {
       'matches': FieldValue.increment(1),
@@ -296,36 +296,40 @@ class _AddMatchResultScreenState
       'setsLost': FieldValue.increment(p2SetsWon),
     }, SetOptions(merge: true));
 
+    // ------------------
+    // COMMIT ONCE
+    // ------------------
     await batch.commit();
 
     if (!mounted) return;
 
-    Navigator.pop(context);
-    Navigator.pop(context);
+    Navigator.pop(context, true);
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(loc.matchCompleted)), // 'Match completed 🎾'
-    );
   }
 
   Future<void> loadPlayerNames() async {
     final players = widget.matchData['players'] as List;
+    final currentUid = FirebaseAuth.instance.currentUser!.uid;
 
-    final user1 = await FirebaseFirestore.instance
+    final opponentUid =
+        players.firstWhere((uid) => uid != currentUid);
+
+    final currentUserDoc = await FirebaseFirestore.instance
         .collection('users')
-        .doc(players[0])
+        .doc(currentUid)
         .get();
 
-    final user2 = await FirebaseFirestore.instance
+    final opponentDoc = await FirebaseFirestore.instance
         .collection('users')
-        .doc(players[1])
+        .doc(opponentUid)
         .get();
 
     if (!mounted) return;
 
     setState(() {
-      player1Name = user1['name'];
-      player2Name = user2['name'];
+      // ✅ ALWAYS enforce correct perspective
+      player1Name = currentUserDoc['name'];
+      player2Name = opponentDoc['name'];
     });
   }
 
@@ -391,7 +395,9 @@ class _AddMatchResultScreenState
                   // ❌ REMOVE BUTTON
                   IconButton(
                     icon: const Icon(Icons.remove_circle, color: Colors.red),
-                    onPressed: sets.length > 1 ? () => removeSet(index) : null,
+                    onPressed: (sets.length > 1 && !isSaving)
+                        ? () => removeSet(index)
+                        : null,
                   ),
                 ],
               );
@@ -400,11 +406,13 @@ class _AddMatchResultScreenState
             const SizedBox(height: 10),
 
             ElevatedButton.icon(
-              onPressed: () {
-                setState(() {
-                  addSet();
-                });
-              },
+              onPressed: isSaving
+                  ? null
+                  : () {
+                      setState(() {
+                        addSet();
+                      });
+                    },
               icon: const Icon(Icons.add),
               label: Text(loc.addSet),
             ),

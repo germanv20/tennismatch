@@ -229,8 +229,8 @@ class MatchDetailScreen extends StatelessWidget {
                   ElevatedButton.icon(
                     icon: const Icon(Icons.emoji_events),
                     label: Text(loc.addMatchResult), // 'Add Match Result'
-                    onPressed: () {
-                      Navigator.push(
+                    onPressed: () async {
+                      final result = await Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (_) => AddMatchResultScreen(
@@ -239,6 +239,10 @@ class MatchDetailScreen extends StatelessWidget {
                           ),
                         ),
                       );
+
+                      if (result == true && context.mounted) {
+                        Navigator.pop(context, true); // 🔥 propagate to My Matches
+                      }
                     },
                   ),
                 ],

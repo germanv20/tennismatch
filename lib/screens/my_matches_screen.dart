@@ -18,6 +18,8 @@ class MyMatchesScreen extends StatefulWidget {
 
 class _MyMatchesScreenState extends State<MyMatchesScreen> {
 
+  bool showCompletedSnackbar = false;
+
     @override
     void initState() {
       super.initState();
@@ -34,18 +36,15 @@ class _MyMatchesScreenState extends State<MyMatchesScreen> {
         .where('status', whereIn: ['pending', 'confirmed'])
         .get();
 
-    for (var doc in snapshot.docs) {
-      final players = List<String>.from(doc['players']);
+    final batch = FirebaseFirestore.instance.batch();
 
-      try {
-        await doc.reference.update({
-          'notifiedPlayers': FieldValue.arrayUnion([userId]),
-        });
-        print("✅ Updated notifiedPlayers for match ${doc.id}");
-      } catch (e) {
-        print("❌ ERROR updating match ${doc.id}: $e");
-      }
+    for (var doc in snapshot.docs) {
+      batch.update(doc.reference, {
+        'notifiedPlayers': FieldValue.arrayUnion([userId]),
+      });
     }
+
+    await batch.commit();
   }
   
 
@@ -53,6 +52,16 @@ class _MyMatchesScreenState extends State<MyMatchesScreen> {
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context)!;
     final matchesRef = FirebaseFirestore.instance.collection('matches');
+
+    if (showCompletedSnackbar) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(loc.matchCompleted)),
+        );
+      });
+
+      showCompletedSnackbar = false;
+    }
 
     return Scaffold(
       appBar: AppBar(
@@ -149,70 +158,56 @@ class _MyMatchesScreenState extends State<MyMatchesScreen> {
                             style: const TextStyle(fontWeight: FontWeight.bold),
                           ), // 'Unknown'
                           subtitle: Text(loc.matchActive), // 'Match active'
-                          trailing: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              StreamBuilder<QuerySnapshot>(
-                                stream: FirebaseFirestore.instance
-                                    .collection('matches')
-                                    .doc(match.id)
-                                    .collection('messages')
-                                    .where('senderUid', isNotEqualTo: widget.currentUser.uid)
-                                    .snapshots(),
-                                builder: (context, messageSnapshot) {
+                          trailing: StreamBuilder<QuerySnapshot>(
+                            stream: FirebaseFirestore.instance
+                                .collection('matches')
+                                .doc(match.id)
+                                .collection('messages')
+                                .snapshots(),
+                            builder: (context, msgSnapshot) {
 
-                                  if (messageSnapshot.hasError){
-                                    return const SizedBox();
-                                  }
+                              int unreadCount = 0;
 
-                                  if (!messageSnapshot.hasData) {
-                                    return const SizedBox(
-                                      width: 24,
-                                      height: 24,
-                                    );
-                                  }
+                              if (msgSnapshot.hasData) {
+                                final currentUid = widget.currentUser.uid;
 
-                                  int unreadCount = 0;
+                                unreadCount = msgSnapshot.data!.docs.where((doc) {
+                                  final msg = doc.data() as Map<String, dynamic>;
 
-                                  for (var doc in messageSnapshot.data!.docs) {
-                                    final data = doc.data() as Map<String, dynamic>;
-                                    final readBy = Map<String, dynamic>.from(data['readBy'] ?? {});
-                                    if (readBy[widget.currentUser.uid] != true) {
-                                      unreadCount++;
-                                    }
-                                  }
+                                  if (msg['senderUid'] == currentUid) return false;
 
-                                  if (unreadCount == 0) {
-                                    return const SizedBox();
-                                  }
+                                  final readBy = Map<String, dynamic>.from(msg['readBy'] ?? {});
+                                  return readBy[currentUid] != true;
+                                }).length;
+                              }
 
-                                  return Container(
-                                    margin: const EdgeInsets.only(right: 8),
-                                    padding: const EdgeInsets.all(6),
-                                    decoration: const BoxDecoration(
-                                      color: Colors.red,
-                                      shape: BoxShape.circle,
-                                    ),
-                                    constraints: const BoxConstraints(
-                                      minWidth: 24,
-                                      minHeight: 24,
-                                    ),
-                                    child: Center(
+                              final hasUnread = unreadCount > 0;
+
+                              return Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  if (hasUnread)
+                                    Container(
+                                      margin: const EdgeInsets.only(right: 8),
+                                      padding: const EdgeInsets.all(6),
+                                      decoration: const BoxDecoration(
+                                        color: Colors.red,
+                                        shape: BoxShape.circle,
+                                      ),
                                       child: Text(
-                                        unreadCount > 99 ? '99+' : unreadCount.toString(),
+                                        unreadCount > 9 ? '9+' : unreadCount.toString(),
                                         style: const TextStyle(
                                           color: Colors.white,
-                                          fontSize: 12,
+                                          fontSize: 10,
                                           fontWeight: FontWeight.bold,
                                         ),
                                       ),
                                     ),
-                                  );
-                                },
-                              ),
 
-                              const Icon(Icons.sports_tennis),
-                            ],
+                                  const Icon(Icons.sports_tennis),
+                                ],
+                              );
+                            },
                           ),
                           onTap: () async {
                             final message = AppLocalizations.of(context)!.matchCancelled;
@@ -225,6 +220,12 @@ class _MyMatchesScreenState extends State<MyMatchesScreen> {
                                 ),
                               ),
                             );
+
+                            if (result == true) {
+                              setState(() {
+                                showCompletedSnackbar = true;
+                              });
+                            }
 
                             debugPrint("👉 Match detail result: $result");
 

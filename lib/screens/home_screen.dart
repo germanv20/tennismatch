@@ -460,36 +460,53 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ],
                   ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
+                  child: Wrap(
+                    spacing: 10,
+                    runSpacing: 10,
+                    children: levelMap.entries.map((entry) {
+                      final isSelected = tennisLevel == entry.key;
 
-                      Text(
-                        loc.yourTennisLevel,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-
-                      const SizedBox(height: spaceS),
-
-                      DropdownButton<String>(
-                        value: tennisLevel,
-                        hint: Text(loc.selectLevel),
-                        isExpanded: true, // 🔥 important improvement
-                        items: levelMap.entries.map((entry) {
-                          return DropdownMenuItem<String>(
-                            value: entry.key,
-                            child: Text(entry.value),
-                          );
-                        }).toList(),
-                        onChanged: (value) async {
-                          if (value == null) return;
-                          await updateTennisLevel(value);
+                      return GestureDetector(
+                        onTap: () async {
+                          await updateTennisLevel(entry.key);
                         },
-                      ),
-                    ],
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 200),
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          decoration: BoxDecoration(
+                            color: isSelected
+                                ? const Color(0xFF2E7D32)
+                                : Colors.grey.shade200,
+                            borderRadius: BorderRadius.circular(30),
+                            boxShadow: isSelected
+                                ? [
+                                    BoxShadow(
+                                      color: Colors.green.withOpacity(0.3),
+                                      blurRadius: 8,
+                                      offset: const Offset(0, 3),
+                                    )
+                                  ]
+                                : [],
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              if (isSelected)
+                                const Icon(Icons.check, color: Colors.white, size: 16),
+                              if (isSelected) const SizedBox(width: 6),
+
+                              Text(
+                                entry.value,
+                                style: TextStyle(
+                                  color: isSelected ? Colors.white : Colors.black87,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    }).toList(),
                   ),
                 ),
 

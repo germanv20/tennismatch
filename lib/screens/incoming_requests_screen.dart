@@ -13,25 +13,32 @@ class IncomingRequestsScreen extends StatelessWidget {
     DocumentReference requestRef,
     String status,
   ) async {
-    // 1️⃣ Update the request status
-    await requestRef.update({
+    // 1️⃣ Read current state FIRST
+    final requestSnapshot = await requestRef.get();
+    final data = requestSnapshot.data() as Map<String, dynamic>;
+
+    // 🚨 Prevent duplicate processing
+    if (data['status'] != 'pending') return;
+
+    final batch = FirebaseFirestore.instance.batch();
+
+    // 2️⃣ Update request status
+    batch.update(requestRef, {
       'status': status,
     });
 
-    // 2️⃣ If accepted → create match
+    // 3️⃣ If accepted → create match
     if (status == 'accepted') {
-      final requestSnapshot = await requestRef.get();
-      final data = requestSnapshot.data() as Map<String, dynamic>;
+      final matchRef =
+          FirebaseFirestore.instance.collection('matches').doc();
 
-      await FirebaseFirestore.instance.collection('matches').add({
+      batch.set(matchRef, {
         'players': [
           data['fromUid'],
           data['toUid'],
         ],
-
         'player1Uid': data['fromUid'],
         'player2Uid': data['toUid'],
-
         'createdAt': FieldValue.serverTimestamp(),
         'status': 'confirmed',
 
@@ -39,11 +46,12 @@ class IncomingRequestsScreen extends StatelessWidget {
         'lastMessageTime': FieldValue.serverTimestamp(),
         'lastSenderUid': null,
 
-        // 🔥 NEW FIELD
         'notifiedPlayers': [],
       });
-
     }
+
+    // 🔥 Commit once
+    await batch.commit();
   }
 
   @override
@@ -160,6 +168,12 @@ class IncomingRequestsScreen extends StatelessWidget {
                                           );
                                         } catch (e) {
                                           debugPrint('❌ Error rejecting request: $e');
+
+                                          if (!context.mounted) return;
+
+                                          ScaffoldMessenger.of(scaffoldContext).showSnackBar(
+                                            const SnackBar(content: Text('Something went wrong')),
+                                          );
                                         }
                                       },
                                     ),

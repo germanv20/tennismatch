@@ -225,10 +225,7 @@ class _MatchHistoryScreenState extends State<MatchHistoryScreen> {
                         duration: duration,
                         matchDate: matchDate,
                         winnerUid: match['winnerUid'],
-                        currentUserUid: currentUid,
-                        currentUserIsP1: currentUserIsP1,
-                        player1Uid: player1Uid,
-                        player2Uid: player2Uid,
+                        currentUserUid: currentUid
                       ),
                     );
                   },

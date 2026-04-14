@@ -12,9 +12,7 @@ class MatchCard extends StatelessWidget {
   final DateTime matchDate;
   final String winnerUid;
   final String currentUserUid;
-  final bool currentUserIsP1;
-  final String player1Uid;
-  final String player2Uid;
+  
 
   const MatchCard({
   super.key,
@@ -27,16 +25,12 @@ class MatchCard extends StatelessWidget {
   required this.matchDate,
   required this.winnerUid,
   required this.currentUserUid,
-  required this.currentUserIsP1,
-  required this.player1Uid,
-  required this.player2Uid,
 });
 
   @override
   Widget build(BuildContext context) {
 
     final bool isWin = winnerUid == currentUserUid;
-    final bool viewerIsP1 = currentUserUid == player1Uid;
 
     final badge = Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -113,8 +107,8 @@ class MatchCard extends StatelessWidget {
                                   final p1 = set['p1'];
                                   final p2 = set['p2'];
 
-                                  final myScore = viewerIsP1 ? p1 : p2;
-                                  final opponentScore = viewerIsP1 ? p2 : p1;
+                                  final myScore = p1;
+                                  final opponentScore = p2;
 
                                   final bool wonSet = myScore > opponentScore;
 
@@ -124,7 +118,7 @@ class MatchCard extends StatelessWidget {
                                       myScore.toString(),
                                       style: TextStyle(
                                         fontSize: 16,
-                                        fontFamily: 'monospace',
+                                        fontFeatures: const [FontFeature.tabularFigures()],
                                         fontWeight: wonSet ? FontWeight.bold : FontWeight.normal,
                                         color: wonSet ? Colors.green.shade700 : Colors.grey,
                                       ),
@@ -164,8 +158,8 @@ class MatchCard extends StatelessWidget {
                               final p1 = set['p1'];
                               final p2 = set['p2'];
 
-                              final myScore = viewerIsP1 ? p1 : p2;
-                              final opponentScore = viewerIsP1 ? p2 : p1;
+                              final myScore = p1;
+                              final opponentScore = p2;
 
                               final bool wonSet = opponentScore > myScore;
 

@@ -84,7 +84,9 @@ class _MatchChatScreenState extends State<MatchChatScreen> {
 
       // 2️⃣ Update parent match document (NEW PART 🔥)
       await matchRef.update({
-        'lastMessage': text,
+        'lastMessage': text.trim().length > 50
+            ? text.trim().substring(0, 50)
+            : text.trim(),
         'lastMessageTime': FieldValue.serverTimestamp(),
         'lastSenderUid': currentUid,
       });
