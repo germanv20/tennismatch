@@ -365,6 +365,37 @@ class _HomeScreenState extends State<HomeScreen> {
         .map((snapshot) => snapshot.docs.length);
   }
 
+  Stream<int> getPendingDeletionRequestsCount(String userId) {
+    return FirebaseFirestore.instance
+        .collection('matches')
+        .where('players', arrayContains: userId)
+        .snapshots()
+        .map((snapshot) {
+          int count = 0;
+
+          for (var doc in snapshot.docs) {
+            final data = doc.data();
+            final deletionRequest = data['deletionRequest'];
+
+            if (deletionRequest == null) continue;
+
+            final isPending = deletionRequest['status'] == 'pending';
+            final isRequester = deletionRequest['requestedBy'] == userId;
+            final seenBy = List<String>.from(deletionRequest['seenBy'] ?? []);
+
+            // 🔥 Only count if:
+            // - pending
+            // - NOT requested by me
+            // - NOT seen yet (optional but better UX)
+            if (isPending && !isRequester && !seenBy.contains(userId)) {
+              count++;
+            }
+          }
+
+          return count;
+        });
+  }
+
   @override
   Widget build(BuildContext context) {
     final String? tennisLevel = widget.userData['tennisLevel'];
@@ -661,20 +692,30 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
 
 
-                    AspectRatio(
-                      aspectRatio: 1,
-                        child: HomeCard(
-                          title: loc.matchHistory,
-                          icon: Icons.history,
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => const MatchHistoryScreen(),
-                              ),
-                            );
-                          },
-                        ),
+                    StreamBuilder<int>(
+                      stream: getPendingDeletionRequestsCount(widget.currentUser.uid),
+                      builder: (context, snapshot) {
+                        final count = snapshot.data ?? 0;
+
+                        return AspectRatio(
+                          aspectRatio: 1,
+                          child: NotificationBadge(
+                            count: count,
+                            child: HomeCard(
+                              title: loc.matchHistory,
+                              icon: Icons.history,
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => const MatchHistoryScreen(),
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                        );
+                      },
                     ),
 
                     AspectRatio(
