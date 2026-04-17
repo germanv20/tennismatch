@@ -12,10 +12,15 @@ class MatchCard extends StatelessWidget {
   final DateTime matchDate;
   final String winnerUid;
   final String currentUserUid;
+  final String matchId;
+  final List players;
+  final bool hasDeleteRequest;
   
 
   const MatchCard({
   super.key,
+  required this.matchId,
+  required this.players,
   required this.playerName,
   required this.opponentName,
   required this.opponentUid,
@@ -25,6 +30,7 @@ class MatchCard extends StatelessWidget {
   required this.matchDate,
   required this.winnerUid,
   required this.currentUserUid,
+  required this.hasDeleteRequest,
 });
 
   @override
@@ -52,11 +58,13 @@ class MatchCard extends StatelessWidget {
     bool opponentWon = !isWin;
 
     return InkWell(
-      onTap: () {
-        Navigator.push(
+      onTap: () async {
+        await Navigator.push(
           context,
           MaterialPageRoute(
             builder: (_) => MatchDetailsScreen(
+              matchId: matchId,
+              players: players,
               playerName: playerName,
               opponentName: opponentName,
               opponentUid:  opponentUid, 
@@ -196,6 +204,24 @@ class MatchCard extends StatelessWidget {
                   right: 8,
                   child: badge,
                 ),
+
+                if (hasDeleteRequest)
+                  Positioned(
+                    top: 8,
+                    left: 8,
+                    child: Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        color: Colors.orange,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.notification_important,
+                        color: Colors.white,
+                        size: 16,
+                      ),
+                    ),
+                  ),
               ],
             ),
         ),
