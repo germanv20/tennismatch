@@ -238,7 +238,7 @@ class _MatchHistoryScreenState extends State<MatchHistoryScreen> {
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   child: GestureDetector(
                     onTap: () async {
-                      await Navigator.push(
+                      final result = await Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (_) => MatchDetailsScreen(
@@ -254,6 +254,20 @@ class _MatchHistoryScreenState extends State<MatchHistoryScreen> {
                           ),
                         ),
                       );
+
+                       // ✅ SHOW SNACKBAR IF MATCH WAS DELETED
+                      if (result == true && mounted) {
+                        Future.delayed(const Duration(milliseconds: 300), () {
+                          if (!mounted) return;
+
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Match deleted'),
+                              duration: Duration(seconds: 2),
+                            ),
+                          );
+                        });
+                      }
                     },
                     child: MatchCard(
                       hasDeleteRequest: hasPendingDelete,

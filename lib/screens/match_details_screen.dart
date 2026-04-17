@@ -43,11 +43,65 @@ class _MatchDetailsScreenState extends State<MatchDetailsScreen> {
 
   bool loadingH2H = true;
   bool hasMarkedSeen = false;
+  bool hasHandledDeletion = false;
 
   @override
   void initState() {
     super.initState();
     loadHeadToHead();
+  }
+
+  void handleMatchDeleted() {
+    if (hasHandledDeletion) return;
+
+    hasHandledDeletion = true;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Future.delayed(const Duration(seconds: 2), () {
+        if (mounted) {
+          Navigator.pop(context, true); // ✅ guaranteed propagation
+        }
+      });
+    });
+  }
+
+  Widget buildDeletedUI() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+
+            const Icon(
+              Icons.check_circle,
+              color: Colors.green,
+              size: 80,
+            ),
+
+            const SizedBox(height: 20),
+
+            const Text(
+              "Match deleted",
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+
+            const SizedBox(height: 10),
+
+            Text(
+              "The match is no longer available.",
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.grey[700]),
+            ),
+
+            // 🚫 NO BUTTON
+          ],
+        ),
+      ),
+    );
   }
 
   Future<void> loadHeadToHead() async {
@@ -144,9 +198,27 @@ class _MatchDetailsScreenState extends State<MatchDetailsScreen> {
             .doc(widget.matchId)
             .snapshots(),
         builder: (context, snapshot) {
-          if (!snapshot.hasData || !snapshot.data!.exists) {
+          if (snapshot.hasError) {
+            final error = snapshot.error.toString();
+
+            if (error.contains('permission-denied')) {
+              handleMatchDeleted();
+              return buildDeletedUI();
+            }
+
+            return Center(child: Text('Something went wrong'));
+          }
+
+          if (!snapshot.hasData) {
             return const Center(child: CircularProgressIndicator());
           }
+
+          // 🔥 MATCH WAS DELETED
+            if (!snapshot.data!.exists) {
+              handleMatchDeleted();    // ✅ unified logic
+              return buildDeletedUI(); // ✅ unified UI
+            }
+          
 
           final data = snapshot.data!.data() as Map<String, dynamic>? ?? {};
           final deletionRequest = data['deletionRequest'] as Map<String, dynamic>?;
