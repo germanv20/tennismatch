@@ -112,7 +112,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sunFull => 'Sunday';
 
   @override
-  String get levelBeginner => 'Begginer';
+  String get levelBeginner => 'Beginner';
 
   @override
   String get levelIntermediate => 'Intermediate';
@@ -465,6 +465,66 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get failedToOpenFeedbackForm => 'Could not open feedback form';
+
+  @override
+  String get matchDeleted => 'Match successfully deleted';
+
+  @override
+  String get matchNoLongerAvailable => 'The match is no longer available.';
+
+  @override
+  String get somethingWentWrong => 'Something went wrong';
+
+  @override
+  String get opponentAcceptedDeletion =>
+      'Your opponent accepted the deletion request.';
+
+  @override
+  String get opponentRejectedDeletion =>
+      'Your opponent rejected the deletion request.';
+
+  @override
+  String get youAcceptedDeletion => 'You accepted the deletion request';
+
+  @override
+  String get youRejectedDeletion => 'You rejected the deletion request';
+
+  @override
+  String get ok => 'OK';
+
+  @override
+  String get win => 'WIN';
+
+  @override
+  String get loss => 'LOSS';
+
+  @override
+  String get deleteMatch => 'Delete Match';
+
+  @override
+  String get deleteMatchQuestion => 'Delete match?';
+
+  @override
+  String get deleteMatchConfirmation => 'This will request deletion.';
+
+  @override
+  String get confirm => 'Confirm';
+
+  @override
+  String get waitingOpponentApproval => 'Waiting for opponent approval...';
+
+  @override
+  String get opponentRequestedDeletion => 'Opponent requested match deletion';
+
+  @override
+  String get deletionAccepted => 'Deletion request accepted';
+
+  @override
+  String get deletionRejected => 'Deletion request was rejected';
+
+  @override
+  String get deletionAcceptedWaiting =>
+      'Deletion request accepted. Waiting for requester confirmation.';
 
   @override
   String setLabel(Object number) {

@@ -39,7 +39,7 @@
   "satFull": "Saturday",
   "sunFull": "Sunday",
 
-  "levelBeginner": "Begginer",
+  "levelBeginner": "Beginner",
   "levelIntermediate": "Intermediate",
   "levelAdvanced": "Advanced",
 
@@ -110,7 +110,6 @@
   "unmatchTitle": "Unmatch?",
   "unmatch": "Unmatch",
   "signOut": "Sign Out",
-  "signOutConfirmation": "Are you sure you want to sign out?",
 
 
   "myMatchesTitle": "My Matches",
@@ -177,6 +176,29 @@
   "averageMatchDuration": "Average Match Duration",
   "failedToLoadStats": "Failed to load stats",
   "failedToOpenFeedbackForm": "Could not open feedback form",
+
+  "matchDeleted": "Match successfully deleted",
+  "matchNoLongerAvailable": "The match is no longer available.",
+  "somethingWentWrong": "Something went wrong",
+  "requestRejected": "Request rejected",
+  "opponentAcceptedDeletion": "Your opponent accepted the deletion request.",
+  "opponentRejectedDeletion": "Your opponent rejected the deletion request.",
+  "youAcceptedDeletion": "You accepted the deletion request",
+  "youRejectedDeletion": "You rejected the deletion request",
+  "ok": "OK",
+  "win": "WIN",
+  "loss": "LOSS",
+
+  "deleteMatch": "Delete Match",
+  "deleteMatchQuestion": "Delete match?",
+  "deleteMatchConfirmation": "This will request deletion.",
+  "confirm": "Confirm",
+
+  "waitingOpponentApproval": "Waiting for opponent approval...",
+  "opponentRequestedDeletion": "Opponent requested match deletion",
+  "deletionAccepted": "Deletion request accepted",
+  "deletionRejected": "Deletion request was rejected",
+  "deletionAcceptedWaiting": "Deletion request accepted. Waiting for requester confirmation.",
 
   "setLabel": "Set {number}",
   "@setLabel": {

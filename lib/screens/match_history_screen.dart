@@ -105,7 +105,7 @@ class _MatchHistoryScreenState extends State<MatchHistoryScreen> {
       if (!mounted) return;
 
       setState(() {
-        if (lastDocument == null) {
+        if (matches.isEmpty) {
           // 🔥 First load / refresh
           matches = snapshot.docs;
         } else {
@@ -228,11 +228,26 @@ class _MatchHistoryScreenState extends State<MatchHistoryScreen> {
 
                 final deletionRequest = match['deletionRequest'];
 
-                final bool hasPendingDelete =
+                final bool hasDeleteNotification =
                     deletionRequest != null &&
-                    deletionRequest['status'] == 'pending' &&
-                    deletionRequest['requestedBy'] != currentUid &&
-                    !(deletionRequest['seenBy'] ?? []).contains(currentUid);
+                    (
+                      // 🔔 Incoming request (existing logic)
+                      (
+                        deletionRequest['status'] == 'pending' &&
+                        deletionRequest['requestedBy'] != currentUid &&
+                        !(deletionRequest['seenBy'] ?? []).contains(currentUid)
+                      )
+
+                      ||
+
+                      // 🔔 RESULT for requester (NEW)
+                      (
+                        deletionRequest['requestedBy'] == currentUid &&
+                        (deletionRequest['status'] == 'accepted' ||
+                        deletionRequest['status'] == 'rejected')
+                      )
+                    );
+                
 
                 return Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -261,8 +276,8 @@ class _MatchHistoryScreenState extends State<MatchHistoryScreen> {
                           if (!mounted) return;
 
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Match deleted'),
+                             SnackBar(
+                              content: Text(loc.matchDeleted),//'Match deleted'
                               duration: Duration(seconds: 2),
                             ),
                           );
@@ -270,7 +285,8 @@ class _MatchHistoryScreenState extends State<MatchHistoryScreen> {
                       }
                     },
                     child: MatchCard(
-                      hasDeleteRequest: hasPendingDelete,
+                      hasDeleteRequest: hasDeleteNotification,
+                      deletionRequest: deletionRequest,
                       matchId: matchDoc.id,
                       players: match['players'] ?? [],
                       playerName: currentUserName,

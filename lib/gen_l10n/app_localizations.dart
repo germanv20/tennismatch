@@ -305,7 +305,7 @@ abstract class AppLocalizations {
   /// No description provided for @levelBeginner.
   ///
   /// In en, this message translates to:
-  /// **'Begginer'**
+  /// **'Beginner'**
   String get levelBeginner;
 
   /// No description provided for @levelIntermediate.
@@ -991,6 +991,120 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Could not open feedback form'**
   String get failedToOpenFeedbackForm;
+
+  /// No description provided for @matchDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Match successfully deleted'**
+  String get matchDeleted;
+
+  /// No description provided for @matchNoLongerAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'The match is no longer available.'**
+  String get matchNoLongerAvailable;
+
+  /// No description provided for @somethingWentWrong.
+  ///
+  /// In en, this message translates to:
+  /// **'Something went wrong'**
+  String get somethingWentWrong;
+
+  /// No description provided for @opponentAcceptedDeletion.
+  ///
+  /// In en, this message translates to:
+  /// **'Your opponent accepted the deletion request.'**
+  String get opponentAcceptedDeletion;
+
+  /// No description provided for @opponentRejectedDeletion.
+  ///
+  /// In en, this message translates to:
+  /// **'Your opponent rejected the deletion request.'**
+  String get opponentRejectedDeletion;
+
+  /// No description provided for @youAcceptedDeletion.
+  ///
+  /// In en, this message translates to:
+  /// **'You accepted the deletion request'**
+  String get youAcceptedDeletion;
+
+  /// No description provided for @youRejectedDeletion.
+  ///
+  /// In en, this message translates to:
+  /// **'You rejected the deletion request'**
+  String get youRejectedDeletion;
+
+  /// No description provided for @ok.
+  ///
+  /// In en, this message translates to:
+  /// **'OK'**
+  String get ok;
+
+  /// No description provided for @win.
+  ///
+  /// In en, this message translates to:
+  /// **'WIN'**
+  String get win;
+
+  /// No description provided for @loss.
+  ///
+  /// In en, this message translates to:
+  /// **'LOSS'**
+  String get loss;
+
+  /// No description provided for @deleteMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Match'**
+  String get deleteMatch;
+
+  /// No description provided for @deleteMatchQuestion.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete match?'**
+  String get deleteMatchQuestion;
+
+  /// No description provided for @deleteMatchConfirmation.
+  ///
+  /// In en, this message translates to:
+  /// **'This will request deletion.'**
+  String get deleteMatchConfirmation;
+
+  /// No description provided for @confirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm'**
+  String get confirm;
+
+  /// No description provided for @waitingOpponentApproval.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for opponent approval...'**
+  String get waitingOpponentApproval;
+
+  /// No description provided for @opponentRequestedDeletion.
+  ///
+  /// In en, this message translates to:
+  /// **'Opponent requested match deletion'**
+  String get opponentRequestedDeletion;
+
+  /// No description provided for @deletionAccepted.
+  ///
+  /// In en, this message translates to:
+  /// **'Deletion request accepted'**
+  String get deletionAccepted;
+
+  /// No description provided for @deletionRejected.
+  ///
+  /// In en, this message translates to:
+  /// **'Deletion request was rejected'**
+  String get deletionRejected;
+
+  /// No description provided for @deletionAcceptedWaiting.
+  ///
+  /// In en, this message translates to:
+  /// **'Deletion request accepted. Waiting for requester confirmation.'**
+  String get deletionAcceptedWaiting;
 
   /// No description provided for @setLabel.
   ///

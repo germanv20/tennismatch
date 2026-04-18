@@ -470,6 +470,68 @@ class AppLocalizationsEs extends AppLocalizations {
       'No se pudo abrir el formulario de comentarios';
 
   @override
+  String get matchDeleted => 'Partido eliminado correctamente';
+
+  @override
+  String get matchNoLongerAvailable => 'El partido ya no está disponible.';
+
+  @override
+  String get somethingWentWrong => 'Algo salió mal';
+
+  @override
+  String get opponentAcceptedDeletion =>
+      'Tu oponente aceptó la solicitud de eliminación.';
+
+  @override
+  String get opponentRejectedDeletion =>
+      'Tu oponente rechazó la solicitud de eliminación.';
+
+  @override
+  String get youAcceptedDeletion => 'Aceptaste la solicitud de eliminación';
+
+  @override
+  String get youRejectedDeletion => 'Rechazaste la solicitud de eliminación';
+
+  @override
+  String get ok => 'Aceptar';
+
+  @override
+  String get win => 'GANADO';
+
+  @override
+  String get loss => 'PERDIDO';
+
+  @override
+  String get deleteMatch => 'Eliminar partido';
+
+  @override
+  String get deleteMatchQuestion => '¿Eliminar partido?';
+
+  @override
+  String get deleteMatchConfirmation =>
+      'Esto enviará una solicitud de eliminación.';
+
+  @override
+  String get confirm => 'Confirmar';
+
+  @override
+  String get waitingOpponentApproval => 'Esperando aprobación del oponente...';
+
+  @override
+  String get opponentRequestedDeletion =>
+      'El oponente solicitó eliminar el partido';
+
+  @override
+  String get deletionAccepted => 'Solicitud de eliminación aceptada';
+
+  @override
+  String get deletionRejected => 'Solicitud de eliminación rechazada';
+
+  @override
+  String get deletionAcceptedWaiting =>
+      'Solicitud aceptada. Esperando confirmación del solicitante.';
+
+  @override
   String setLabel(Object number) {
     return 'Set $number';
   }

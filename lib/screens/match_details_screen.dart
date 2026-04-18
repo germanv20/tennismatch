@@ -66,6 +66,7 @@ class _MatchDetailsScreenState extends State<MatchDetailsScreen> {
   }
 
   Widget buildDeletedUI() {
+    final loc = AppLocalizations.of(context)!;
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(24),
@@ -81,8 +82,7 @@ class _MatchDetailsScreenState extends State<MatchDetailsScreen> {
 
             const SizedBox(height: 20),
 
-            const Text(
-              "Match deleted",
+            Text(loc.matchDeleted, //"Match deleted"
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
@@ -92,7 +92,7 @@ class _MatchDetailsScreenState extends State<MatchDetailsScreen> {
             const SizedBox(height: 10),
 
             Text(
-              "The match is no longer available.",
+              loc.matchNoLongerAvailable, //"The match is no longer available."
               textAlign: TextAlign.center,
               style: TextStyle(color: Colors.grey[700]),
             ),
@@ -102,6 +102,67 @@ class _MatchDetailsScreenState extends State<MatchDetailsScreen> {
         ),
       ),
     );
+  }
+
+  bool hasShownResultDialog = false;
+
+  void handleDeletionResult(
+    bool isAccepted,
+    Map<String, dynamic> deletionRequest,
+  ) {
+    if (hasShownResultDialog) return;
+
+    final currentUid = FirebaseAuth.instance.currentUser!.uid;
+    final loc = AppLocalizations.of(context)!;
+
+    // Only requester should see this
+    if (deletionRequest['requestedBy'] != currentUid) return;
+
+    hasShownResultDialog = true;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+
+      await showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => AlertDialog(
+          title: Text(isAccepted ? loc.matchDeleted : loc.requestRejected), //'Match deleted' : 'Request rejected'
+          content: Text(
+            isAccepted
+                ? loc.opponentAcceptedDeletion
+                : loc.opponentRejectedDeletion,
+          ), // 'Your opponent accepted the deletion request.' 'Your opponent rejected the deletion request.'
+          actions: [
+            TextButton(
+              onPressed: () async {
+                Navigator.pop(context);
+
+                if (isAccepted) {
+                  // ✅ NOW delete
+                  await FirebaseFirestore.instance
+                      .collection('matches')
+                      .doc(widget.matchId)
+                      .delete();
+
+                  if (!mounted) return;
+
+                  Navigator.pop(context, true);
+                } else {
+                  // ✅ Clean request so user can retry
+                  await FirebaseFirestore.instance
+                      .collection('matches')
+                      .doc(widget.matchId)
+                      .update({
+                    'deletionRequest': FieldValue.delete(),
+                  });
+                }
+              },
+              child: Text(loc.ok),
+            ),
+          ],
+        ),
+      );
+    });
   }
 
   Future<void> loadHeadToHead() async {
@@ -206,7 +267,7 @@ class _MatchDetailsScreenState extends State<MatchDetailsScreen> {
               return buildDeletedUI();
             }
 
-            return Center(child: Text('Something went wrong'));
+            return Center(child: Text(loc.somethingWentWrong));
           }
 
           if (!snapshot.hasData) {
@@ -257,6 +318,15 @@ class _MatchDetailsScreenState extends State<MatchDetailsScreen> {
 
           final isRejected = deletionRequest != null &&
               deletionRequest['status'] == 'rejected';
+
+          final isAccepted = deletionRequest != null &&
+              deletionRequest['status'] == 'accepted';
+
+          if (isAccepted) {
+            handleDeletionResult(true, deletionRequest!);
+          } else if (isRejected) {
+            handleDeletionResult(false, deletionRequest!);
+          }
 
           return SafeArea(
             child: Padding(
@@ -472,22 +542,22 @@ class _MatchDetailsScreenState extends State<MatchDetailsScreen> {
                               if (deletionRequest == null) ...[
                                 ElevatedButton.icon(
                                   icon: const Icon(Icons.delete),
-                                  label: const Text('Delete Match'),
+                                  label: Text(loc.deleteMatch), //'Delete Match'
                                   style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
                                   onPressed: () async {
                                     final confirm = await showDialog(
                                       context: context,
                                       builder: (_) => AlertDialog(
-                                        title: const Text('Delete match?'),
-                                        content: const Text('This will request deletion.'),
+                                        title: Text(loc.deleteMatchQuestion), //'Delete match?'
+                                        content: Text(loc.deleteMatchConfirmation), //'This will request deletion.'
                                         actions: [
                                           TextButton(
                                             onPressed: () => Navigator.pop(context, false),
-                                            child: const Text('Cancel'),
+                                            child: Text(loc.cancel), //'Cancel'
                                           ),
                                           TextButton(
                                             onPressed: () => Navigator.pop(context, true),
-                                            child: const Text('Confirm'),
+                                            child: Text(loc.confirm), //'Confirm'
                                           ),
                                         ],
                                       ),
@@ -519,10 +589,9 @@ class _MatchDetailsScreenState extends State<MatchDetailsScreen> {
                                     color: Colors.orange[100],
                                     borderRadius: BorderRadius.circular(8),
                                   ),
-                                  child: const Text(
-                                    'Waiting for opponent approval...',
+                                  child: Text(loc.waitingOpponentApproval,
                                     textAlign: TextAlign.center,
-                                    style: TextStyle(fontWeight: FontWeight.bold),
+                                    style: TextStyle(fontWeight: FontWeight.bold), //'Waiting for opponent approval...'
                                   ),
                                 ),
                               ]
@@ -532,10 +601,9 @@ class _MatchDetailsScreenState extends State<MatchDetailsScreen> {
                                 Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    const Text(
-                                      'Opponent requested match deletion',
+                                    Text(loc.opponentRequestedDeletion,
                                       style: TextStyle(fontWeight: FontWeight.bold),
-                                    ),
+                                    ),//'Opponent requested match deletion',
                                     const SizedBox(height: 10),
                                     Row(
                                       children: [
@@ -543,10 +611,18 @@ class _MatchDetailsScreenState extends State<MatchDetailsScreen> {
                                           child: ElevatedButton(
                                             style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
                                             onPressed: () async {
+                                              // ✅ ACCEPT
                                               await FirebaseFirestore.instance
                                                   .collection('matches')
                                                   .doc(widget.matchId)
-                                                  .delete();
+                                                  .update({
+                                                'deletionRequest.status': 'accepted',
+                                                'deletionRequest.resolvedAt': FieldValue.serverTimestamp(),
+                                                'deletionRequest.resolvedBy': currentUid,
+
+                                                // 🔥 RESET seenBy → so requester gets notified
+                                                'deletionRequest.seenBy': [currentUid],
+                                              });
 
                                               await H2HService.recalculateHeadToHead(
                                                 userA: currentUid,
@@ -555,39 +631,58 @@ class _MatchDetailsScreenState extends State<MatchDetailsScreen> {
 
                                               if (!mounted) return;
 
-                                              Navigator.pop(context);
-
                                               ScaffoldMessenger.of(context).showSnackBar(
-                                                const SnackBar(content: Text('Match deleted')),
+                                                SnackBar(content: Text(loc.deletionAcceptedWaiting)), //Text(loc.deletionAcceptedWaiting)
                                               );
                                             },
-                                            child: const Text('Accept'),
+                                            child: Text(loc.accept), //'Accept'
                                           ),
                                         ),
                                         const SizedBox(width: 10),
                                         Expanded(
                                           child: ElevatedButton(
-                                            style: ElevatedButton.styleFrom(backgroundColor: Colors.grey),
+                                            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
                                             onPressed: () async {
+                                              // ✅ REJECT
                                               await FirebaseFirestore.instance
                                                   .collection('matches')
                                                   .doc(widget.matchId)
                                                   .update({
-                                                    'deletionRequest': FieldValue.delete(),
-                                                  });
+                                                'deletionRequest.status': 'rejected',
+                                                'deletionRequest.resolvedAt': FieldValue.serverTimestamp(),
+                                                'deletionRequest.resolvedBy': currentUid,
+
+                                                // 🔥 RESET seenBy → so requester gets notified
+                                                'deletionRequest.seenBy': [currentUid],
+                                              });
 
                                               if (!mounted) return;
 
                                               ScaffoldMessenger.of(context).showSnackBar(
-                                                const SnackBar(content: Text('Request rejected')),
+                                                SnackBar(content: Text(loc.requestRejected)), //'Request rejected'
                                               );
                                             },
-                                            child: const Text('Reject'),
+                                            child: Text(loc.reject), //'Reject'
                                           ),
                                         ),
                                       ],
                                     ),
                                   ],
+                                ),
+                              ]
+
+                              else if (isAccepted && !isRequester) ...[
+                                Container(
+                                  width: double.infinity,
+                                  padding: const EdgeInsets.all(12),
+                                  decoration: BoxDecoration(
+                                    color: Colors.green[100],
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Text(loc.deletionAccepted,
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(fontWeight: FontWeight.bold),
+                                  ), //'Deletion request accepted'
                                 ),
                               ]
 
@@ -600,11 +695,10 @@ class _MatchDetailsScreenState extends State<MatchDetailsScreen> {
                                     color: Colors.red[100],
                                     borderRadius: BorderRadius.circular(8),
                                   ),
-                                  child: const Text(
-                                    'Deletion request was rejected',
+                                  child: Text(loc.deletionRejected,
                                     textAlign: TextAlign.center,
                                     style: TextStyle(fontWeight: FontWeight.bold),
-                                  ),
+                                  ), //'Deletion request was rejected'
                                 ),
                               ]
                             ],

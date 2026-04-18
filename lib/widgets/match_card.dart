@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../screens/match_details_screen.dart';
+import 'package:tennismatch/gen_l10n/app_localizations.dart';
 
 class MatchCard extends StatelessWidget {
 
@@ -15,28 +16,88 @@ class MatchCard extends StatelessWidget {
   final String matchId;
   final List players;
   final bool hasDeleteRequest;
+  final Map<String, dynamic>? deletionRequest;
   
 
   const MatchCard({
-  super.key,
-  required this.matchId,
-  required this.players,
-  required this.playerName,
-  required this.opponentName,
-  required this.opponentUid,
-  required this.sets,
-  required this.location,
-  required this.duration,
-  required this.matchDate,
-  required this.winnerUid,
-  required this.currentUserUid,
-  required this.hasDeleteRequest,
-});
+    super.key,
+    required this.matchId,
+    required this.players,
+    required this.playerName,
+    required this.opponentName,
+    required this.opponentUid,
+    required this.sets,
+    required this.location,
+    required this.duration,
+    required this.matchDate,
+    required this.winnerUid,
+    required this.currentUserUid,
+    required this.hasDeleteRequest,
+    required this.deletionRequest,
+  });
+
+  Widget? buildDeletionStatus(BuildContext context) {
+    final loc = AppLocalizations.of(context)!;
+    final dr = deletionRequest;
+    if (dr == null) return null;
+
+    final status = dr['status'];
+    final isRequester = dr['requestedBy'] == currentUserUid;
+
+    String text = '';
+    Color bgColor = Colors.grey;
+
+    if (status == 'pending') {
+      text = isRequester
+          ? loc.waitingOpponentApproval //'Waiting for opponent approval...'
+          : loc.opponentRequestedDeletion;//'Opponent requested match deletion'
+      bgColor = Colors.orange.shade100;
+    } else if (status == 'accepted') {
+      text = isRequester
+          ? loc.deletionAccepted//'Deletion request accepted'
+          : loc.youAcceptedDeletion;//'You accepted the deletion request'
+      bgColor = Colors.green.shade100;
+    } else if (status == 'rejected') {
+      text = isRequester
+          ? loc.deletionRejected//'Deletion request rejected'
+          : loc.youRejectedDeletion;//'You rejected the deletion request'
+      bgColor = Colors.red.shade100;
+    } else {
+      return null;
+    }
+
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(top: 10),
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Text(
+        text,
+        textAlign: TextAlign.center,
+        style: const TextStyle(
+          fontWeight: FontWeight.bold,
+          fontSize: 13,
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
 
+    final loc = AppLocalizations.of(context)!;
+
     final bool isWin = winnerUid == currentUserUid;
+
+    final currentUid = currentUserUid;
+
+    final dr = deletionRequest;
+
+    final isRequester = dr != null && dr['requestedBy'] == currentUid;
+    final status = dr != null ? dr['status'] : null;
 
     final badge = Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -44,8 +105,9 @@ class MatchCard extends StatelessWidget {
         color: isWin ? Colors.green : Colors.red,
         borderRadius: BorderRadius.circular(12),
       ),
+
       child: Text(
-        isWin ? "WIN" : "LOSS",
+        isWin ? loc.win : loc.loss,
         style: const TextStyle(
           color: Colors.white,
           fontWeight: FontWeight.bold,
@@ -196,6 +258,9 @@ class MatchCard extends StatelessWidget {
                         style: const TextStyle(color: Colors.grey),
                       ),
 
+                      
+                      if (buildDeletionStatus(context) != null)
+                        buildDeletionStatus(context)!,
                     ],
                   ),
                 ),
@@ -222,6 +287,7 @@ class MatchCard extends StatelessWidget {
                       ),
                     ),
                   ),
+
               ],
             ),
         ),

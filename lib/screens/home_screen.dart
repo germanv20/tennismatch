@@ -379,15 +379,21 @@ class _HomeScreenState extends State<HomeScreen> {
 
             if (deletionRequest == null) continue;
 
-            final isPending = deletionRequest['status'] == 'pending';
+            final status = deletionRequest['status'];
             final isRequester = deletionRequest['requestedBy'] == userId;
             final seenBy = List<String>.from(deletionRequest['seenBy'] ?? []);
 
-            // 🔥 Only count if:
-            // - pending
-            // - NOT requested by me
-            // - NOT seen yet (optional but better UX)
-            if (isPending && !isRequester && !seenBy.contains(userId)) {
+            final notSeen = !seenBy.contains(userId);
+
+            // 🟡 Case 1: Incoming request
+            if (status == 'pending' && !isRequester && notSeen) {
+              count++;
+            }
+
+            // 🔵 Case 2: My request was answered
+            if ((status == 'accepted' || status == 'rejected') &&
+                isRequester &&
+                notSeen) {
               count++;
             }
           }

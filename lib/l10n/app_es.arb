@@ -9,7 +9,7 @@
   "loginTitle": "Inicio de sesión",
   "signInWithGoogle": "Iniciar sesión con Google",
   "userProfileNotFound": "Perfil de usuario no encontrado",
-  "signOutConfirmation": "¿Seguro que quieres cerrar sesión?",
+  "signOutConfirmation": "¿Estás seguro de que quieres cerrar sesión?",
 
   "findPlayers": "Buscar jugadores",
   "myMatches": "Mis partidos",
@@ -110,7 +110,6 @@
   "unmatchTitle": "¿Eliminar emparejamiento?",
   "unmatch": "Eliminar",
   "signOut": "Cerrar sesión",
-  "signOutConfirmation": "¿Estás seguro de que quieres cerrar sesión?",
 
   "myMatchesTitle": "Mis partidos",
   "failedToLoadMatches": "Error al cargar partidos",
@@ -176,6 +175,29 @@
   "averageMatchDuration": "Duración promedio",
   "failedToLoadStats": "Error al cargar estadísticas",
   "failedToOpenFeedbackForm": "No se pudo abrir el formulario de comentarios",
+
+  "matchDeleted": "Partido eliminado correctamente",
+  "matchNoLongerAvailable": "El partido ya no está disponible.",
+  "somethingWentWrong": "Algo salió mal",
+  "requestRejected": "Solicitud rechazada",
+  "opponentAcceptedDeletion": "Tu oponente aceptó la solicitud de eliminación.",
+  "opponentRejectedDeletion": "Tu oponente rechazó la solicitud de eliminación.",
+  "youAcceptedDeletion": "Aceptaste la solicitud de eliminación",
+  "youRejectedDeletion": "Rechazaste la solicitud de eliminación",
+  "ok": "Aceptar",
+  "win": "GANADO",
+  "loss": "PERDIDO",
+
+  "deleteMatch": "Eliminar partido",
+  "deleteMatchQuestion": "¿Eliminar partido?",
+  "deleteMatchConfirmation": "Esto enviará una solicitud de eliminación.",
+  "confirm": "Confirmar",
+
+  "waitingOpponentApproval": "Esperando aprobación del oponente...",
+  "opponentRequestedDeletion": "El oponente solicitó eliminar el partido",
+  "deletionAccepted": "Solicitud de eliminación aceptada",
+  "deletionRejected": "Solicitud de eliminación rechazada",
+  "deletionAcceptedWaiting": "Solicitud aceptada. Esperando confirmación del solicitante.",
 
   "setLabel": "Set {number}",
   "@setLabel": {
