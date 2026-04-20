@@ -199,7 +199,7 @@ class _MatchDetailsScreenState extends State<MatchDetailsScreen> {
       final result = data['result'] ?? {};
       final sets = result['sets'] ?? [];
 
-      final bool userIsP1 = players[0] == uid;
+      final bool userIsP1 = data['player1Uid'] == uid;
 
       for (var set in sets) {
         final p1 = set['p1'] ?? 0;
@@ -294,7 +294,7 @@ class _MatchDetailsScreenState extends State<MatchDetailsScreen> {
 
             Future.microtask(() async {
               try {
-                print("🔥 Attempting to mark deletionRequest as seen");
+                debugPrint("🔥 Attempting to mark deletionRequest as seen");
 
                 await FirebaseFirestore.instance
                     .collection('matches')
@@ -303,9 +303,9 @@ class _MatchDetailsScreenState extends State<MatchDetailsScreen> {
                   'deletionRequest.seenBy': FieldValue.arrayUnion([currentUid])
                 });
 
-                print("✅ Successfully marked as seen");
+                debugPrint("✅ Successfully marked as seen");
               } catch (e) {
-                print("❌ ERROR updating seenBy: $e");
+                debugPrint("❌ ERROR updating seenBy: $e");
               }
             });
           }

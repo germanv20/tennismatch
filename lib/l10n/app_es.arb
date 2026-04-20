@@ -175,6 +175,7 @@
   "averageMatchDuration": "Duración promedio",
   "failedToLoadStats": "Error al cargar estadísticas",
   "failedToOpenFeedbackForm": "No se pudo abrir el formulario de comentarios",
+  "failedToSaveResult": "Error al salvar el resultado",
 
   "matchDeleted": "Partido eliminado correctamente",
   "matchNoLongerAvailable": "El partido ya no está disponible.",

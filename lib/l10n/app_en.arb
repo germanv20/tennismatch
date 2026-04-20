@@ -176,6 +176,7 @@
   "averageMatchDuration": "Average Match Duration",
   "failedToLoadStats": "Failed to load stats",
   "failedToOpenFeedbackForm": "Could not open feedback form",
+  "failedToSaveResult": "Failed to save result",
 
   "matchDeleted": "Match successfully deleted",
   "matchNoLongerAvailable": "The match is no longer available.",

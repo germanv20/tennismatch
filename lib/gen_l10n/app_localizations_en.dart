@@ -467,6 +467,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get failedToOpenFeedbackForm => 'Could not open feedback form';
 
   @override
+  String get failedToSaveResult => 'Failed to save result';
+
+  @override
   String get matchDeleted => 'Match successfully deleted';
 
   @override

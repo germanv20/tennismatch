@@ -470,6 +470,9 @@ class AppLocalizationsEs extends AppLocalizations {
       'No se pudo abrir el formulario de comentarios';
 
   @override
+  String get failedToSaveResult => 'Error al salvar el resultado';
+
+  @override
   String get matchDeleted => 'Partido eliminado correctamente';
 
   @override

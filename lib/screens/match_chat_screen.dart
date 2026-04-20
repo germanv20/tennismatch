@@ -5,7 +5,7 @@ import 'package:tennismatch/gen_l10n/app_localizations.dart';
 import 'dart:async';
 
 
-final ScrollController _scrollController = ScrollController();
+
 
 class MatchChatScreen extends StatefulWidget {
   final String matchId;
@@ -29,6 +29,7 @@ class MatchChatScreen extends StatefulWidget {
 class _MatchChatScreenState extends State<MatchChatScreen> {
   final TextEditingController _messageController = TextEditingController();
   final String currentUid = FirebaseAuth.instance.currentUser!.uid;
+  late final ScrollController _scrollController = ScrollController();
 
   Timer? _typingTimer;
 
@@ -136,16 +137,20 @@ class _MatchChatScreenState extends State<MatchChatScreen> {
         .where('senderUid', isNotEqualTo: currentUid)
         .get();
 
-    for (final doc in query.docs) {
-      final data = doc.data();
-      final readBy = Map<String, dynamic>.from(data['readBy'] ?? {});
+    final batch = FirebaseFirestore.instance.batch();
+    bool hasUpdates = false;
 
+    for (final doc in query.docs) {
+      final readBy = Map<String, dynamic>.from(
+        doc.data()['readBy'] ?? {}
+      );
       if (readBy[currentUid] != true) {
-        await doc.reference.update({
-          'readBy.$currentUid': true,
-        });
+        batch.update(doc.reference, {'readBy.$currentUid': true});
+        hasUpdates = true;
       }
     }
+
+    if (hasUpdates) await batch.commit();
   }
 
   Future<void> setTyping(bool isTyping) async {
@@ -161,6 +166,7 @@ class _MatchChatScreenState extends State<MatchChatScreen> {
     void dispose() {
       _typingTimer?.cancel();
       setActiveChat(false);
+      _scrollController.dispose();
       // setTyping(false); // ensure typing stops if user leaves
       _messageController.dispose();
       super.dispose();

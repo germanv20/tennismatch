@@ -312,6 +312,7 @@ class _AddMatchResultScreenState
   }
 
   Future<void> handleSave() async {
+    final loc = AppLocalizations.of(context)!;
     if (!mounted) return;
 
     setState(() => isSaving = true);
@@ -324,7 +325,7 @@ class _AddMatchResultScreenState
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to save result')),
+        SnackBar(content: Text(loc.failedToSaveResult)),//'Failed to save result'
       );
     } finally {
         if (mounted) {

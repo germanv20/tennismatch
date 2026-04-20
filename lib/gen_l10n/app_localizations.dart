@@ -992,6 +992,12 @@ abstract class AppLocalizations {
   /// **'Could not open feedback form'**
   String get failedToOpenFeedbackForm;
 
+  /// No description provided for @failedToSaveResult.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to save result'**
+  String get failedToSaveResult;
+
   /// No description provided for @matchDeleted.
   ///
   /// In en, this message translates to:
