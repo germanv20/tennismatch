@@ -660,4 +660,22 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get deleteGuestMatchConfirmation =>
       '¿Estás seguro de que quieres eliminar este partido? Esta acción no se puede deshacer.';
+
+  @override
+  String get tiebreakLabel => 'Puntuación del tiebreak';
+
+  @override
+  String get tiebreakPointsLabel => 'Puntos';
+
+  @override
+  String get enterTiebreakScore =>
+      'Por favor ingresa el marcador del tiebreak.';
+
+  @override
+  String get invalidTiebreakScore =>
+      'Marcador de tiebreak inválido. El ganador debe llegar al menos a 7, ganar por 2.';
+
+  @override
+  String get tiebreakWinnerMismatch =>
+      'El ganador del tiebreak debe coincidir con el ganador del set.';
 }

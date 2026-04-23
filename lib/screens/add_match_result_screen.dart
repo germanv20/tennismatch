@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:tennismatch/gen_l10n/app_localizations.dart';
 import 'package:tennismatch/services/h2h_service.dart';
+import '../widgets/set_score_row.dart';
 
 class AddMatchResultScreen extends StatefulWidget {
   final String matchId;
@@ -21,7 +22,7 @@ class AddMatchResultScreen extends StatefulWidget {
 
 class _AddMatchResultScreenState extends State<AddMatchResultScreen> {
 
-  List<Map<String, TextEditingController>> sets = [];
+  final List<GlobalKey<SetScoreRowState>> _setKeys = [];
 
   final durationController = TextEditingController();
   final locationController = TextEditingController();
@@ -34,34 +35,25 @@ class _AddMatchResultScreenState extends State<AddMatchResultScreen> {
   @override
   void initState() {
     super.initState();
-    addSet();
+    _addSet();
     loadPlayerNames();
   }
 
-  void addSet() {
+  void _addSet() {
     setState(() {
-      sets.add({
-        'p1': TextEditingController(),
-        'p2': TextEditingController(),
-      });
+      _setKeys.add(GlobalKey<SetScoreRowState>());
     });
   }
 
-  void removeSet(int index) {
-    if (sets.length == 1) return;
+  void _removeSet(int index) {
+    if (_setKeys.length == 1) return;
     setState(() {
-      final removed = sets.removeAt(index);
-      removed['p1']!.dispose();
-      removed['p2']!.dispose();
+      _setKeys.removeAt(index);
     });
   }
 
   @override
   void dispose() {
-    for (var set in sets) {
-      set['p1']?.dispose();
-      set['p2']?.dispose();
-    }
     durationController.dispose();
     locationController.dispose();
     super.dispose();
@@ -78,29 +70,27 @@ class _AddMatchResultScreenState extends State<AddMatchResultScreen> {
     if ((p1 == 6 && p2 <= 4) || (p2 == 6 && p1 <= 4)) return true;
     if ((p1 == 7 && p2 == 5) || (p2 == 7 && p1 == 5)) return true;
     if ((p1 == 7 && p2 == 6) || (p2 == 7 && p1 == 6)) return true;
-    // Match tiebreak (10-point)
     if ((p1 >= 10 || p2 >= 10) && (p1 - p2).abs() >= 2) return true;
     return false;
   }
 
+  bool isValidTiebreak(int tb1, int tb2) {
+    final maxScore = tb1 > tb2 ? tb1 : tb2;
+    final minScore = tb1 < tb2 ? tb1 : tb2;
+    return maxScore >= 7 && (maxScore - minScore) >= 2;
+  }
+
   Future<void> pickMatchDate() async {
-    final DateTime? picked = await showDatePicker(
+    final picked = await showDatePicker(
       context: context,
       initialDate: DateTime.now(),
       firstDate: DateTime(2020),
       lastDate: DateTime.now(),
     );
-    if (picked != null) {
-      setState(() => selectedMatchDate = picked);
-    }
+    if (picked != null) setState(() => selectedMatchDate = picked);
   }
 
   Future<void> saveResult() async {
-    final matchRef = FirebaseFirestore.instance
-        .collection('matches')
-        .doc(widget.matchId);
-
-    // Use already-available matchData to avoid extra read
     if (widget.matchData['status'] == 'completed') {
       showError('Match already completed');
       return;
@@ -108,24 +98,21 @@ class _AddMatchResultScreenState extends State<AddMatchResultScreen> {
 
     if (!mounted) return;
     final loc = AppLocalizations.of(context)!;
-    List<Map<String, int>> formattedSets = [];
 
+    List<Map<String, dynamic>> formattedSets = [];
     int p1Wins = 0;
     int p2Wins = 0;
 
-    for (var set in sets) {
-      if (set['p1']!.text.isEmpty || set['p2']!.text.isEmpty) {
+    for (int i = 0; i < _setKeys.length; i++) {
+      final data = _setKeys[i].currentState?.currentData;
+
+      if (data == null || data.p1 == null || data.p2 == null) {
         showError(loc.addAtLeastOneSet);
         return;
       }
 
-      final p1 = int.tryParse(set['p1']!.text);
-      final p2 = int.tryParse(set['p2']!.text);
-
-      if (p1 == null || p2 == null) {
-        showError(loc.invalidSetScore);
-        return;
-      }
+      final p1 = data.p1!;
+      final p2 = data.p2!;
 
       if (p1 == 0 && p2 == 0) {
         showError(loc.setScoresZeroError);
@@ -137,7 +124,24 @@ class _AddMatchResultScreenState extends State<AddMatchResultScreen> {
         return;
       }
 
-      formattedSets.add({'p1': p1, 'p2': p2});
+      if (data.isTiebreak) {
+        if (data.tb1 == null || data.tb2 == null) {
+          showError(loc.enterTiebreakScore);
+          return;
+        }
+        if (useOfficialScoring && !isValidTiebreak(data.tb1!, data.tb2!)) {
+          showError(loc.invalidTiebreakScore);
+          return;
+        }
+        final setWinnerIsP1 = p1 > p2;
+        final tbWinnerIsP1 = data.tb1! > data.tb2!;
+        if (setWinnerIsP1 != tbWinnerIsP1) {
+          showError(loc.tiebreakWinnerMismatch);
+          return;
+        }
+      }
+
+      formattedSets.add(data.toMap());
       if (p1 > p2) p1Wins++;
       if (p2 > p1) p2Wins++;
     }
@@ -146,7 +150,6 @@ class _AddMatchResultScreenState extends State<AddMatchResultScreen> {
       showError(loc.addAtLeastOneSet);
       return;
     }
-
     if (p1Wins == p2Wins) {
       showError(loc.mustHaveWinner);
       return;
@@ -157,12 +160,10 @@ class _AddMatchResultScreenState extends State<AddMatchResultScreen> {
       showError(loc.enterDuration);
       return;
     }
-
     if (locationController.text.trim().isEmpty) {
       showError(loc.enterLocation);
       return;
     }
-
     if (selectedMatchDate == null) {
       showError(loc.selectDateError);
       return;
@@ -171,26 +172,23 @@ class _AddMatchResultScreenState extends State<AddMatchResultScreen> {
     final players = widget.matchData['players'] as List;
     final currentUid = FirebaseAuth.instance.currentUser!.uid;
     final opponentUid = players.firstWhere((uid) => uid != currentUid);
-
     final winnerUid = p1Wins > p2Wins ? currentUid : opponentUid;
-
-    // Use already-loaded names — avoid duplicate Firestore reads
     final currentUserName = player1Name ?? 'Player 1';
     final opponentName = player2Name ?? 'Player 2';
 
+    final matchRef = FirebaseFirestore.instance
+        .collection('matches')
+        .doc(widget.matchId);
+
     final batch = FirebaseFirestore.instance.batch();
 
-    // Match update
     batch.update(matchRef, {
       'status': 'completed',
       'completedAt': FieldValue.serverTimestamp(),
       'winnerUid': winnerUid,
       'player1Uid': currentUid,
       'player2Uid': opponentUid,
-      'playerNames': {
-        currentUid: currentUserName,
-        opponentUid: opponentName,
-      },
+      'playerNames': {currentUid: currentUserName, opponentUid: opponentName},
       'result': {
         'sets': formattedSets,
         'location': locationController.text.trim(),
@@ -206,11 +204,7 @@ class _AddMatchResultScreenState extends State<AddMatchResultScreen> {
       },
     });
 
-    // Current user stats
-    final userRef = FirebaseFirestore.instance
-        .collection('users')
-        .doc(currentUid);
-
+    final userRef = FirebaseFirestore.instance.collection('users').doc(currentUid);
     if (winnerUid == currentUid) {
       batch.update(userRef, {
         'matchesPlayed': FieldValue.increment(1),
@@ -247,7 +241,6 @@ class _AddMatchResultScreenState extends State<AddMatchResultScreen> {
     ]);
 
     if (!mounted) return;
-
     setState(() {
       player1Name = (results[0].data() as Map<String, dynamic>?)?['name'] ?? 'Player 1';
       player2Name = (results[1].data() as Map<String, dynamic>?)?['name'] ?? 'Player 2';
@@ -281,211 +274,76 @@ class _AddMatchResultScreenState extends State<AddMatchResultScreen> {
         padding: const EdgeInsets.all(16),
         child: ListView(
           children: [
-
-            // ── Section: Sets ──
-            Text(
-              loc.sets,
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-
+            Text(loc.sets, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 4),
-
-            // Official scoring toggle
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Expanded(
-                  child: Text(
-                    loc.useOfficialScoring,
-                    style: const TextStyle(fontSize: 13),
-                  ),
-                ),
-                Switch(
-                  value: useOfficialScoring,
-                  onChanged: (v) => setState(() => useOfficialScoring = v),
-                ),
+                Expanded(child: Text(loc.useOfficialScoring, style: const TextStyle(fontSize: 13))),
+                Switch(value: useOfficialScoring, onChanged: (v) => setState(() => useOfficialScoring = v)),
               ],
             ),
-
             const SizedBox(height: 8),
-
-            // Set score header row with player names
             Row(
               children: [
-                Expanded(
-                  child: Center(
-                    child: Text(
-                      player1Name ?? loc.loading,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 13,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ),
+                Expanded(child: Center(child: Text(player1Name ?? loc.loading, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13), overflow: TextOverflow.ellipsis))),
                 const SizedBox(width: 10),
-                Expanded(
-                  child: Center(
-                    child: Text(
-                      player2Name ?? loc.loading,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 13,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 48), // space for remove button
+                Expanded(child: Center(child: Text(player2Name ?? loc.loading, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13), overflow: TextOverflow.ellipsis))),
+                const SizedBox(width: 48),
               ],
             ),
-
             const SizedBox(height: 8),
-
-            // Set rows
-            ...sets.asMap().entries.map((entry) {
+            ..._setKeys.asMap().entries.map((entry) {
               final index = entry.key;
-              final set = entry.value;
-
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 10),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: TextField(
-                        controller: set['p1'],
-                        keyboardType: TextInputType.number,
-                        textAlign: TextAlign.center,
-                        decoration: InputDecoration(
-                          labelText: loc.setLabel(index + 1),
-                          border: const OutlineInputBorder(),
-                        ),
-                      ),
-                    ),
-                    const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 8),
-                      child: Text(
-                        '–',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      child: TextField(
-                        controller: set['p2'],
-                        keyboardType: TextInputType.number,
-                        textAlign: TextAlign.center,
-                        decoration: InputDecoration(
-                          labelText: loc.setLabel(index + 1),
-                          border: const OutlineInputBorder(),
-                        ),
-                      ),
-                    ),
-                    IconButton(
-                      icon: const Icon(
-                        Icons.remove_circle,
-                        color: Colors.red,
-                      ),
-                      onPressed: (sets.length > 1 && !isSaving)
-                          ? () => removeSet(index)
-                          : null,
-                    ),
-                  ],
-                ),
+              final key = entry.value;
+              return SetScoreRow(
+                key: key,
+                index: index,
+                player1Name: player1Name ?? loc.loading,
+                player2Name: player2Name ?? loc.loading,
+                canRemove: _setKeys.length > 1,
+                isSaving: isSaving,
+                onRemove: () => _removeSet(index),
+                onChanged: (_) {},
               );
             }),
-
             TextButton.icon(
-              onPressed: isSaving ? null : addSet,
+              onPressed: isSaving ? null : _addSet,
               icon: const Icon(Icons.add),
               label: Text(loc.addSet),
             ),
-
             const SizedBox(height: 16),
-
-            // ── Section: Match Details ──
-            Text(
-              loc.matchDetailsTitle,
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-
+            Text(loc.matchDetailsTitle, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 12),
-
-            // Date picker
             ListTile(
               contentPadding: EdgeInsets.zero,
               leading: const Icon(Icons.calendar_today),
-              title: Text(
-                selectedMatchDate == null
-                    ? loc.selectMatchDate
-                    : loc.matchDateLabel(
-                        '${selectedMatchDate!.day}/${selectedMatchDate!.month}/${selectedMatchDate!.year}',
-                      ),
-              ),
+              title: Text(selectedMatchDate == null ? loc.selectMatchDate : loc.matchDateLabel('${selectedMatchDate!.day}/${selectedMatchDate!.month}/${selectedMatchDate!.year}')),
               onTap: pickMatchDate,
             ),
-
             const SizedBox(height: 8),
-
-            // Duration
             TextField(
               controller: durationController,
               keyboardType: TextInputType.number,
-              decoration: InputDecoration(
-                labelText: loc.durationMinutes,
-                border: const OutlineInputBorder(),
-                prefixIcon: const Icon(Icons.timer_outlined),
-              ),
+              decoration: InputDecoration(labelText: loc.durationMinutes, border: const OutlineInputBorder(), prefixIcon: const Icon(Icons.timer_outlined)),
             ),
-
             const SizedBox(height: 12),
-
-            // Location
             TextField(
               controller: locationController,
               textCapitalization: TextCapitalization.words,
-              decoration: InputDecoration(
-                labelText: loc.location,
-                border: const OutlineInputBorder(),
-                prefixIcon: const Icon(Icons.location_on_outlined),
-              ),
+              decoration: InputDecoration(labelText: loc.location, border: const OutlineInputBorder(), prefixIcon: const Icon(Icons.location_on_outlined)),
             ),
-
             const SizedBox(height: 32),
-
-            // Save button
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: isSaving ? null : handleSave,
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                ),
+                style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 16)),
                 child: isSaving
-                    ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
-                        ),
-                      )
-                    : Text(
-                        loc.saveResult,
-                        style: const TextStyle(fontSize: 16),
-                      ),
+                    ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                    : Text(loc.saveResult, style: const TextStyle(fontSize: 16)),
               ),
             ),
-
             const SizedBox(height: 24),
           ],
         ),

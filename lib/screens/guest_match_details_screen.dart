@@ -30,9 +30,17 @@ class GuestMatchDetailsScreen extends StatelessWidget {
   });
 
   String _formatScore() {
-    return sets
-        .map((s) => '${s['p1']}-${s['p2']}')
-        .join(', ');
+    return sets.map((s) {
+      final p1 = s['p1'] as int;
+      final p2 = s['p2'] as int;
+      // In the WhatsApp message, show loser's tiebreak points
+      // e.g. "7-6 (4)" where 4 = loser's tiebreak points
+      if (s['tb1'] != null && s['tb2'] != null) {
+        final loserTb = p1 > p2 ? s['tb2'] : s['tb1'];
+        return '$p1-$p2 ($loserTb)';
+      }
+      return '$p1-$p2';
+    }).join(', ');
   }
 
   Future<void> _shareViaWhatsApp(
@@ -194,129 +202,139 @@ class GuestMatchDetailsScreen extends StatelessWidget {
                   padding: const EdgeInsets.all(12),
                   child: Column(
                     children: [
-                      // Header
-                      Row(
-                        children: [
-                          const SizedBox(width: 130),
-                          ...sets.asMap().entries.map((e) => Expanded(
-                            child: Center(
-                              child: Text(
-                                loc.setLabel(e.key + 1),
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          )),
-                        ],
-                      ),
 
-                      const SizedBox(height: 10),
-
-                      // Player 1 row (current user)
-                      Row(
-                        children: [
-                          SizedBox(
-                            width: 130,
-                            child: Row(
-                              children: [
-                                Flexible(
-                                  child: Text(
-                                    playerName,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: TextStyle(
-                                      fontWeight: currentUserWon
-                                          ? FontWeight.bold
-                                          : FontWeight.normal,
+                      // Header: player names
+                      IntrinsicHeight(
+                        child: Row(
+                          children: [
+                            const SizedBox(width: 56),
+                            Expanded(
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Flexible(
+                                    child: Text(
+                                      playerName,
+                                      textAlign: TextAlign.center,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: TextStyle(
+                                        fontWeight: currentUserWon
+                                            ? FontWeight.bold
+                                            : FontWeight.normal,
+                                        fontSize: 13,
+                                      ),
                                     ),
                                   ),
-                                ),
-                                if (currentUserWon) ...[
-                                  const SizedBox(width: 4),
-                                  const Text('🏆'),
+                                  if (currentUserWon) ...[
+                                    const SizedBox(width: 4),
+                                    const Text('🏆', style: TextStyle(fontSize: 11)),
+                                  ],
                                 ],
-                              ],
-                            ),
-                          ),
-                          ...sets.map((set) {
-                            final p1 = set['p1'] ?? 0;
-                            final p2 = set['p2'] ?? 0;
-                            final won = p1 > p2;
-                            return Expanded(
-                              child: Center(
-                                child: Text(
-                                  p1.toString(),
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: won
-                                        ? FontWeight.bold
-                                        : FontWeight.normal,
-                                    color: won
-                                        ? Colors.black
-                                        : Colors.grey[500],
-                                  ),
-                                ),
                               ),
-                            );
-                          }),
-                        ],
-                      ),
-
-                      const SizedBox(height: 6),
-
-                      // Player 2 row (guest)
-                      Row(
-                        children: [
-                          SizedBox(
-                            width: 130,
-                            child: Row(
-                              children: [
-                                Flexible(
-                                  child: Text(
-                                    opponentName,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: TextStyle(
-                                      fontWeight: !currentUserWon
-                                          ? FontWeight.bold
-                                          : FontWeight.normal,
+                            ),
+                            Expanded(
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Flexible(
+                                    child: Text(
+                                      opponentName,
+                                      textAlign: TextAlign.center,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: TextStyle(
+                                        fontWeight: !currentUserWon
+                                            ? FontWeight.bold
+                                            : FontWeight.normal,
+                                        fontSize: 13,
+                                      ),
                                     ),
                                   ),
-                                ),
-                                if (!currentUserWon) ...[
-                                  const SizedBox(width: 4),
-                                  const Text('🏆'),
+                                  if (!currentUserWon) ...[
+                                    const SizedBox(width: 4),
+                                    const Text('🏆', style: TextStyle(fontSize: 11)),
+                                  ],
                                 ],
-                              ],
+                              ),
                             ),
-                          ),
-                          ...sets.map((set) {
-                            final p1 = set['p1'] ?? 0;
-                            final p2 = set['p2'] ?? 0;
-                            final won = p2 > p1;
-                            return Expanded(
-                              child: Center(
+                          ],
+                        ),
+                      ),
+
+                      const Divider(height: 16),
+
+                      // One row per set
+                      ...sets.asMap().entries.map((entry) {
+                        final index = entry.key;
+                        final set = entry.value;
+                        final p1 = set['p1'] as int;
+                        final p2 = set['p2'] as int;
+                        final p1Won = p1 > p2;
+                        final hasTb = set['tb1'] != null && set['tb2'] != null;
+
+                        final p1TbText = (hasTb && !p1Won) ? '(${set["tb1"]})' : '';
+                        final p2TbText = (hasTb && p1Won) ? '(${set["tb2"]})' : '';
+
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 6),
+                          child: Row(
+                            children: [
+                              SizedBox(
+                                width: 56,
                                 child: Text(
-                                  p2.toString(),
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: won
-                                        ? FontWeight.bold
-                                        : FontWeight.normal,
-                                    color: won
-                                        ? Colors.black
-                                        : Colors.grey[500],
-                                  ),
+                                  loc.setLabel(index + 1),
+                                  style: TextStyle(fontSize: 13, color: Colors.grey[600]),
                                 ),
                               ),
-                            );
-                          }),
-                        ],
-                      ),
+                              Expanded(
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Text(
+                                      p1.toString(),
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: p1Won ? FontWeight.bold : FontWeight.normal,
+                                        color: p1Won ? Colors.black : Colors.grey[500],
+                                      ),
+                                    ),
+                                    if (p1TbText.isNotEmpty) ...[
+                                      const SizedBox(width: 3),
+                                      Text(p1TbText,
+                                        style: TextStyle(fontSize: 12, color: Colors.grey[500])),
+                                    ],
+                                  ],
+                                ),
+                              ),
+                              Expanded(
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Text(
+                                      p2.toString(),
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: !p1Won ? FontWeight.bold : FontWeight.normal,
+                                        color: !p1Won ? Colors.black : Colors.grey[500],
+                                      ),
+                                    ),
+                                    if (p2TbText.isNotEmpty) ...[
+                                      const SizedBox(width: 3),
+                                      Text(p2TbText,
+                                        style: TextStyle(fontSize: 12, color: Colors.grey[500])),
+                                    ],
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      }),
                     ],
                   ),
                 ),
               ),
-
               const SizedBox(height: 16),
 
               // ── Match info ──

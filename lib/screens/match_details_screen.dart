@@ -53,14 +53,10 @@ class _MatchDetailsScreenState extends State<MatchDetailsScreen> {
 
   void handleMatchDeleted() {
     if (hasHandledDeletion) return;
-
     hasHandledDeletion = true;
-
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Future.delayed(const Duration(seconds: 2), () {
-        if (mounted) {
-          Navigator.pop(context, true); // ✅ guaranteed propagation
-        }
+        if (mounted) Navigator.pop(context, true);
       });
     });
   }
@@ -73,31 +69,14 @@ class _MatchDetailsScreenState extends State<MatchDetailsScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-
-            const Icon(
-              Icons.check_circle,
-              color: Colors.green,
-              size: 80,
-            ),
-
+            const Icon(Icons.check_circle, color: Colors.green, size: 80),
             const SizedBox(height: 20),
-
-            Text(loc.matchDeleted, //"Match deleted"
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-
+            Text(loc.matchDeleted,
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
             const SizedBox(height: 10),
-
-            Text(
-              loc.matchNoLongerAvailable, //"The match is no longer available."
+            Text(loc.matchNoLongerAvailable,
               textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.grey[700]),
-            ),
-
-            // 🚫 NO BUTTON
+              style: TextStyle(color: Colors.grey[700])),
           ],
         ),
       ),
@@ -106,55 +85,38 @@ class _MatchDetailsScreenState extends State<MatchDetailsScreen> {
 
   bool hasShownResultDialog = false;
 
-  void handleDeletionResult(
-    bool isAccepted,
-    Map<String, dynamic> deletionRequest,
-  ) {
+  void handleDeletionResult(bool isAccepted, Map<String, dynamic> deletionRequest) {
     if (hasShownResultDialog) return;
-
     final currentUid = FirebaseAuth.instance.currentUser!.uid;
     final loc = AppLocalizations.of(context)!;
-
-    // Only requester should see this
     if (deletionRequest['requestedBy'] != currentUid) return;
-
     hasShownResultDialog = true;
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-
       await showDialog(
         context: context,
         barrierDismissible: false,
         builder: (_) => AlertDialog(
-          title: Text(isAccepted ? loc.matchDeleted : loc.requestRejected), //'Match deleted' : 'Request rejected'
-          content: Text(
-            isAccepted
-                ? loc.opponentAcceptedDeletion
-                : loc.opponentRejectedDeletion,
-          ), // 'Your opponent accepted the deletion request.' 'Your opponent rejected the deletion request.'
+          title: Text(isAccepted ? loc.matchDeleted : loc.requestRejected),
+          content: Text(isAccepted
+              ? loc.opponentAcceptedDeletion
+              : loc.opponentRejectedDeletion),
           actions: [
             TextButton(
               onPressed: () async {
                 Navigator.pop(context);
-
                 if (isAccepted) {
-                  // ✅ NOW delete
                   await FirebaseFirestore.instance
                       .collection('matches')
                       .doc(widget.matchId)
                       .delete();
-
                   if (!mounted) return;
-
                   Navigator.pop(context, true);
                 } else {
-                  // ✅ Clean request so user can retry
                   await FirebaseFirestore.instance
                       .collection('matches')
                       .doc(widget.matchId)
-                      .update({
-                    'deletionRequest': FieldValue.delete(),
-                  });
+                      .update({'deletionRequest': FieldValue.delete()});
                 }
               },
               child: Text(loc.ok),
@@ -184,40 +146,24 @@ class _MatchDetailsScreenState extends State<MatchDetailsScreen> {
     for (var doc in snapshot.docs) {
       final data = doc.data();
       final players = List<String>.from(data['players'] ?? []);
-
-      // ✅ Only matches between these two players
       if (!players.contains(opponentUid)) continue;
-
       matches++;
-
-      if (data['winnerUid'] == uid) {
-        wins++;
-      } else {
-        losses++;
-      }
+      if (data['winnerUid'] == uid) wins++; else losses++;
 
       final result = data['result'] ?? {};
       final sets = result['sets'] ?? [];
-
       final bool userIsP1 = data['player1Uid'] == uid;
 
       for (var set in sets) {
         final p1 = set['p1'] ?? 0;
         final p2 = set['p2'] ?? 0;
-
         int myScore = userIsP1 ? p1 : p2;
         int opponentScore = userIsP1 ? p2 : p1;
-
-        if (myScore > opponentScore) {
-          setsWon++;
-        } else {
-          setsLost++;
-        }
+        if (myScore > opponentScore) setsWon++; else setsLost++;
       }
     }
 
     if (!mounted) return;
-
     setState(() {
       h2hMatches = matches;
       h2hWins = wins;
@@ -230,29 +176,20 @@ class _MatchDetailsScreenState extends State<MatchDetailsScreen> {
 
   @override
   Widget build(BuildContext context) {
-
     final loc = AppLocalizations.of(context)!;
 
     int playerSetsWon = 0;
     int opponentSetsWon = 0;
-
     for (var set in widget.sets) {
-      if (set['p1'] > set['p2']) {
-        playerSetsWon++;
-      } else {
-        opponentSetsWon++;
-      }
+      if (set['p1'] > set['p2']) playerSetsWon++; else opponentSetsWon++;
     }
 
     final bool playerWon = playerSetsWon > opponentSetsWon;
-
     final winnerName = playerWon ? widget.playerName : widget.opponentName;
     final loserName = playerWon ? widget.opponentName : widget.playerName;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(loc.matchDetailsTitle), // "Match Details"
-      ),
+      appBar: AppBar(title: Text(loc.matchDetailsTitle)),
       body: StreamBuilder<DocumentSnapshot>(
         stream: FirebaseFirestore.instance
             .collection('matches')
@@ -261,12 +198,10 @@ class _MatchDetailsScreenState extends State<MatchDetailsScreen> {
         builder: (context, snapshot) {
           if (snapshot.hasError) {
             final error = snapshot.error.toString();
-
             if (error.contains('permission-denied')) {
               handleMatchDeleted();
               return buildDeletedUI();
             }
-
             return Center(child: Text(loc.somethingWentWrong));
           }
 
@@ -274,12 +209,10 @@ class _MatchDetailsScreenState extends State<MatchDetailsScreen> {
             return const Center(child: CircularProgressIndicator());
           }
 
-          // 🔥 MATCH WAS DELETED
-            if (!snapshot.data!.exists) {
-              handleMatchDeleted();    // ✅ unified logic
-              return buildDeletedUI(); // ✅ unified UI
-            }
-          
+          if (!snapshot.data!.exists) {
+            handleMatchDeleted();
+            return buildDeletedUI();
+          }
 
           final data = snapshot.data!.data() as Map<String, dynamic>? ?? {};
           final deletionRequest = data['deletionRequest'] as Map<String, dynamic>?;
@@ -289,44 +222,32 @@ class _MatchDetailsScreenState extends State<MatchDetailsScreen> {
               deletionRequest != null &&
               deletionRequest['status'] == 'pending' &&
               !(deletionRequest['seenBy'] ?? []).contains(currentUid)) {
-
             hasMarkedSeen = true;
-
             Future.microtask(() async {
               try {
-                debugPrint("🔥 Attempting to mark deletionRequest as seen");
-
                 await FirebaseFirestore.instance
                     .collection('matches')
                     .doc(widget.matchId)
                     .update({
                   'deletionRequest.seenBy': FieldValue.arrayUnion([currentUid])
                 });
-
-                debugPrint("✅ Successfully marked as seen");
               } catch (e) {
-                debugPrint("❌ ERROR updating seenBy: $e");
+                debugPrint('❌ ERROR updating seenBy: $e');
               }
             });
           }
 
           final isRequester = deletionRequest != null &&
               deletionRequest['requestedBy'] == currentUid;
-
           final isPending = deletionRequest != null &&
               deletionRequest['status'] == 'pending';
-
           final isRejected = deletionRequest != null &&
               deletionRequest['status'] == 'rejected';
-
           final isAccepted = deletionRequest != null &&
               deletionRequest['status'] == 'accepted';
 
-          if (isAccepted) {
-            handleDeletionResult(true, deletionRequest!);
-          } else if (isRejected) {
-            handleDeletionResult(false, deletionRequest!);
-          }
+          if (isAccepted) handleDeletionResult(true, deletionRequest!);
+          else if (isRejected) handleDeletionResult(false, deletionRequest!);
 
           return SafeArea(
             child: Padding(
@@ -336,23 +257,15 @@ class _MatchDetailsScreenState extends State<MatchDetailsScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
 
-                    Text(
-                      loc.result, // "Result"
-                      style: const TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-
+                    Text(loc.result,
+                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
                     const SizedBox(height: 10),
 
                     RichText(
                       text: TextSpan(
                         style: const TextStyle(color: Colors.black, fontSize: 16),
                         children: [
-                          TextSpan(
-                            text: loc.matchResultSentence(winnerName, loserName),
-                          ),
+                          TextSpan(text: loc.matchResultSentence(winnerName, loserName)),
                         ],
                       ),
                     ),
@@ -365,352 +278,295 @@ class _MatchDetailsScreenState extends State<MatchDetailsScreen> {
                         child: Column(
                           children: [
 
-                            // Header row (SET1 SET2 SET3...)
-                            Row(
-                              children: [
-                                const SizedBox(width: 120),
-                                ...widget.sets.asMap().entries.map((entry) {
-                                  final index = entry.key;
+                            // ── Header: player names ──
+                            IntrinsicHeight(
+                              child: Row(
+                                children: [
+                                  // Set label spacer
+                                  const SizedBox(width: 56),
+                                  // Player 1 name — centered over score area
+                                  Expanded(
+                                    child: Text(
+                                      widget.playerName,
+                                      textAlign: TextAlign.center,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 13,
+                                      ),
+                                    ),
+                                  ),
+                                  // Player 2 name — centered over score area
+                                  Expanded(
+                                    child: Text(
+                                      widget.opponentName,
+                                      textAlign: TextAlign.center,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 13,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
 
-                                  return Expanded(
-                                    child: Center(
+                            const Divider(height: 16),
+
+                            // ── One row per set ──
+                            ...widget.sets.asMap().entries.map((entry) {
+                              final index = entry.key;
+                              final set = entry.value;
+                              final p1 = set['p1'] as int;
+                              final p2 = set['p2'] as int;
+                              final p1Won = p1 > p2;
+                              final hasTb = set['tb1'] != null && set['tb2'] != null;
+
+                              // tb1 belongs to p1 (current user perspective after flip in history screen)
+                              // Show tiebreak on LOSER's side only
+                              final p1TbText = (hasTb && !p1Won) ? '(${set['tb1']})' : '';
+                              final p2TbText = (hasTb && p1Won) ? '(${set['tb2']})' : '';
+
+                              return Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 6),
+                                child: Row(
+                                  children: [
+                                    // Set label
+                                    SizedBox(
+                                      width: 56,
                                       child: Text(
                                         loc.setLabel(index + 1),
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                        ),
+                                        style: TextStyle(fontSize: 13, color: Colors.grey[600]),
                                       ),
                                     ),
-                                  );
-                                }),
-                              ],
-                            ),
-
-                            const SizedBox(height: 10),
-
-                            // Player 1 row
-                            Row(
-                              children: [
-                                SizedBox(
-                                  width: 120,
-                                  child: Text(widget.playerName),
+                                    // P1 score + tiebreak — centered as a unit
+                                    Expanded(
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          Text(
+                                            p1.toString(),
+                                            style: TextStyle(
+                                              fontSize: 16,
+                                              fontWeight: p1Won ? FontWeight.bold : FontWeight.normal,
+                                              color: p1Won ? Colors.black : Colors.grey[500],
+                                            ),
+                                          ),
+                                          if (p1TbText.isNotEmpty) ...[
+                                            const SizedBox(width: 3),
+                                            Text(
+                                              p1TbText,
+                                              style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+                                            ),
+                                          ],
+                                        ],
+                                      ),
+                                    ),
+                                    // P2 score + tiebreak — centered as a unit
+                                    Expanded(
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          Text(
+                                            p2.toString(),
+                                            style: TextStyle(
+                                              fontSize: 16,
+                                              fontWeight: !p1Won ? FontWeight.bold : FontWeight.normal,
+                                              color: !p1Won ? Colors.black : Colors.grey[500],
+                                            ),
+                                          ),
+                                          if (p2TbText.isNotEmpty) ...[
+                                            const SizedBox(width: 3),
+                                            Text(
+                                              p2TbText,
+                                              style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+                                            ),
+                                          ],
+                                        ],
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                                ...widget.sets.map((set) {
-
-                                  final p1 = set['p1'];
-                                  final p2 = set['p2'];
-                                  final isWinner = p1 > p2;
-
-                                  return Expanded(
-                                    child: Center(
-                                      child: Text(
-                                        p1.toString(),
-                                        style: TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: isWinner ? FontWeight.bold : FontWeight.normal,
-                                          color: isWinner ? Colors.black : Colors.grey[500],
-                                        ),
-                                      ),
-                                    ),
-                                  );
-                                }),
-                              ],
-                            ),
-
-                            const SizedBox(height: 6),
-
-                            // Player 2 row
-                            Row(
-                              children: [
-                                SizedBox(
-                                  width: 120,
-                                  child: Text(widget.opponentName),
-                                ),
-                                ...widget.sets.map((set) {
-
-                                  final p1 = set['p1'];
-                                  final p2 = set['p2'];
-                                  final isWinner = p2 > p1;
-
-                                  return Expanded(
-                                    child: Center(
-                                      child: Text(
-                                        p2.toString(),
-                                        style: TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: isWinner ? FontWeight.bold : FontWeight.normal,
-                                          color: isWinner ? Colors.black : Colors.grey[500],
-                                        ),
-                                      ),
-                                    ),
-                                  );
-                                }),
-                              ],
-                            ),
-
+                              );
+                            }),
                           ],
                         ),
                       ),
                     ),
 
-                    const SizedBox(height: 20),
+                                        const SizedBox(height: 20),
 
-                    Text(
-                      '${loc.locationLabel}: ${widget.location}',
-                      style: const TextStyle(fontWeight: FontWeight.w500),
-                    ),
-                    Text(
-                      '${loc.durationLabel}: ${widget.duration} ${loc.minutesShort}',
-                      style: const TextStyle(fontWeight: FontWeight.w500),
-                    ),
-                    Text(
-                      '${loc.dateLabel}: ${widget.matchDate.day}/${widget.matchDate.month}/${widget.matchDate.year}',
-                      style: const TextStyle(fontWeight: FontWeight.w500),
-                    ),
+                    Text('${loc.locationLabel}: ${widget.location}',
+                      style: const TextStyle(fontWeight: FontWeight.w500)),
+                    Text('${loc.durationLabel}: ${widget.duration} ${loc.minutesShort}',
+                      style: const TextStyle(fontWeight: FontWeight.w500)),
+                    Text('${loc.dateLabel}: ${widget.matchDate.day}/${widget.matchDate.month}/${widget.matchDate.year}',
+                      style: const TextStyle(fontWeight: FontWeight.w500)),
 
                     const SizedBox(height: 30),
 
-                    Text(
-                      loc.headToHead, // "Head-to-Head"
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-
+                    Text(loc.headToHead,
+                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                     const SizedBox(height: 10),
 
                     loadingH2H
                       ? const Center(child: CircularProgressIndicator())
-                        : Card(
-                            child: Padding(
-                              padding: const EdgeInsets.all(12),
-                              child: Column(
-                                children: [
-
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Text(loc.headToHead), // Matches
-                                      Text(h2hMatches.toString()),
-                                    ],
-                                  ),
-
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Text(loc.wins), // "Wins"
-                                      Text(h2hWins.toString()),
-                                    ],
-                                  ),
-
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Text(loc.losses), // "Losses"
-                                      Text(h2hLosses.toString()),
-                                    ],
-                                  ),
-
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Text(loc.totalSetsWon), // "Sets Won"
-                                      Text(h2hSetsWon.toString()),
-                                    ],
-                                  ),
-
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Text(loc.totalSetsLost), // "Sets Lost"
-                                      Text(h2hSetsLost.toString()),
-                                    ],
-                                  ),                            
-
-                                ],
-                              ),
+                      : Card(
+                          child: Padding(
+                            padding: const EdgeInsets.all(12),
+                            child: Column(
+                              children: [
+                                Row(mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [Text(loc.headToHead), Text(h2hMatches.toString())]),
+                                Row(mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [Text(loc.wins), Text(h2hWins.toString())]),
+                                Row(mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [Text(loc.losses), Text(h2hLosses.toString())]),
+                                Row(mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [Text(loc.totalSetsWon), Text(h2hSetsWon.toString())]),
+                                Row(mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [Text(loc.totalSetsLost), Text(h2hSetsLost.toString())]),
+                              ],
                             ),
                           ),
+                        ),
 
-                          const SizedBox(height: 30),
+                    const SizedBox(height: 30),
 
-                          // 🔴 DELETE SECTION HERE (outside card)
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              if (deletionRequest == null) ...[
-                                ElevatedButton.icon(
-                                  icon: const Icon(Icons.delete),
-                                  label: Text(loc.deleteMatch), //'Delete Match'
-                                  style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-                                  onPressed: () async {
-                                    final confirm = await showDialog(
-                                      context: context,
-                                      builder: (_) => AlertDialog(
-                                        title: Text(loc.deleteMatchQuestion), //'Delete match?'
-                                        content: Text(loc.deleteMatchConfirmation), //'This will request deletion.'
-                                        actions: [
-                                          TextButton(
-                                            onPressed: () => Navigator.pop(context, false),
-                                            child: Text(loc.cancel), //'Cancel'
-                                          ),
-                                          TextButton(
-                                            onPressed: () => Navigator.pop(context, true),
-                                            child: Text(loc.confirm), //'Confirm'
-                                          ),
-                                        ],
-                                      ),
-                                    );
-
-                                    if (confirm != true) return;
-
-                                    await FirebaseFirestore.instance
-                                        .collection('matches')
-                                        .doc(widget.matchId)
-                                        .update({
-                                      'deletionRequest': {
-                                        'requestedBy': currentUid,
-                                        'status': 'pending',
-                                        'createdAt': FieldValue.serverTimestamp(),
-                                        'seenBy': [currentUid],
-                                      }
-                                    });
-                                  },
-                                ),
-                              ]
-
-                              // 🟡 WAITING STATE (PERSISTENT)
-                              else if (isPending && isRequester) ...[
-                                Container(
-                                  width: double.infinity,
-                                  padding: const EdgeInsets.all(12),
-                                  decoration: BoxDecoration(
-                                    color: Colors.orange[100],
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: Text(loc.waitingOpponentApproval,
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(fontWeight: FontWeight.bold), //'Waiting for opponent approval...'
-                                  ),
-                                ),
-                              ]
-
-                              // 🟢 ACCEPT / REJECT
-                              else if (isPending && !isRequester) ...[
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(loc.opponentRequestedDeletion,
-                                      style: TextStyle(fontWeight: FontWeight.bold),
-                                    ),//'Opponent requested match deletion',
-                                    const SizedBox(height: 10),
-                                    Row(
-                                      children: [
-                                        Expanded(
-                                          child: ElevatedButton(
-                                            style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-                                            onPressed: () async {
-                                              // ✅ ACCEPT
-                                              await FirebaseFirestore.instance
-                                                  .collection('matches')
-                                                  .doc(widget.matchId)
-                                                  .update({
-                                                'deletionRequest.status': 'accepted',
-                                                'deletionRequest.resolvedAt': FieldValue.serverTimestamp(),
-                                                'deletionRequest.resolvedBy': currentUid,
-
-                                                // 🔥 RESET seenBy → so requester gets notified
-                                                'deletionRequest.seenBy': [currentUid],
-                                              });
-
-                                              await H2HService.recalculateHeadToHead(
-                                                userA: currentUid,
-                                                userB: widget.opponentUid,
-                                              );
-
-                                              if (!mounted) return;
-
-                                              ScaffoldMessenger.of(context).showSnackBar(
-                                                SnackBar(content: Text(loc.deletionAcceptedWaiting)), //Text(loc.deletionAcceptedWaiting)
-                                              );
-                                            },
-                                            child: Text(loc.accept), //'Accept'
-                                          ),
-                                        ),
-                                        const SizedBox(width: 10),
-                                        Expanded(
-                                          child: ElevatedButton(
-                                            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-                                            onPressed: () async {
-                                              // ✅ REJECT
-                                              await FirebaseFirestore.instance
-                                                  .collection('matches')
-                                                  .doc(widget.matchId)
-                                                  .update({
-                                                'deletionRequest.status': 'rejected',
-                                                'deletionRequest.resolvedAt': FieldValue.serverTimestamp(),
-                                                'deletionRequest.resolvedBy': currentUid,
-
-                                                // 🔥 RESET seenBy → so requester gets notified
-                                                'deletionRequest.seenBy': [currentUid],
-                                              });
-
-                                              if (!mounted) return;
-
-                                              ScaffoldMessenger.of(context).showSnackBar(
-                                                SnackBar(content: Text(loc.requestRejected)), //'Request rejected'
-                                              );
-                                            },
-                                            child: Text(loc.reject), //'Reject'
-                                          ),
-                                        ),
-                                      ],
-                                    ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        if (deletionRequest == null) ...[
+                          ElevatedButton.icon(
+                            icon: const Icon(Icons.delete),
+                            label: Text(loc.deleteMatch),
+                            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                            onPressed: () async {
+                              final confirm = await showDialog(
+                                context: context,
+                                builder: (_) => AlertDialog(
+                                  title: Text(loc.deleteMatchQuestion),
+                                  content: Text(loc.deleteMatchConfirmation),
+                                  actions: [
+                                    TextButton(onPressed: () => Navigator.pop(context, false), child: Text(loc.cancel)),
+                                    TextButton(onPressed: () => Navigator.pop(context, true), child: Text(loc.confirm)),
                                   ],
                                 ),
-                              ]
-
-                              else if (isAccepted && !isRequester) ...[
-                                Container(
-                                  width: double.infinity,
-                                  padding: const EdgeInsets.all(12),
-                                  decoration: BoxDecoration(
-                                    color: Colors.green[100],
-                                    borderRadius: BorderRadius.circular(8),
+                              );
+                              if (confirm != true) return;
+                              await FirebaseFirestore.instance
+                                  .collection('matches')
+                                  .doc(widget.matchId)
+                                  .update({
+                                'deletionRequest': {
+                                  'requestedBy': currentUid,
+                                  'status': 'pending',
+                                  'createdAt': FieldValue.serverTimestamp(),
+                                  'seenBy': [currentUid],
+                                }
+                              });
+                            },
+                          ),
+                        ]
+                        else if (isPending && isRequester) ...[
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(color: Colors.orange[100], borderRadius: BorderRadius.circular(8)),
+                            child: Text(loc.waitingOpponentApproval,
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(fontWeight: FontWeight.bold)),
+                          ),
+                        ]
+                        else if (isPending && !isRequester) ...[
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(loc.opponentRequestedDeletion,
+                                style: const TextStyle(fontWeight: FontWeight.bold)),
+                              const SizedBox(height: 10),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: ElevatedButton(
+                                      style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+                                      onPressed: () async {
+                                        await FirebaseFirestore.instance
+                                            .collection('matches')
+                                            .doc(widget.matchId)
+                                            .update({
+                                          'deletionRequest.status': 'accepted',
+                                          'deletionRequest.resolvedAt': FieldValue.serverTimestamp(),
+                                          'deletionRequest.resolvedBy': currentUid,
+                                          'deletionRequest.seenBy': [currentUid],
+                                        });
+                                        await H2HService.recalculateHeadToHead(
+                                          userA: currentUid,
+                                          userB: widget.opponentUid,
+                                        );
+                                        if (!mounted) return;
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(content: Text(loc.deletionAcceptedWaiting)),
+                                        );
+                                      },
+                                      child: Text(loc.accept),
+                                    ),
                                   ),
-                                  child: Text(loc.deletionAccepted,
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(fontWeight: FontWeight.bold),
-                                  ), //'Deletion request accepted'
-                                ),
-                              ]
-
-                              // 🔴 REJECTED STATE
-                              else if (isRejected) ...[
-                                Container(
-                                  width: double.infinity,
-                                  padding: const EdgeInsets.all(12),
-                                  decoration: BoxDecoration(
-                                    color: Colors.red[100],
-                                    borderRadius: BorderRadius.circular(8),
+                                  const SizedBox(width: 10),
+                                  Expanded(
+                                    child: ElevatedButton(
+                                      style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                                      onPressed: () async {
+                                        await FirebaseFirestore.instance
+                                            .collection('matches')
+                                            .doc(widget.matchId)
+                                            .update({
+                                          'deletionRequest.status': 'rejected',
+                                          'deletionRequest.resolvedAt': FieldValue.serverTimestamp(),
+                                          'deletionRequest.resolvedBy': currentUid,
+                                          'deletionRequest.seenBy': [currentUid],
+                                        });
+                                        if (!mounted) return;
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(content: Text(loc.requestRejected)),
+                                        );
+                                      },
+                                      child: Text(loc.reject),
+                                    ),
                                   ),
-                                  child: Text(loc.deletionRejected,
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(fontWeight: FontWeight.bold),
-                                  ), //'Deletion request was rejected'
-                                ),
-                              ]
+                                ],
+                              ),
                             ],
                           ),
+                        ]
+                        else if (isAccepted && !isRequester) ...[
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(color: Colors.green[100], borderRadius: BorderRadius.circular(8)),
+                            child: Text(loc.deletionAccepted,
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(fontWeight: FontWeight.bold)),
+                          ),
+                        ]
+                        else if (isRejected) ...[
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(color: Colors.red[100], borderRadius: BorderRadius.circular(8)),
+                            child: Text(loc.deletionRejected,
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(fontWeight: FontWeight.bold)),
+                          ),
+                        ],
+                      ],
+                    ),
 
                   ],
                 ),
               ),
             ),
           );
-        }
-      ),        
+        },
+      ),
     );
   }
 }

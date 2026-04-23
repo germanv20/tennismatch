@@ -1334,6 +1334,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Are you sure you want to delete this match? This action cannot be undone.'**
   String get deleteGuestMatchConfirmation;
+
+  /// No description provided for @tiebreakLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Tiebreak score'**
+  String get tiebreakLabel;
+
+  /// No description provided for @tiebreakPointsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Points'**
+  String get tiebreakPointsLabel;
+
+  /// No description provided for @enterTiebreakScore.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter the tiebreak score.'**
+  String get enterTiebreakScore;
+
+  /// No description provided for @invalidTiebreakScore.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid tiebreak score. Winner must reach at least 7, win by 2.'**
+  String get invalidTiebreakScore;
+
+  /// No description provided for @tiebreakWinnerMismatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Tiebreak winner must match set winner.'**
+  String get tiebreakWinnerMismatch;
 }
 
 class _AppLocalizationsDelegate

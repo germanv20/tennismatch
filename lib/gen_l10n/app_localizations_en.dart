@@ -653,4 +653,20 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get deleteGuestMatchConfirmation =>
       'Are you sure you want to delete this match? This action cannot be undone.';
+
+  @override
+  String get tiebreakLabel => 'Tiebreak score';
+
+  @override
+  String get tiebreakPointsLabel => 'Points';
+
+  @override
+  String get enterTiebreakScore => 'Please enter the tiebreak score.';
+
+  @override
+  String get invalidTiebreakScore =>
+      'Invalid tiebreak score. Winner must reach at least 7, win by 2.';
+
+  @override
+  String get tiebreakWinnerMismatch => 'Tiebreak winner must match set winner.';
 }

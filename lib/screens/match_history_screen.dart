@@ -47,7 +47,16 @@ class _MatchHistoryScreenState extends State<MatchHistoryScreen> {
     bool currentUserIsP1,
   ) {
     if (currentUserIsP1) return rawSets;
-    return rawSets.map((s) => {'p1': s['p2'], 'p2': s['p1']}).toList();
+    // Flip both score and tiebreak fields so p1 always = current user
+    return rawSets.map((s) {
+      final flipped = <String, dynamic>{'p1': s['p2'], 'p2': s['p1']};
+      // Also flip tiebreak scores if present
+      if (s['tb1'] != null && s['tb2'] != null) {
+        flipped['tb1'] = s['tb2'];
+        flipped['tb2'] = s['tb1'];
+      }
+      return flipped;
+    }).toList();
   }
 
   /// Builds a card for a REGULAR (non-guest) completed match

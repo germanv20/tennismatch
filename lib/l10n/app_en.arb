@@ -258,5 +258,10 @@
     }
   },
   "nameLabel": "Your name",
-  "deleteGuestMatchConfirmation": "Are you sure you want to delete this match? This action cannot be undone."
+  "deleteGuestMatchConfirmation": "Are you sure you want to delete this match? This action cannot be undone.",
+  "tiebreakLabel": "Tiebreak score",
+  "tiebreakPointsLabel": "Points",
+  "enterTiebreakScore": "Please enter the tiebreak score.",
+  "invalidTiebreakScore": "Invalid tiebreak score. Winner must reach at least 7, win by 2.",
+  "tiebreakWinnerMismatch": "Tiebreak winner must match set winner."
 }

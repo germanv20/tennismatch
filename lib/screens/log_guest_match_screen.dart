@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:tennismatch/gen_l10n/app_localizations.dart';
 import '../main.dart' show navigatorKey;
+import '../widgets/set_score_row.dart';
 
 class LogGuestMatchScreen extends StatefulWidget {
   const LogGuestMatchScreen({super.key});
@@ -18,7 +19,7 @@ class _LogGuestMatchScreenState extends State<LogGuestMatchScreen> {
   final opponentPhoneController = TextEditingController();
 
   // Sets
-  List<Map<String, TextEditingController>> sets = [];
+  final List<GlobalKey<SetScoreRowState>> _setKeys = [];
 
   // Match info
   final durationController = TextEditingController();
@@ -59,19 +60,14 @@ class _LogGuestMatchScreenState extends State<LogGuestMatchScreen> {
 
   void addSet() {
     setState(() {
-      sets.add({
-        'p1': TextEditingController(),
-        'p2': TextEditingController(),
-      });
+      _setKeys.add(GlobalKey<SetScoreRowState>());
     });
   }
 
   void removeSet(int index) {
-    if (sets.length == 1) return;
+    if (_setKeys.length == 1) return;
     setState(() {
-      final removed = sets.removeAt(index);
-      removed['p1']!.dispose();
-      removed['p2']!.dispose();
+      _setKeys.removeAt(index);
     });
   }
 
@@ -81,10 +77,6 @@ class _LogGuestMatchScreenState extends State<LogGuestMatchScreen> {
     opponentPhoneController.dispose();
     durationController.dispose();
     locationController.dispose();
-    for (var set in sets) {
-      set['p1']?.dispose();
-      set['p2']?.dispose();
-    }
     super.dispose();
   }
 
@@ -100,9 +92,14 @@ class _LogGuestMatchScreenState extends State<LogGuestMatchScreen> {
     if ((p1 == 6 && p2 <= 4) || (p2 == 6 && p1 <= 4)) return true;
     if ((p1 == 7 && p2 == 5) || (p2 == 7 && p1 == 5)) return true;
     if ((p1 == 7 && p2 == 6) || (p2 == 7 && p1 == 6)) return true;
-    // Match tiebreak (10-point)
     if ((p1 >= 10 || p2 >= 10) && (p1 - p2).abs() >= 2) return true;
     return false;
+  }
+
+  bool isValidTiebreak(int tb1, int tb2) {
+    final maxScore = tb1 > tb2 ? tb1 : tb2;
+    final minScore = tb1 < tb2 ? tb1 : tb2;
+    return maxScore >= 7 && (maxScore - minScore) >= 2;
   }
 
   Future<void> pickMatchDate() async {
@@ -137,7 +134,7 @@ class _LogGuestMatchScreenState extends State<LogGuestMatchScreen> {
   }
 
   /// Formats sets into a readable score string e.g. "6-4, 7-5"
-  String _formatScore(List<Map<String, int>> formattedSets) {
+  String _formatScore(List<Map<String, dynamic>> formattedSets) {
     return formattedSets
         .map((s) => '${s['p1']}-${s['p2']}')
         .join(', ');
@@ -147,7 +144,7 @@ class _LogGuestMatchScreenState extends State<LogGuestMatchScreen> {
     required AppLocalizations loc,
     required String opponentName,
     required String opponentPhone,
-    required List<Map<String, int>> formattedSets,
+    required List<Map<String, dynamic>> formattedSets,
     required String location,
     required DateTime matchDate,
   }) async {
@@ -218,23 +215,20 @@ class _LogGuestMatchScreenState extends State<LogGuestMatchScreen> {
     }
 
     // ── Validate sets ──
-    List<Map<String, int>> formattedSets = [];
+    List<Map<String, dynamic>> formattedSets = [];
     int p1Wins = 0;
     int p2Wins = 0;
 
-    for (var set in sets) {
-      if (set['p1']!.text.isEmpty || set['p2']!.text.isEmpty) {
+    for (int i = 0; i < _setKeys.length; i++) {
+      final data = _setKeys[i].currentState?.currentData;
+
+      if (data == null || data.p1 == null || data.p2 == null) {
         showError(loc.addAtLeastOneSet);
         return;
       }
 
-      final p1 = int.tryParse(set['p1']!.text);
-      final p2 = int.tryParse(set['p2']!.text);
-
-      if (p1 == null || p2 == null) {
-        showError(loc.invalidSetScore);
-        return;
-      }
+      final p1 = data.p1!;
+      final p2 = data.p2!;
 
       if (p1 == 0 && p2 == 0) {
         showError(loc.setScoresZeroError);
@@ -246,7 +240,24 @@ class _LogGuestMatchScreenState extends State<LogGuestMatchScreen> {
         return;
       }
 
-      formattedSets.add({'p1': p1, 'p2': p2});
+      if (data.isTiebreak) {
+        if (data.tb1 == null || data.tb2 == null) {
+          showError(loc.enterTiebreakScore);
+          return;
+        }
+        if (useOfficialScoring && !isValidTiebreak(data.tb1!, data.tb2!)) {
+          showError(loc.invalidTiebreakScore);
+          return;
+        }
+        final setWinnerIsP1 = p1 > p2;
+        final tbWinnerIsP1 = data.tb1! > data.tb2!;
+        if (setWinnerIsP1 != tbWinnerIsP1) {
+          showError(loc.tiebreakWinnerMismatch);
+          return;
+        }
+      }
+
+      formattedSets.add(data.toMap());
       if (p1 > p2) p1Wins++;
       if (p2 > p1) p2Wins++;
     }
@@ -400,7 +411,7 @@ class _LogGuestMatchScreenState extends State<LogGuestMatchScreen> {
     required AppLocalizations loc,
     required String opponentName,
     required String opponentPhone,
-    required List<Map<String, int>> formattedSets,
+    required List<Map<String, dynamic>> formattedSets,
     required String location,
     required DateTime matchDate,
   }) async {
@@ -553,57 +564,20 @@ class _LogGuestMatchScreenState extends State<LogGuestMatchScreen> {
 
             const SizedBox(height: 8),
 
-            ...sets.asMap().entries.map((entry) {
+            ..._setKeys.asMap().entries.map((entry) {
               final index = entry.key;
-              final set = entry.value;
-
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 10),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: TextField(
-                        controller: set['p1'],
-                        keyboardType: TextInputType.number,
-                        textAlign: TextAlign.center,
-                        decoration: InputDecoration(
-                          labelText: loc.setLabel(index + 1),
-                          border: const OutlineInputBorder(),
-                        ),
-                      ),
-                    ),
-                    const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 8),
-                      child: Text(
-                        '–',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      child: TextField(
-                        controller: set['p2'],
-                        keyboardType: TextInputType.number,
-                        textAlign: TextAlign.center,
-                        decoration: InputDecoration(
-                          labelText: loc.setLabel(index + 1),
-                          border: const OutlineInputBorder(),
-                        ),
-                      ),
-                    ),
-                    IconButton(
-                      icon: const Icon(
-                        Icons.remove_circle,
-                        color: Colors.red,
-                      ),
-                      onPressed: (sets.length > 1 && !isSaving)
-                          ? () => removeSet(index)
-                          : null,
-                    ),
-                  ],
-                ),
+              final key = entry.value;
+              return SetScoreRow(
+                key: key,
+                index: index,
+                player1Name: currentUserName ?? loc.loading,
+                player2Name: opponentNameController.text.isEmpty
+                    ? loc.guestOpponent
+                    : opponentNameController.text,
+                canRemove: _setKeys.length > 1,
+                isSaving: isSaving,
+                onRemove: () => removeSet(index),
+                onChanged: (_) {},
               );
             }),
 

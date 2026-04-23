@@ -258,5 +258,10 @@
     }
   },
   "nameLabel": "Tu nombre",
-  "deleteGuestMatchConfirmation": "¿Estás seguro de que quieres eliminar este partido? Esta acción no se puede deshacer."
+  "deleteGuestMatchConfirmation": "¿Estás seguro de que quieres eliminar este partido? Esta acción no se puede deshacer.",
+  "tiebreakLabel": "Puntuación del tiebreak",
+  "tiebreakPointsLabel": "Puntos",
+  "enterTiebreakScore": "Por favor ingresa el marcador del tiebreak.",
+  "invalidTiebreakScore": "Marcador de tiebreak inválido. El ganador debe llegar al menos a 7, ganar por 2.",
+  "tiebreakWinnerMismatch": "El ganador del tiebreak debe coincidir con el ganador del set."
 }
