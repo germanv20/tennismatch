@@ -1,0 +1,213 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+
+    function isParticipant(players) {
+      return request.auth.uid in players;
+    }
+
+    // -------------------------
+    // USERS
+    // -------------------------
+    match /users/{userId} {
+
+      allow read: if isAuthenticated();
+
+      allow create: if isAuthenticated() &&
+                    isOwner(userId);
+
+      allow update: if isAuthenticated() &&
+        isOwner(userId) &&
+        (
+          // Case A: profile fields
+          request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly([
+              'name',
+              'tennisLevel',
+              'availability',
+              'birthDate',
+              'age',
+              'city',
+              'country',
+              'photoUrl',
+              'phoneNumber',
+              'fcmTokens'
+            ])
+
+          ||
+
+          // Case B: stats fields
+          request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly([
+              'matchesPlayed',
+              'totalDuration',
+              'wins',
+              'losses'
+            ])
+        );
+
+      allow delete: if false;
+
+      match /headToHead/{opponentId} {
+        allow read: if isAuthenticated() && isOwner(userId);
+        allow write: if isAuthenticated() && isOwner(userId);
+      }
+    }
+
+    // -------------------------
+    // MATCH REQUESTS
+    // -------------------------
+    match /match_requests/{requestId} {
+
+      allow read: if isAuthenticated() &&
+        (request.auth.uid == resource.data.fromUid ||
+         request.auth.uid == resource.data.toUid);
+
+      allow create: if isAuthenticated() &&
+        request.auth.uid == request.resource.data.fromUid &&
+        request.resource.data.toUid is string &&
+        request.resource.data.status == "pending";
+
+      allow update: if isAuthenticated() && (
+        (request.auth.uid == resource.data.toUid &&
+         request.resource.data.status in ["accepted", "rejected"]) ||
+        (request.auth.uid == resource.data.fromUid &&
+         request.resource.data.status == "cancelled")
+      );
+
+      allow delete: if false;
+    }
+
+    // -------------------------
+    // MATCHES
+    // -------------------------
+    match /matches/{matchId} {
+
+      allow read: if isAuthenticated() &&
+        isParticipant(resource.data.players);
+
+      // Case A: Regular match create
+      allow create: if isAuthenticated() &&
+        isParticipant(request.resource.data.players) &&
+        request.resource.data.players.size() == 2 &&
+        (
+          !('player1Uid' in request.resource.data) ||
+          !('player2Uid' in request.resource.data) ||
+          request.resource.data.player1Uid != request.resource.data.player2Uid
+        ) &&
+        request.resource.data.status in ["pending", "confirmed"];
+
+      // Case B: Guest match create
+      allow create: if isAuthenticated() &&
+        request.resource.data.type == 'guest' &&
+        request.resource.data.createdBy == request.auth.uid &&
+        request.auth.uid in request.resource.data.players &&
+        request.resource.data.players.size() == 1 &&
+        request.resource.data.status == 'completed';
+
+      allow update: if isAuthenticated() &&
+        isParticipant(resource.data.players) &&
+        (
+          (
+            resource.data.status == "confirmed" &&
+            request.resource.data.status == "completed" &&
+            request.resource.data.winnerUid in resource.data.players &&
+            request.resource.data.diff(resource.data).affectedKeys()
+              .hasOnly([
+                'status','completedAt','winnerUid',
+                'player1Uid','player2Uid','playerNames',
+                'result','summary'
+              ])
+          )
+          ||
+          (
+            resource.data.status in ["pending", "confirmed"] &&
+            request.resource.data.status == "cancelled"
+          )
+          ||
+          request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly([
+              'lastMessage','lastMessageTime','lastSenderUid',
+              'notifiedPlayers','typing','activeChatUsers'
+            ])
+          ||
+          (
+            request.resource.data.diff(resource.data).affectedKeys()
+              .hasOnly(['deletionRequest']) &&
+            (
+              (
+                'deletionRequest' in request.resource.data &&
+                request.resource.data.deletionRequest.requestedBy in resource.data.players &&
+                request.resource.data.deletionRequest.status == 'pending' &&
+                request.resource.data.deletionRequest.createdAt is timestamp &&
+                request.resource.data.deletionRequest.keys().hasOnly([
+                  'requestedBy','status','createdAt','seenBy'
+                ]) &&
+                request.resource.data.deletionRequest.seenBy is list
+              )
+              ||
+              (
+                'deletionRequest' in request.resource.data &&
+                request.resource.data.deletionRequest.seenBy is list
+              )
+              ||
+              (!('deletionRequest' in request.resource.data))
+            )
+          )
+          ||
+          (
+            resource.data.type == 'guest' &&
+            resource.data.guestOpponent.claimedBy == null &&
+            request.resource.data.diff(resource.data).affectedKeys()
+              .hasOnly(['guestOpponent', 'players', 'claimantResult'])
+          )
+        );
+
+      // Regular match delete
+      allow delete: if isAuthenticated() &&
+        isParticipant(resource.data.players) &&
+        resource.data.type != 'guest' &&
+        resource.data.deletionRequest.status == 'accepted' &&
+        request.auth.uid == resource.data.deletionRequest.requestedBy;
+
+      // Guest match delete
+      allow delete: if isAuthenticated() &&
+        resource.data.type == 'guest' &&
+        resource.data.createdBy == request.auth.uid;
+
+      match /messages/{messageId} {
+
+        allow read: if isAuthenticated() &&
+          isParticipant(
+            get(/databases/$(database)/documents/matches/$(matchId)).data.players
+          );
+
+        allow create: if isAuthenticated() &&
+          request.auth.uid == request.resource.data.senderUid &&
+          request.resource.data.keys().hasOnly(['text', 'senderUid', 'createdAt', 'readBy']) &&
+          request.resource.data.text is string &&
+          request.resource.data.text.size() > 0 &&
+          isParticipant(
+            get(/databases/$(database)/documents/matches/$(matchId)).data.players
+          );
+
+        allow update: if isAuthenticated() &&
+          isParticipant(
+            get(/databases/$(database)/documents/matches/$(matchId)).data.players
+          ) &&
+          request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['readBy']);
+
+        allow delete: if false;
+      }
+    }
+  }
+}

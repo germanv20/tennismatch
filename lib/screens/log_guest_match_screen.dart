@@ -1,41 +1,60 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:tennismatch/gen_l10n/app_localizations.dart';
-import 'package:tennismatch/services/h2h_service.dart';
+import '../main.dart' show navigatorKey;
 
-class AddMatchResultScreen extends StatefulWidget {
-  final String matchId;
-  final Map<String, dynamic> matchData;
-
-  const AddMatchResultScreen({
-    super.key,
-    required this.matchId,
-    required this.matchData,
-  });
+class LogGuestMatchScreen extends StatefulWidget {
+  const LogGuestMatchScreen({super.key});
 
   @override
-  State<AddMatchResultScreen> createState() =>
-      _AddMatchResultScreenState();
+  State<LogGuestMatchScreen> createState() => _LogGuestMatchScreenState();
 }
 
-class _AddMatchResultScreenState extends State<AddMatchResultScreen> {
+class _LogGuestMatchScreenState extends State<LogGuestMatchScreen> {
+  // Opponent info
+  final opponentNameController = TextEditingController();
+  final opponentPhoneController = TextEditingController();
 
+  // Sets
   List<Map<String, TextEditingController>> sets = [];
 
+  // Match info
   final durationController = TextEditingController();
   final locationController = TextEditingController();
   bool useOfficialScoring = true;
   DateTime? selectedMatchDate;
-  String? player1Name;
-  String? player2Name;
+
+  // Player names (loaded from Firestore)
+  String? currentUserName;
+  String? currentUserUid;
+
   bool isSaving = false;
 
   @override
   void initState() {
     super.initState();
     addSet();
-    loadPlayerNames();
+    _loadCurrentUser();
+  }
+
+  Future<void> _loadCurrentUser() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    currentUserUid = user.uid;
+
+    final doc = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(user.uid)
+        .get();
+
+    if (!mounted) return;
+
+    setState(() {
+      currentUserName = doc['name'] ?? user.displayName ?? 'Player';
+    });
   }
 
   void addSet() {
@@ -58,16 +77,19 @@ class _AddMatchResultScreenState extends State<AddMatchResultScreen> {
 
   @override
   void dispose() {
+    opponentNameController.dispose();
+    opponentPhoneController.dispose();
+    durationController.dispose();
+    locationController.dispose();
     for (var set in sets) {
       set['p1']?.dispose();
       set['p2']?.dispose();
     }
-    durationController.dispose();
-    locationController.dispose();
     super.dispose();
   }
 
   void showError(String message) {
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message)),
     );
@@ -84,7 +106,7 @@ class _AddMatchResultScreenState extends State<AddMatchResultScreen> {
   }
 
   Future<void> pickMatchDate() async {
-    final DateTime? picked = await showDatePicker(
+    final picked = await showDatePicker(
       context: context,
       initialDate: DateTime.now(),
       firstDate: DateTime(2020),
@@ -95,21 +117,108 @@ class _AddMatchResultScreenState extends State<AddMatchResultScreen> {
     }
   }
 
-  Future<void> saveResult() async {
-    final matchRef = FirebaseFirestore.instance
-        .collection('matches')
-        .doc(widget.matchId);
+  /// Builds the WhatsApp share message in the current app locale
+  String _buildWhatsAppMessage(
+    AppLocalizations loc, {
+    required String opponentName,
+    required String playerName,
+    required String score,
+    required String location,
+    required String date,
+  }) {
+    return loc.whatsappMessageTemplate(
+      opponentName,
+      playerName,
+      score,
+      location,
+      date,
+      'https://tennismatch.app', // placeholder — replace with real link
+    );
+  }
 
-    // Use already-available matchData to avoid extra read
-    if (widget.matchData['status'] == 'completed') {
-      showError('Match already completed');
+  /// Formats sets into a readable score string e.g. "6-4, 7-5"
+  String _formatScore(List<Map<String, int>> formattedSets) {
+    return formattedSets
+        .map((s) => '${s['p1']}-${s['p2']}')
+        .join(', ');
+  }
+
+  Future<void> _shareViaWhatsApp({
+    required AppLocalizations loc,
+    required String opponentName,
+    required String opponentPhone,
+    required List<Map<String, int>> formattedSets,
+    required String location,
+    required DateTime matchDate,
+  }) async {
+    final playerName = currentUserName ?? 'Player';
+    final score = _formatScore(formattedSets);
+    final date =
+        '${matchDate.day}/${matchDate.month}/${matchDate.year}';
+
+    final message = _buildWhatsAppMessage(
+      loc,
+      opponentName: opponentName,
+      playerName: playerName,
+      score: score,
+      location: location,
+      date: date,
+    );
+
+    // Capture the not-installed message before any await
+    final notInstalledMsg = loc.whatsappNotInstalled;
+
+    final encodedMessage = Uri.encodeComponent(message);
+
+    // wa.me requires digits only — strip +, spaces, dashes, parens
+    final String rawPhone =
+        opponentPhone.replaceAll(RegExp(r'[\s\-\(\)\+]'), '');
+
+    final Uri whatsappUri = rawPhone.isNotEmpty
+        ? Uri.parse('https://wa.me/$rawPhone?text=$encodedMessage')
+        : Uri.parse('https://wa.me/?text=$encodedMessage');
+
+    if (await canLaunchUrl(whatsappUri)) {
+      await launchUrl(whatsappUri, mode: LaunchMode.externalApplication);
+    } else {
+      // Use root context — this screen may already be popped at this point
+      final rootContext = navigatorKey.currentContext;
+      if (rootContext == null) return;
+      ScaffoldMessenger.of(rootContext).showSnackBar(
+        SnackBar(content: Text(notInstalledMsg)),
+      );
+    }
+  }
+
+  Future<void> _handleSave() async {
+    if (isSaving) return;
+    setState(() => isSaving = true);
+
+    try {
+      await _saveGuestMatch();
+    } catch (e) {
+      debugPrint('❌ Save guest match error: $e');
+      if (!mounted) return;
+      final loc = AppLocalizations.of(context)!;
+      showError(loc.failedToSaveGuestMatch);
+    } finally {
+      if (mounted) setState(() => isSaving = false);
+    }
+  }
+
+  Future<void> _saveGuestMatch() async {
+    if (!mounted) return;
+    final loc = AppLocalizations.of(context)!;
+
+    // ── Validate opponent name ──
+    final opponentName = opponentNameController.text.trim();
+    if (opponentName.isEmpty) {
+      showError(loc.guestOpponentName);
       return;
     }
 
-    if (!mounted) return;
-    final loc = AppLocalizations.of(context)!;
+    // ── Validate sets ──
     List<Map<String, int>> formattedSets = [];
-
     int p1Wins = 0;
     int p2Wins = 0;
 
@@ -152,13 +261,15 @@ class _AddMatchResultScreenState extends State<AddMatchResultScreen> {
       return;
     }
 
+    // ── Validate match info ──
     final duration = int.tryParse(durationController.text);
     if (duration == null || duration <= 0) {
       showError(loc.enterDuration);
       return;
     }
 
-    if (locationController.text.trim().isEmpty) {
+    final location = locationController.text.trim();
+    if (location.isEmpty) {
       showError(loc.enterLocation);
       return;
     }
@@ -168,50 +279,80 @@ class _AddMatchResultScreenState extends State<AddMatchResultScreen> {
       return;
     }
 
-    final players = widget.matchData['players'] as List;
-    final currentUid = FirebaseAuth.instance.currentUser!.uid;
-    final opponentUid = players.firstWhere((uid) => uid != currentUid);
+    // ── Build match document ──
+    final uid = currentUserUid!;
+    // Normalise phone to E.164 with + prefix for consistent storage
+    // This ensures phoneIndex lookup matches CompleteProfileScreen format
+    final rawPhoneInput = opponentPhoneController.text.trim();
+    final opponentPhone = rawPhoneInput.isNotEmpty && !rawPhoneInput.startsWith('+')
+        ? '+$rawPhoneInput'
+        : rawPhoneInput;
 
-    final winnerUid = p1Wins > p2Wins ? currentUid : opponentUid;
+    // p1 = current user (always), p2 = guest opponent
+    final bool currentUserWon = p1Wins > p2Wins;
+    final String winnerUid = currentUserWon ? uid : 'guest';
 
-    // Use already-loaded names — avoid duplicate Firestore reads
-    final currentUserName = player1Name ?? 'Player 1';
-    final opponentName = player2Name ?? 'Player 2';
-
-    final batch = FirebaseFirestore.instance.batch();
-
-    // Match update
-    batch.update(matchRef, {
-      'status': 'completed',
-      'completedAt': FieldValue.serverTimestamp(),
-      'winnerUid': winnerUid,
-      'player1Uid': currentUid,
-      'player2Uid': opponentUid,
+    final matchData = {
+      'type': 'guest',
+      'players': [uid],
+      'createdBy': uid,
+      'player1Uid': uid,
+      'player2Uid': 'guest',
       'playerNames': {
-        currentUid: currentUserName,
-        opponentUid: opponentName,
+        uid: currentUserName ?? 'Player',
+        'guest': opponentName,
       },
+      'guestOpponent': {
+        'name': opponentName,
+        'phone': opponentPhone,
+        'claimedBy': null,
+      },
+      'status': 'completed',
+      'winnerUid': winnerUid,
+      'createdAt': FieldValue.serverTimestamp(),
+      'completedAt': FieldValue.serverTimestamp(),
       'result': {
         'sets': formattedSets,
-        'location': locationController.text.trim(),
+        'location': location,
         'durationMinutes': duration,
         'matchDate': Timestamp.fromDate(selectedMatchDate!),
       },
       'summary': {
-        'p1Name': currentUserName,
+        'p1Name': currentUserName ?? 'Player',
         'p2Name': opponentName,
         'p1Sets': p1Wins,
         'p2Sets': p2Wins,
         'matchDate': Timestamp.fromDate(selectedMatchDate!),
       },
-    });
+    };
 
-    // Current user stats
-    final userRef = FirebaseFirestore.instance
-        .collection('users')
-        .doc(currentUid);
+    // ── Batch write: match + user stats + phoneIndex ──
+    final batch = FirebaseFirestore.instance.batch();
 
-    if (winnerUid == currentUid) {
+    final matchRef =
+        FirebaseFirestore.instance.collection('matches').doc();
+    batch.set(matchRef, matchData);
+
+    // Write to phoneIndex so the claim mechanic can find this match
+    // phoneIndex/{phone}/matches/{matchId}
+    // This is a separate readable collection keyed by phone number
+    if (opponentPhone.isNotEmpty) {
+      final indexRef = FirebaseFirestore.instance
+          .collection('phoneIndex')
+          .doc(opponentPhone)
+          .collection('matches')
+          .doc(matchRef.id);
+      batch.set(indexRef, {
+        'matchId': matchRef.id,
+        'createdBy': uid,
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+    }
+
+    final userRef =
+        FirebaseFirestore.instance.collection('users').doc(uid);
+
+    if (currentUserWon) {
       batch.update(userRef, {
         'matchesPlayed': FieldValue.increment(1),
         'totalDuration': FieldValue.increment(duration),
@@ -227,48 +368,74 @@ class _AddMatchResultScreenState extends State<AddMatchResultScreen> {
 
     await batch.commit();
 
-    await H2HService.recalculateHeadToHead(
-      userA: currentUid,
-      userB: opponentUid,
-    );
-
     if (!mounted) return;
+
+    // ── Pop first so we return to HomeScreen ──
+    // Store what we need before popping (context will be gone after)
+    final opponentPhoneCopy = opponentPhone;
+    final opponentNameCopy = opponentName;
+    final formattedSetsCopy = List<Map<String, int>>.from(formattedSets);
+    final locationCopy = location;
+    final matchDateCopy = selectedMatchDate!;
+
     Navigator.pop(context, true);
+
+    // ── Show WhatsApp share dialog on HomeScreen after returning ──
+    // Small delay lets the home screen finish its transition first
+    await Future.delayed(const Duration(milliseconds: 400));
+
+    await _showShareDialogOnRoot(
+      loc: loc,
+      opponentName: opponentNameCopy,
+      opponentPhone: opponentPhoneCopy,
+      formattedSets: formattedSetsCopy,
+      location: locationCopy,
+      matchDate: matchDateCopy,
+    );
   }
 
-  Future<void> loadPlayerNames() async {
-    final players = widget.matchData['players'] as List;
-    final currentUid = FirebaseAuth.instance.currentUser!.uid;
-    final opponentUid = players.firstWhere((uid) => uid != currentUid);
+  /// Shows the share dialog using the root navigator key so it works
+  /// even after this screen has been popped from the stack
+  Future<void> _showShareDialogOnRoot({
+    required AppLocalizations loc,
+    required String opponentName,
+    required String opponentPhone,
+    required List<Map<String, int>> formattedSets,
+    required String location,
+    required DateTime matchDate,
+  }) async {
+    final ctx = navigatorKey.currentContext;
+    if (ctx == null) return;
 
-    final results = await Future.wait([
-      FirebaseFirestore.instance.collection('users').doc(currentUid).get(),
-      FirebaseFirestore.instance.collection('users').doc(opponentUid).get(),
-    ]);
-
-    if (!mounted) return;
-
-    setState(() {
-      player1Name = (results[0].data() as Map<String, dynamic>?)?['name'] ?? 'Player 1';
-      player2Name = (results[1].data() as Map<String, dynamic>?)?['name'] ?? 'Player 2';
-    });
-  }
-
-  Future<void> handleSave() async {
-    if (!mounted) return;
-    setState(() => isSaving = true);
-    try {
-      await saveResult();
-    } catch (e) {
-      debugPrint('❌ Save result error: $e');
-      if (!mounted) return;
-      final loc = AppLocalizations.of(context)!;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(loc.failedToSaveResult)),
-      );
-    } finally {
-      if (mounted) setState(() => isSaving = false);
-    }
+    await showDialog(
+      context: ctx,
+      barrierDismissible: false,
+      builder: (dialogCtx) => AlertDialog(
+        title: Text(loc.shareMatchTitle),
+        content: Text(loc.shareMatchSubtitle),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogCtx),
+            child: Text(loc.skipSharing),
+          ),
+          ElevatedButton.icon(
+            icon: const Icon(Icons.send),
+            label: Text(loc.shareViaWhatsApp),
+            onPressed: () async {
+              Navigator.pop(dialogCtx);
+              await _shareViaWhatsApp(
+                loc: loc,
+                opponentName: opponentName,
+                opponentPhone: opponentPhone,
+                formattedSets: formattedSets,
+                location: location,
+                matchDate: matchDate,
+              );
+            },
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -276,13 +443,52 @@ class _AddMatchResultScreenState extends State<AddMatchResultScreen> {
     final loc = AppLocalizations.of(context)!;
 
     return Scaffold(
-      appBar: AppBar(title: Text(loc.addMatchResult)),
+      appBar: AppBar(
+        title: Text(loc.logMatch),
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: ListView(
           children: [
 
-            // ── Section: Sets ──
+            // ── Section: Opponent Info ──
+            Text(
+              loc.opponentLabel,
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+
+            const SizedBox(height: 12),
+
+            TextField(
+              controller: opponentNameController,
+              textCapitalization: TextCapitalization.words,
+              decoration: InputDecoration(
+                labelText: loc.guestOpponentName,
+                border: const OutlineInputBorder(),
+                prefixIcon: const Icon(Icons.person_outline),
+              ),
+            ),
+
+            const SizedBox(height: 12),
+
+            TextField(
+              controller: opponentPhoneController,
+              keyboardType: TextInputType.phone,
+              decoration: InputDecoration(
+                labelText: loc.guestOpponentPhone,
+                hintText: loc.phoneNumberHint,
+                border: const OutlineInputBorder(),
+                prefixIcon: const Icon(Icons.phone_outlined),
+                helperText: loc.phoneOptionalHint,
+              ),
+            ),
+
+            const SizedBox(height: 24),
+
+            // ── Section: Score ──
             Text(
               loc.sets,
               style: const TextStyle(
@@ -293,7 +499,6 @@ class _AddMatchResultScreenState extends State<AddMatchResultScreen> {
 
             const SizedBox(height: 4),
 
-            // Official scoring toggle
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -312,13 +517,13 @@ class _AddMatchResultScreenState extends State<AddMatchResultScreen> {
 
             const SizedBox(height: 8),
 
-            // Set score header row with player names
+            // Set score rows header
             Row(
               children: [
                 Expanded(
                   child: Center(
                     child: Text(
-                      player1Name ?? loc.loading,
+                      currentUserName ?? loc.loading,
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 13,
@@ -331,7 +536,9 @@ class _AddMatchResultScreenState extends State<AddMatchResultScreen> {
                 Expanded(
                   child: Center(
                     child: Text(
-                      player2Name ?? loc.loading,
+                      opponentNameController.text.isEmpty
+                          ? loc.guestOpponent
+                          : opponentNameController.text,
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 13,
@@ -346,7 +553,6 @@ class _AddMatchResultScreenState extends State<AddMatchResultScreen> {
 
             const SizedBox(height: 8),
 
-            // Set rows
             ...sets.asMap().entries.map((entry) {
               final index = entry.key;
               final set = entry.value;
@@ -409,7 +615,7 @@ class _AddMatchResultScreenState extends State<AddMatchResultScreen> {
 
             const SizedBox(height: 16),
 
-            // ── Section: Match Details ──
+            // ── Section: Match Info ──
             Text(
               loc.matchDetailsTitle,
               style: const TextStyle(
@@ -420,7 +626,6 @@ class _AddMatchResultScreenState extends State<AddMatchResultScreen> {
 
             const SizedBox(height: 12),
 
-            // Date picker
             ListTile(
               contentPadding: EdgeInsets.zero,
               leading: const Icon(Icons.calendar_today),
@@ -436,7 +641,6 @@ class _AddMatchResultScreenState extends State<AddMatchResultScreen> {
 
             const SizedBox(height: 8),
 
-            // Duration
             TextField(
               controller: durationController,
               keyboardType: TextInputType.number,
@@ -449,7 +653,6 @@ class _AddMatchResultScreenState extends State<AddMatchResultScreen> {
 
             const SizedBox(height: 12),
 
-            // Location
             TextField(
               controller: locationController,
               textCapitalization: TextCapitalization.words,
@@ -462,11 +665,11 @@ class _AddMatchResultScreenState extends State<AddMatchResultScreen> {
 
             const SizedBox(height: 32),
 
-            // Save button
+            // ── Save button ──
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: isSaving ? null : handleSave,
+                onPressed: isSaving ? null : _handleSave,
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
                 ),

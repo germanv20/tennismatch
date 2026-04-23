@@ -111,7 +111,6 @@
   "unmatch": "Unmatch",
   "signOut": "Sign Out",
 
-
   "myMatchesTitle": "My Matches",
   "failedToLoadMatches": "Failed to load matches",
   "refreshOrTryLater": "Try refreshing or check again later",
@@ -181,7 +180,6 @@
   "matchDeleted": "Match successfully deleted",
   "matchNoLongerAvailable": "The match is no longer available.",
   "somethingWentWrong": "Something went wrong",
-  "requestRejected": "Request rejected",
   "opponentAcceptedDeletion": "Your opponent accepted the deletion request.",
   "opponentRejectedDeletion": "Your opponent rejected the deletion request.",
   "youAcceptedDeletion": "You accepted the deletion request",
@@ -216,45 +214,49 @@
     }
   },
 
-  
   "completeProfile": "Complete Profile",
-  "@completeProfile": {
-    "description": "Title for complete profile screen"
-  },
-
   "selectBirthdate": "Select birthdate",
-  "@selectBirthdate": {
-    "description": "Label for selecting birthdate"
-  },
-
   "city": "City",
-  "@city": {
-    "description": "City field label"
-  },
-
   "country": "Country",
-  "@country": {
-    "description": "Country field label"
-  },
-
   "requiredField": "This field is required",
-  "@requiredField": {
-    "description": "Validation message for required fields"
-  },
-
   "selectAvailability": "Select your availability",
-  "@selectAvailability": {
-    "description": "Availability selection label"
-  },
-
   "save": "Save",
-  "@save": {
-    "description": "Save button text"
-  },
-
   "editProfile": "Edit Profile",
-  "@editProfile": {
-    "description": "Edit profile screen title/button"
-  }
 
+  "logMatchCard": "Log Match",
+  "logMatch": "Log a Match",
+  "logMatchSubtitle": "Record a match against any opponent",
+  "guestOpponentName": "Opponent's name",
+  "guestOpponentPhone": "Opponent's WhatsApp number (optional)",
+  "guestMatchSaved": "Match saved successfully 🎾",
+  "failedToSaveGuestMatch": "Failed to save match",
+  "shareViaWhatsApp": "Share via WhatsApp",
+  "skipSharing": "Skip",
+  "shareMatchTitle": "Share result with opponent?",
+  "shareMatchSubtitle": "Send this result via WhatsApp and invite your opponent to join TennisMatch",
+  "whatsappNotInstalled": "WhatsApp is not installed on this device",
+  "phoneNumberHint": "e.g. +1 234 567 8900",
+  "phoneNumberLabel": "Phone number (for match claims)",
+  "phoneNumberSaved": "Phone number saved",
+  "guestOpponent": "Guest",
+  "claimedMatchesMerged": "Your past match results have been linked to your account 🎾",
+  "yourPhoneNumber": "Your phone number",
+  "phoneOptionalHint": "Used to link matches logged by opponents",
+  "invalidPhoneNumber": "Please enter a valid phone number with country code",
+  "guestMatchBadge": "GUEST",
+  "vsLabel": "vs",
+  "opponentLabel": "Opponent",
+  "whatsappMessageTemplate": "Hi {opponentName}! 🎾 We just played a tennis match and I recorded the result on TennisMatch:\n\n{playerName} vs {opponentName}\nScore: {score}\nLocation: {location}\nDate: {date}\n\nDownload TennisMatch to save your stats and track your matches too!\n{appLink}\n\nSee you on the court! 🎾",
+  "@whatsappMessageTemplate": {
+    "placeholders": {
+      "opponentName": {},
+      "playerName": {},
+      "score": {},
+      "location": {},
+      "date": {},
+      "appLink": {}
+    }
+  },
+  "nameLabel": "Your name",
+  "deleteGuestMatchConfirmation": "Are you sure you want to delete this match? This action cannot be undone."
 }

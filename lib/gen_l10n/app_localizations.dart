@@ -1124,53 +1124,216 @@ abstract class AppLocalizations {
   /// **'{winnerName} defeated {loserName}'**
   String matchResultSentence(Object winnerName, Object loserName);
 
-  /// Title for complete profile screen
+  /// No description provided for @completeProfile.
   ///
   /// In en, this message translates to:
   /// **'Complete Profile'**
   String get completeProfile;
 
-  /// Label for selecting birthdate
+  /// No description provided for @selectBirthdate.
   ///
   /// In en, this message translates to:
   /// **'Select birthdate'**
   String get selectBirthdate;
 
-  /// City field label
+  /// No description provided for @city.
   ///
   /// In en, this message translates to:
   /// **'City'**
   String get city;
 
-  /// Country field label
+  /// No description provided for @country.
   ///
   /// In en, this message translates to:
   /// **'Country'**
   String get country;
 
-  /// Validation message for required fields
+  /// No description provided for @requiredField.
   ///
   /// In en, this message translates to:
   /// **'This field is required'**
   String get requiredField;
 
-  /// Availability selection label
+  /// No description provided for @selectAvailability.
   ///
   /// In en, this message translates to:
   /// **'Select your availability'**
   String get selectAvailability;
 
-  /// Save button text
+  /// No description provided for @save.
   ///
   /// In en, this message translates to:
   /// **'Save'**
   String get save;
 
-  /// Edit profile screen title/button
+  /// No description provided for @editProfile.
   ///
   /// In en, this message translates to:
   /// **'Edit Profile'**
   String get editProfile;
+
+  /// No description provided for @logMatchCard.
+  ///
+  /// In en, this message translates to:
+  /// **'Log Match'**
+  String get logMatchCard;
+
+  /// No description provided for @logMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Log a Match'**
+  String get logMatch;
+
+  /// No description provided for @logMatchSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Record a match against any opponent'**
+  String get logMatchSubtitle;
+
+  /// No description provided for @guestOpponentName.
+  ///
+  /// In en, this message translates to:
+  /// **'Opponent\'s name'**
+  String get guestOpponentName;
+
+  /// No description provided for @guestOpponentPhone.
+  ///
+  /// In en, this message translates to:
+  /// **'Opponent\'s WhatsApp number (optional)'**
+  String get guestOpponentPhone;
+
+  /// No description provided for @guestMatchSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Match saved successfully 🎾'**
+  String get guestMatchSaved;
+
+  /// No description provided for @failedToSaveGuestMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to save match'**
+  String get failedToSaveGuestMatch;
+
+  /// No description provided for @shareViaWhatsApp.
+  ///
+  /// In en, this message translates to:
+  /// **'Share via WhatsApp'**
+  String get shareViaWhatsApp;
+
+  /// No description provided for @skipSharing.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip'**
+  String get skipSharing;
+
+  /// No description provided for @shareMatchTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Share result with opponent?'**
+  String get shareMatchTitle;
+
+  /// No description provided for @shareMatchSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Send this result via WhatsApp and invite your opponent to join TennisMatch'**
+  String get shareMatchSubtitle;
+
+  /// No description provided for @whatsappNotInstalled.
+  ///
+  /// In en, this message translates to:
+  /// **'WhatsApp is not installed on this device'**
+  String get whatsappNotInstalled;
+
+  /// No description provided for @phoneNumberHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. +1 234 567 8900'**
+  String get phoneNumberHint;
+
+  /// No description provided for @phoneNumberLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone number (for match claims)'**
+  String get phoneNumberLabel;
+
+  /// No description provided for @phoneNumberSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone number saved'**
+  String get phoneNumberSaved;
+
+  /// No description provided for @guestOpponent.
+  ///
+  /// In en, this message translates to:
+  /// **'Guest'**
+  String get guestOpponent;
+
+  /// No description provided for @claimedMatchesMerged.
+  ///
+  /// In en, this message translates to:
+  /// **'Your past match results have been linked to your account 🎾'**
+  String get claimedMatchesMerged;
+
+  /// No description provided for @yourPhoneNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Your phone number'**
+  String get yourPhoneNumber;
+
+  /// No description provided for @phoneOptionalHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Used to link matches logged by opponents'**
+  String get phoneOptionalHint;
+
+  /// No description provided for @invalidPhoneNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter a valid phone number with country code'**
+  String get invalidPhoneNumber;
+
+  /// No description provided for @guestMatchBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'GUEST'**
+  String get guestMatchBadge;
+
+  /// No description provided for @vsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'vs'**
+  String get vsLabel;
+
+  /// No description provided for @opponentLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Opponent'**
+  String get opponentLabel;
+
+  /// No description provided for @whatsappMessageTemplate.
+  ///
+  /// In en, this message translates to:
+  /// **'Hi {opponentName}! 🎾 We just played a tennis match and I recorded the result on TennisMatch:\n\n{playerName} vs {opponentName}\nScore: {score}\nLocation: {location}\nDate: {date}\n\nDownload TennisMatch to save your stats and track your matches too!\n{appLink}\n\nSee you on the court! 🎾'**
+  String whatsappMessageTemplate(
+    Object opponentName,
+    Object playerName,
+    Object score,
+    Object location,
+    Object date,
+    Object appLink,
+  );
+
+  /// No description provided for @nameLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Your name'**
+  String get nameLabel;
+
+  /// No description provided for @deleteGuestMatchConfirmation.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete this match? This action cannot be undone.'**
+  String get deleteGuestMatchConfirmation;
 }
 
 class _AppLocalizationsDelegate

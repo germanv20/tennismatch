@@ -6,6 +6,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:country_picker/country_picker.dart';
 import 'firebase_options.dart';
 import 'screens/match_chat_screen.dart';
 import 'screens/home_screen.dart';
@@ -51,6 +52,7 @@ class MyApp extends StatelessWidget {
 
       localizationsDelegates: const [
         AppLocalizations.delegate,
+        CountryLocalizations.delegate,
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
@@ -80,7 +82,7 @@ class MyApp extends StatelessWidget {
         scaffoldBackgroundColor: const Color(0xFFF5F5F5),
 
         appBarTheme: const AppBarTheme(
-          backgroundColor: Color(0xFF2E7D32), // deep tennis green
+          backgroundColor: Color(0xFF2E7D32),
           foregroundColor: Colors.white,
           elevation: 2,
         ),
@@ -104,9 +106,8 @@ class MyApp extends StatelessWidget {
         ),
       ),
 
-      home: const AuthTest(), // keep yours
+      home: const AuthTest(),
     );
-
   }
 }
 
@@ -135,8 +136,7 @@ Future<void> navigateToChat(String matchId) async {
 
   if (!opponentSnap.exists) return;
 
-  final opponentData =
-      opponentSnap.data() as Map<String, dynamic>;
+  final opponentData = opponentSnap.data() as Map<String, dynamic>;
 
   navigatorKey.currentState?.pushAndRemoveUntil(
     MaterialPageRoute(
@@ -194,20 +194,16 @@ class _AuthTestState extends State<AuthTest> {
         }
       }
     });
-
   }
-
 
   Future<void> signInWithGoogle() async {
     try {
       final GoogleSignIn googleSignIn = GoogleSignIn();
 
-      // 🔥 Force account picker
+      // Force account picker every time
       await googleSignIn.signOut();
 
-      final GoogleSignInAccount? googleUser =
-          await googleSignIn.signIn();
-
+      final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
       if (googleUser == null) return;
 
       final GoogleSignInAuthentication googleAuth =
@@ -218,18 +214,14 @@ class _AuthTestState extends State<AuthTest> {
         accessToken: googleAuth.accessToken,
       );
 
-      final userCredential =
-        await _auth.signInWithCredential(credential);
-
+      final userCredential = await _auth.signInWithCredential(credential);
       final user = userCredential.user;
 
       if (user != null) {
         await ensureUserDocument(user);
       }
-
     } catch (e) {
       debugPrint('❌ Google sign-in failed: $e');
-      debugPrint('🔥 Firebase UID: ${_auth.currentUser?.uid}');
     }
   }
 
@@ -242,75 +234,77 @@ class _AuthTestState extends State<AuthTest> {
     }
   }
 
-  Future<void> createUserProfile(User user) async {
-    final docRef =
-        FirebaseFirestore.instance.collection('users').doc(user.uid);
-
-    final docSnapshot = await docRef.get();
-
-    if (!docSnapshot.exists) {
-      await docRef.set({
-        'uid': user.uid,
-        'name': user.displayName,
-        'email': user.email,
-        'photoUrl': user.photoURL,
-        'createdAt': FieldValue.serverTimestamp(),
-        'tennisLevel': null,
-        'availability': [],
-      });
-    }
-  }
-
-  
-
+  /// Creates or repairs the user document without overwriting
+  /// any fields that CompleteProfileScreen has already set.
+  ///
+  /// Strategy:
+  /// - Read the document first
+  /// - Only write fields that are genuinely missing (null or absent)
+  /// - Never write null over a non-null value
   Future<void> ensureUserDocument(User user) async {
-    final ref =
-        FirebaseFirestore.instance.collection('users').doc(user.uid);
+    final ref = FirebaseFirestore.instance
+        .collection('users')
+        .doc(user.uid);
 
     final snap = await ref.get();
+    final existing = snap.data() ?? {};
 
-    if (!snap.exists) {
-      await ref.set({
-        'uid': user.uid,
-        'name': user.displayName ?? 'Unknown',
-        'email': user.email,
-        'photoUrl': user.photoURL,
-        'tennisLevel': null,
-        'availability': [],
-        'birthdate': null,
-        'city': null,
-        'country': null,
-        'createdAt': FieldValue.serverTimestamp(),
-      });
+    // Build a map of ONLY the fields that are missing or empty
+    final Map<String, dynamic> toWrite = {};
+
+    // Auth-derived fields — always safe to write from Google account
+    // Only update if missing to avoid overwriting custom display names
+    if (_isMissing(existing, 'uid')) toWrite['uid'] = user.uid;
+    if (_isMissing(existing, 'name')) {
+      toWrite['name'] = user.displayName ?? 'Unknown';
     }
+    if (_isMissing(existing, 'email')) toWrite['email'] = user.email;
+    if (_isMissing(existing, 'photoUrl')) toWrite['photoUrl'] = user.photoURL;
+    if (_isMissing(existing, 'createdAt')) {
+      toWrite['createdAt'] = FieldValue.serverTimestamp();
+    }
+
+    // Profile fields — only set to null if completely absent
+    // Never overwrite values set by CompleteProfileScreen
+    if (!existing.containsKey('tennisLevel')) toWrite['tennisLevel'] = null;
+    if (!existing.containsKey('availability')) toWrite['availability'] = [];
+    if (!existing.containsKey('birthDate')) toWrite['birthDate'] = null;
+    if (!existing.containsKey('city')) toWrite['city'] = null;
+    if (!existing.containsKey('country')) toWrite['country'] = null;
+
+    if (toWrite.isNotEmpty) {
+      // merge: true so we never wipe fields not in toWrite
+      await ref.set(toWrite, SetOptions(merge: true));
+      } else {
+      }
+  }
+
+  /// Returns true if the field is absent OR its value is null/empty string
+  bool _isMissing(Map<String, dynamic> data, String key) {
+    if (!data.containsKey(key)) return true;
+    final value = data[key];
+    if (value == null) return true;
+    if (value is String && value.isEmpty) return true;
+    return false;
   }
 
   Future<void> setupFCM() async {
     debugPrint('🔥 setupFCM started');
 
-    FirebaseMessaging messaging = FirebaseMessaging.instance;
+    final messaging = FirebaseMessaging.instance;
 
-    await messaging.requestPermission(
-      alert: true,
-      badge: true,
-      sound: true,
-    );
-
+    // Permission already requested in main() — no need to request again
     final token = await messaging.getToken();
 
     if (token != null) {
-      debugPrint('📱 FCM Token: $token');
       await saveFcmToken(token);
     }
 
-    // Listen for token refresh (VERY important)
+    // Listen for token refresh
     FirebaseMessaging.instance.onTokenRefresh.listen((newToken) async {
-      debugPrint('🔄 FCM token refreshed: $newToken');
       await saveFcmToken(newToken);
     });
   }
-
-
 
   Future<void> saveFcmToken(String token) async {
     final user = _auth.currentUser;
@@ -320,12 +314,10 @@ class _AuthTestState extends State<AuthTest> {
         FirebaseFirestore.instance.collection('users').doc(user.uid);
 
     await userRef.set({
-      'fcmTokens': {
-        token: true,
-      }
+      'fcmTokens': {token: true}
     }, SetOptions(merge: true));
 
-    debugPrint('✅ FCM token saved to Firestore');
+    debugPrint('✅ FCM token saved');
   }
 
   Widget _featureItem({required IconData icon, required String text}) {
@@ -334,7 +326,7 @@ class _AuthTestState extends State<AuthTest> {
         Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.2),
+            color: Colors.white.withValues(alpha: 0.2),
             shape: BoxShape.circle,
           ),
           child: Icon(icon, color: Colors.white, size: 20),
@@ -343,10 +335,7 @@ class _AuthTestState extends State<AuthTest> {
         Expanded(
           child: Text(
             text,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 14,
-            ),
+            style: const TextStyle(color: Colors.white, fontSize: 14),
           ),
         ),
       ],
@@ -388,7 +377,6 @@ class _AuthTestState extends State<AuthTest> {
 
                       const SizedBox(height: 40),
 
-                      // 🎾 LOGO + TITLE
                       Column(
                         children: const [
                           Icon(Icons.sports_tennis, size: 90, color: Colors.white),
@@ -407,7 +395,6 @@ class _AuthTestState extends State<AuthTest> {
 
                       const SizedBox(height: 12),
 
-                      // 🧠 TAGLINE
                       Text(
                         loc.loginSubtitle,
                         textAlign: TextAlign.center,
@@ -419,11 +406,10 @@ class _AuthTestState extends State<AuthTest> {
 
                       const SizedBox(height: 40),
 
-                      // 🧊 FEATURE CARD (GLASS STYLE)
                       Container(
                         padding: const EdgeInsets.all(20),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.15),
+                          color: Colors.white.withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Column(
@@ -448,7 +434,6 @@ class _AuthTestState extends State<AuthTest> {
 
                       const Spacer(),
 
-                      // 🔘 GOOGLE BUTTON (PREMIUM)
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton(
@@ -484,7 +469,6 @@ class _AuthTestState extends State<AuthTest> {
 
                       const SizedBox(height: 12),
 
-                      // 🔒 TRUST TEXT
                       Text(
                         loc.loginDisclaimer,
                         textAlign: TextAlign.center,
@@ -518,22 +502,21 @@ class _AuthTestState extends State<AuthTest> {
 
             if (!userSnapshot.hasData || !userSnapshot.data!.exists) {
               return Scaffold(
-                body: Center(child: Text(AppLocalizations.of(context)!.userProfileNotFound)),
+                body: Center(
+                  child: Text(AppLocalizations.of(context)!.userProfileNotFound),
+                ),
               );
             }
 
             final rawData = userSnapshot.data!.data();
-
             if (rawData == null) {
               return const Scaffold(
                 body: Center(child: CircularProgressIndicator()),
               );
             }
 
-            final Map<String, dynamic> data =
-                rawData as Map<String, dynamic>;
+            final Map<String, dynamic> data = rawData as Map<String, dynamic>;
 
-            // ✅ THIS is the ONLY place HomeScreen should be called
             bool isEmpty(value) => value == null || value.toString().isEmpty;
 
             final isProfileIncomplete =

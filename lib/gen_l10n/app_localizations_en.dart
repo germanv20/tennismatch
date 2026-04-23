@@ -562,4 +562,95 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get editProfile => 'Edit Profile';
+
+  @override
+  String get logMatchCard => 'Log Match';
+
+  @override
+  String get logMatch => 'Log a Match';
+
+  @override
+  String get logMatchSubtitle => 'Record a match against any opponent';
+
+  @override
+  String get guestOpponentName => 'Opponent\'s name';
+
+  @override
+  String get guestOpponentPhone => 'Opponent\'s WhatsApp number (optional)';
+
+  @override
+  String get guestMatchSaved => 'Match saved successfully 🎾';
+
+  @override
+  String get failedToSaveGuestMatch => 'Failed to save match';
+
+  @override
+  String get shareViaWhatsApp => 'Share via WhatsApp';
+
+  @override
+  String get skipSharing => 'Skip';
+
+  @override
+  String get shareMatchTitle => 'Share result with opponent?';
+
+  @override
+  String get shareMatchSubtitle =>
+      'Send this result via WhatsApp and invite your opponent to join TennisMatch';
+
+  @override
+  String get whatsappNotInstalled => 'WhatsApp is not installed on this device';
+
+  @override
+  String get phoneNumberHint => 'e.g. +1 234 567 8900';
+
+  @override
+  String get phoneNumberLabel => 'Phone number (for match claims)';
+
+  @override
+  String get phoneNumberSaved => 'Phone number saved';
+
+  @override
+  String get guestOpponent => 'Guest';
+
+  @override
+  String get claimedMatchesMerged =>
+      'Your past match results have been linked to your account 🎾';
+
+  @override
+  String get yourPhoneNumber => 'Your phone number';
+
+  @override
+  String get phoneOptionalHint => 'Used to link matches logged by opponents';
+
+  @override
+  String get invalidPhoneNumber =>
+      'Please enter a valid phone number with country code';
+
+  @override
+  String get guestMatchBadge => 'GUEST';
+
+  @override
+  String get vsLabel => 'vs';
+
+  @override
+  String get opponentLabel => 'Opponent';
+
+  @override
+  String whatsappMessageTemplate(
+    Object opponentName,
+    Object playerName,
+    Object score,
+    Object location,
+    Object date,
+    Object appLink,
+  ) {
+    return 'Hi $opponentName! 🎾 We just played a tennis match and I recorded the result on TennisMatch:\n\n$playerName vs $opponentName\nScore: $score\nLocation: $location\nDate: $date\n\nDownload TennisMatch to save your stats and track your matches too!\n$appLink\n\nSee you on the court! 🎾';
+  }
+
+  @override
+  String get nameLabel => 'Your name';
+
+  @override
+  String get deleteGuestMatchConfirmation =>
+      'Are you sure you want to delete this match? This action cannot be undone.';
 }

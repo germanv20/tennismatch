@@ -8,6 +8,7 @@ import 'incoming_requests_screen.dart';
 import 'outgoing_requests_screen.dart';
 import 'player_statistics_screen.dart';
 import 'my_profile_screen.dart';
+import 'log_guest_match_screen.dart'; // NEW
 import '../widgets/home_card.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:tennismatch/gen_l10n/app_localizations.dart';
@@ -81,58 +82,26 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-
   int? outgoingOverrideCount;
-
-  @override
-  void initState() {
-    super.initState();
-  }
-
 
   String translateLevel(String level, AppLocalizations loc) {
     switch (level) {
-      case 'Beginner':
-        return loc.levelBeginner;
-      case 'Intermediate':
-        return loc.levelIntermediate;
-      case 'Advanced':
-        return loc.levelAdvanced;
-      default:
-        return level;
+      case 'Beginner': return loc.levelBeginner;
+      case 'Intermediate': return loc.levelIntermediate;
+      case 'Advanced': return loc.levelAdvanced;
+      default: return level;
     }
   }
 
   String translateDay(String day, AppLocalizations loc) {
     switch (day) {
-      case 'Mon':
-        return loc.mon;
-      case 'Tue':
-        return loc.tue;
-      case 'Wed':
-        return loc.wed;
-      case 'Thu':
-        return loc.thu;
-      case 'Fri':
-        return loc.fri;
-      case 'Sat':
-        return loc.sat;
-      case 'Sun':
-        return loc.sun;
-      default:
-        return day;
-    }
-  }
-
-  String translateDayFull(String day, AppLocalizations loc) {
-    switch (day) {
-      case 'Mon': return loc.monFull;
-      case 'Tue': return loc.tueFull;
-      case 'Wed': return loc.wedFull;
-      case 'Thu': return loc.thuFull;
-      case 'Fri': return loc.friFull;
-      case 'Sat': return loc.satFull;
-      case 'Sun': return loc.sunFull;
+      case 'Mon': return loc.mon;
+      case 'Tue': return loc.tue;
+      case 'Wed': return loc.wed;
+      case 'Thu': return loc.thu;
+      case 'Fri': return loc.fri;
+      case 'Sat': return loc.sat;
+      case 'Sun': return loc.sun;
       default: return day;
     }
   }
@@ -144,7 +113,6 @@ class _HomeScreenState extends State<HomeScreen> {
       'Lun': 'Mon', 'Mar': 'Tue', 'Mié': 'Wed',
       'Jue': 'Thu', 'Vie': 'Fri', 'Sáb': 'Sat', 'Dom': 'Sun',
     };
-
     return rawDays
         .map<String>((day) => map[day.toString()] ?? day.toString())
         .toSet()
@@ -152,17 +120,18 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget buildProfileCard(AppLocalizations loc) {
-    final String name = widget.currentUser.displayName ?? "Player";
-    final String rawLevel = widget.userData['tennisLevel'] ?? "";
-    final String level = rawLevel.isEmpty
-        ? loc.notSet
-        : translateLevel(rawLevel, loc);
+    final String name = widget.currentUser.displayName ?? 'Player';
+    final String rawLevel = widget.userData['tennisLevel'] ?? '';
+    final String level =
+        rawLevel.isEmpty ? loc.notSet : translateLevel(rawLevel, loc);
 
     final List availabilityRaw =
         normalizeDays(widget.userData['availability'] ?? []);
 
-    final List<String> sortedAvailability = List<String>.from(availabilityRaw)
-      ..sort((a, b) => weekOrder.indexOf(a).compareTo(weekOrder.indexOf(b)));
+    final List<String> sortedAvailability =
+        List<String>.from(availabilityRaw)
+          ..sort((a, b) =>
+              weekOrder.indexOf(a).compareTo(weekOrder.indexOf(b)));
 
     return Container(
       decoration: BoxDecoration(
@@ -197,14 +166,11 @@ class _HomeScreenState extends State<HomeScreen> {
                   : null,
             ),
           ),
-
           const SizedBox(width: spaceM),
-
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-
                 Text(
                   name,
                   style: const TextStyle(
@@ -213,10 +179,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     color: Colors.white,
                   ),
                 ),
-
                 const SizedBox(height: spaceS),
-
-                // 🎾 LEVEL CHIP
                 Container(
                   padding: const EdgeInsets.symmetric(
                       horizontal: 10, vertical: 6),
@@ -225,14 +188,11 @@ class _HomeScreenState extends State<HomeScreen> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
-                    "🎾 $level",
+                    '🎾 $level',
                     style: const TextStyle(color: Colors.white),
                   ),
                 ),
-
                 const SizedBox(height: spaceS),
-
-                // 📅 AVAILABILITY CHIPS
                 Wrap(
                   spacing: 6,
                   runSpacing: 6,
@@ -247,9 +207,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       child: Text(
                         translateDay(day, loc),
                         style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 12,
-                        ),
+                            color: Colors.white, fontSize: 12),
                       ),
                     );
                   }).toList(),
@@ -266,60 +224,36 @@ class _HomeScreenState extends State<HomeScreen> {
     await FirebaseFirestore.instance
         .collection('users')
         .doc(widget.currentUser.uid)
-        .update({
-      'tennisLevel': level,
-    });
+        .update({'tennisLevel': level});
   }
 
   Future<void> updateAvailability(List<String> days) async {
     await FirebaseFirestore.instance
         .collection('users')
         .doc(widget.currentUser.uid)
-        .update({
-      'availability': days,
-    });
+        .update({'availability': days});
   }
 
   Future<void> openFeedbackForm(BuildContext context) async {
-    final url = Uri.parse("https://docs.google.com/forms/d/e/1FAIpQLScGcT2eC2znik4ndofkiExqAN1k7LL_A3eOOQfjeCkl-5RO-A/viewform");
-
+    final url = Uri.parse(
+        'https://docs.google.com/forms/d/e/1FAIpQLScGcT2eC2znik4ndofkiExqAN1k7LL_A3eOOQfjeCkl-5RO-A/viewform');
     final messenger = ScaffoldMessenger.of(context);
     final loc = AppLocalizations.of(context)!;
 
-    final success = await launchUrl(
-      url,
-      mode: LaunchMode.externalApplication,
-    );
+    final success =
+        await launchUrl(url, mode: LaunchMode.externalApplication);
 
     if (!success) {
       messenger.showSnackBar(
-        SnackBar(
-          content: Text(loc.failedToOpenFeedbackForm),
-        ),
+        SnackBar(content: Text(loc.failedToOpenFeedbackForm)),
       );
-    }
-  }
-
-  Future<void> fixBrokenNotifications(String userId) async {
-    final snapshot = await FirebaseFirestore.instance
-        .collection('matches')
-        .where('players', arrayContains: userId)
-        .get();
-
-    for (var doc in snapshot.docs) {
-      final players = List<String>.from(doc['players']);
-
-      await doc.reference.update({
-        'notifiedPlayers': players,
-      });
     }
   }
 
   Future<void> signOut(BuildContext context) async {
     final loc = AppLocalizations.of(context)!;
-
     await FirebaseAuth.instance.signOut();
-
+    if (!context.mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(loc.loggedOutSuccessfully)),
     );
@@ -331,7 +265,7 @@ class _HomeScreenState extends State<HomeScreen> {
         .where('toUid', isEqualTo: userId)
         .where('status', isEqualTo: 'pending')
         .snapshots()
-        .map((snapshot) => snapshot.docs.length);
+        .map((s) => s.docs.length);
   }
 
   Stream<int> getNewMatchesCount(String userId) {
@@ -342,16 +276,12 @@ class _HomeScreenState extends State<HomeScreen> {
         .snapshots()
         .map((snapshot) {
           int count = 0;
-
           for (var doc in snapshot.docs) {
             final data = doc.data();
-            final notified = List<String>.from(data['notifiedPlayers'] ?? []);
-
-            if (!notified.contains(userId)) {
-              count++;
-            }
+            final notified =
+                List<String>.from(data['notifiedPlayers'] ?? []);
+            if (!notified.contains(userId)) count++;
           }
-
           return count;
         });
   }
@@ -362,7 +292,7 @@ class _HomeScreenState extends State<HomeScreen> {
         .where('fromUid', isEqualTo: userId)
         .where('status', isEqualTo: 'pending')
         .snapshots()
-        .map((snapshot) => snapshot.docs.length);
+        .map((s) => s.docs.length);
   }
 
   Stream<int> getPendingDeletionRequestsCount(String userId) {
@@ -372,32 +302,21 @@ class _HomeScreenState extends State<HomeScreen> {
         .snapshots()
         .map((snapshot) {
           int count = 0;
-
           for (var doc in snapshot.docs) {
             final data = doc.data();
             final deletionRequest = data['deletionRequest'];
-
             if (deletionRequest == null) continue;
-
             final status = deletionRequest['status'];
-            final isRequester = deletionRequest['requestedBy'] == userId;
-            final seenBy = List<String>.from(deletionRequest['seenBy'] ?? []);
-
+            final isRequester =
+                deletionRequest['requestedBy'] == userId;
+            final seenBy =
+                List<String>.from(deletionRequest['seenBy'] ?? []);
             final notSeen = !seenBy.contains(userId);
-
-            // 🟡 Case 1: Incoming request
-            if (status == 'pending' && !isRequester && notSeen) {
-              count++;
-            }
-
-            // 🔵 Case 2: My request was answered
+            if (status == 'pending' && !isRequester && notSeen) count++;
             if ((status == 'accepted' || status == 'rejected') &&
                 isRequester &&
-                notSeen) {
-              count++;
-            }
+                notSeen) count++;
           }
-
           return count;
         });
   }
@@ -405,18 +324,14 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final String? tennisLevel = widget.userData['tennisLevel'];
-    final List<dynamic> availabilityRaw = widget.userData['availability'] ?? [];
-    final List<String> availability =
-        normalizeDays(availabilityRaw);
+    final List<dynamic> availabilityRaw =
+        widget.userData['availability'] ?? [];
+    final List<String> availability = normalizeDays(availabilityRaw);
     final loc = AppLocalizations.of(context)!;
 
     final dayMap = {
-      'Mon': loc.monFull,
-      'Tue': loc.tueFull,
-      'Wed': loc.wedFull,
-      'Thu': loc.thuFull,
-      'Fri': loc.friFull,
-      'Sat': loc.satFull,
+      'Mon': loc.monFull, 'Tue': loc.tueFull, 'Wed': loc.wedFull,
+      'Thu': loc.thuFull, 'Fri': loc.friFull, 'Sat': loc.satFull,
       'Sun': loc.sunFull,
     };
 
@@ -432,7 +347,7 @@ class _HomeScreenState extends State<HomeScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),
-            tooltip: loc.signOut, // optional localization
+            tooltip: loc.signOut,
             onPressed: () async {
               final confirm = await showDialog(
                 context: context,
@@ -451,10 +366,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ],
                 ),
               );
-
-              if (confirm == true) {
-                await signOut(context);
-              }
+              if (confirm == true) await signOut(context);
             },
           ),
         ],
@@ -502,14 +414,13 @@ class _HomeScreenState extends State<HomeScreen> {
                     runSpacing: 10,
                     children: levelMap.entries.map((entry) {
                       final isSelected = tennisLevel == entry.key;
-
                       return GestureDetector(
-                        onTap: () async {
-                          await updateTennisLevel(entry.key);
-                        },
+                        onTap: () async =>
+                            await updateTennisLevel(entry.key),
                         child: AnimatedContainer(
                           duration: const Duration(milliseconds: 200),
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 12),
                           decoration: BoxDecoration(
                             color: isSelected
                                 ? const Color(0xFF2E7D32)
@@ -518,7 +429,8 @@ class _HomeScreenState extends State<HomeScreen> {
                             boxShadow: isSelected
                                 ? [
                                     BoxShadow(
-                                      color: Colors.green.withOpacity(0.3),
+                                      color:
+                                          Colors.green.withOpacity(0.3),
                                       blurRadius: 8,
                                       offset: const Offset(0, 3),
                                     )
@@ -529,13 +441,15 @@ class _HomeScreenState extends State<HomeScreen> {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               if (isSelected)
-                                const Icon(Icons.check, color: Colors.white, size: 16),
+                                const Icon(Icons.check,
+                                    color: Colors.white, size: 16),
                               if (isSelected) const SizedBox(width: 6),
-
                               Text(
                                 entry.value,
                                 style: TextStyle(
-                                  color: isSelected ? Colors.white : Colors.black87,
+                                  color: isSelected
+                                      ? Colors.white
+                                      : Colors.black87,
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
@@ -566,7 +480,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-
                       Row(
                         children: [
                           const Icon(Icons.calendar_today, size: 18),
@@ -580,9 +493,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                         ],
                       ),
-
                       const SizedBox(height: spaceXS),
-
                       Text(
                         loc.availabilityHint,
                         style: TextStyle(
@@ -590,28 +501,22 @@ class _HomeScreenState extends State<HomeScreen> {
                           fontSize: 13,
                         ),
                       ),
-
                       const SizedBox(height: spaceM),
-
                       Wrap(
                         spacing: spaceS,
                         runSpacing: spaceS,
                         children: dayMap.entries.map((entry) {
                           final key = entry.key;
                           final label = entry.value;
-
                           final isSelected = availability.contains(key);
 
                           return GestureDetector(
                             onTap: () async {
-                              final updated = List<String>.from(availability);
-
-                              if (isSelected) {
-                                updated.remove(key);
-                              } else {
-                                updated.add(key);
-                              }
-
+                              final updated =
+                                  List<String>.from(availability);
+                              isSelected
+                                  ? updated.remove(key)
+                                  : updated.add(key);
                               await updateAvailability(updated);
                             },
                             child: AnimatedContainer(
@@ -627,7 +532,9 @@ class _HomeScreenState extends State<HomeScreen> {
                               child: Text(
                                 label,
                                 style: TextStyle(
-                                  color: isSelected ? Colors.white : Colors.black87,
+                                  color: isSelected
+                                      ? Colors.white
+                                      : Colors.black87,
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
@@ -654,55 +561,48 @@ class _HomeScreenState extends State<HomeScreen> {
                       child: HomeCard(
                         title: loc.findPlayers,
                         icon: Icons.sports_tennis,
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                              MaterialPageRoute(
-                                builder: (_) => const AvailablePlayersScreen(),
-                              ),
-                          );
-                        },
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const AvailablePlayersScreen(),
+                          ),
+                        ),
                       ),
                     ),
 
                     StreamBuilder<int>(
                       stream: getNewMatchesCount(widget.currentUser.uid),
                       builder: (context, snapshot) {
-
-                        // 🔥 Use local override AFTER visiting
                         final count = snapshot.data ?? 0;
-
-                          return AspectRatio(
-                            aspectRatio: 1, 
-                            child: NotificationBadge(
-                              count: count,
-                              child: HomeCard(
-                                title: loc.myMatches,
-                                icon: Icons.calendar_today,
-                                onTap: () async {
-                                  await Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (_) => MyMatchesScreen(
-                                        currentUser: widget.currentUser,
-                                      ),
+                        return AspectRatio(
+                          aspectRatio: 1,
+                          child: NotificationBadge(
+                            count: count,
+                            child: HomeCard(
+                              title: loc.myMatches,
+                              icon: Icons.calendar_today,
+                              onTap: () async {
+                                await Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => MyMatchesScreen(
+                                      currentUser: widget.currentUser,
                                     ),
-                                  );
-
-                                 setState(() {}); // ✅ just trigger rebuild
-                                },
-                              ),
-                            )
+                                  ),
+                                );
+                                setState(() {});
+                              },
+                            ),
+                          ),
                         );
                       },
                     ),
 
-
                     StreamBuilder<int>(
-                      stream: getPendingDeletionRequestsCount(widget.currentUser.uid),
+                      stream: getPendingDeletionRequestsCount(
+                          widget.currentUser.uid),
                       builder: (context, snapshot) {
                         final count = snapshot.data ?? 0;
-
                         return AspectRatio(
                           aspectRatio: 1,
                           child: NotificationBadge(
@@ -710,14 +610,12 @@ class _HomeScreenState extends State<HomeScreen> {
                             child: HomeCard(
                               title: loc.matchHistory,
                               icon: Icons.history,
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => const MatchHistoryScreen(),
-                                  ),
-                                );
-                              },
+                              onTap: () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const MatchHistoryScreen(),
+                                ),
+                              ),
                             ),
                           ),
                         );
@@ -729,63 +627,78 @@ class _HomeScreenState extends State<HomeScreen> {
                       child: HomeCard(
                         title: loc.myStats,
                         icon: Icons.bar_chart,
-                        onTap: () {
-                          Navigator.push(
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => PlayerStatisticsScreen(
+                              userId: widget.currentUser.uid,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    // ── NEW: Log Match card ──
+                    AspectRatio(
+                      aspectRatio: 1,
+                      child: HomeCard(
+                        title: loc.logMatchCard,
+                        icon: Icons.add_circle_outline,
+                        onTap: () async {
+                          final result = await Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (_) => PlayerStatisticsScreen(
-                                userId: widget.currentUser.uid,
-                              ),
+                              builder: (_) => const LogGuestMatchScreen(),
                             ),
                           );
+                          if (result == true && mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(loc.guestMatchSaved),
+                              ),
+                            );
+                          }
                         },
                       ),
                     ),
 
-
                     StreamBuilder<int>(
-                      stream: getIncomingRequestsCount(widget.currentUser.uid),
+                      stream: getIncomingRequestsCount(
+                          widget.currentUser.uid),
                       builder: (context, snapshot) {
                         final count = snapshot.data ?? 0;
-
                         return AspectRatio(
-                            aspectRatio: 1, 
-                            child: NotificationBadge(
-                              count: count,
-                              child: HomeCard(
-                                title: loc.incomingRequests,
-                                icon: Icons.mail,
-                                onTap: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (_) => const IncomingRequestsScreen(),
-                                    ),
-                                  );
-                                },
+                          aspectRatio: 1,
+                          child: NotificationBadge(
+                            count: count,
+                            child: HomeCard(
+                              title: loc.incomingRequests,
+                              icon: Icons.mail,
+                              onTap: () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) =>
+                                      const IncomingRequestsScreen(),
+                                ),
                               ),
-                            )
+                            ),
+                          ),
                         );
                       },
                     ),
 
                     StreamBuilder<int>(
-                      stream: getOutgoingRequestsCount(widget.currentUser.uid),
+                      stream: getOutgoingRequestsCount(
+                          widget.currentUser.uid),
                       builder: (context, snapshot) {
-
                         final firestoreCount = snapshot.data ?? 0;
-
-                        // Reset override if new requests appear
                         if (outgoingOverrideCount != null &&
                             outgoingOverrideCount! > 0 &&
                             firestoreCount > outgoingOverrideCount!) {
                           outgoingOverrideCount = null;
                         }
-
-                        // 🔥 Use override if exists
-                        final displayCount = outgoingOverrideCount ?? firestoreCount;
-
-
+                        final displayCount =
+                            outgoingOverrideCount ?? firestoreCount;
                         return AspectRatio(
                           aspectRatio: 1,
                           child: NotificationBadge(
@@ -802,8 +715,6 @@ class _HomeScreenState extends State<HomeScreen> {
                                     ),
                                   ),
                                 );
-
-                                // ✅ Clear badge after visiting
                                 setState(() {
                                   outgoingOverrideCount = 0;
                                 });
@@ -819,14 +730,12 @@ class _HomeScreenState extends State<HomeScreen> {
                       child: HomeCard(
                         title: loc.myProfile,
                         icon: Icons.person,
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => const MyProfileScreen(),
-                            ),
-                          );
-                        },
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const MyProfileScreen(),
+                          ),
+                        ),
                       ),
                     ),
 
@@ -837,8 +746,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         icon: Icons.feedback,
                         onTap: () => openFeedbackForm(context),
                       ),
-                    )
-
+                    ),
                   ],
                 ),
               ],

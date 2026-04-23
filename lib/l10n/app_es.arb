@@ -180,7 +180,6 @@
   "matchDeleted": "Partido eliminado correctamente",
   "matchNoLongerAvailable": "El partido ya no está disponible.",
   "somethingWentWrong": "Algo salió mal",
-  "requestRejected": "Solicitud rechazada",
   "opponentAcceptedDeletion": "Tu oponente aceptó la solicitud de eliminación.",
   "opponentRejectedDeletion": "Tu oponente rechazó la solicitud de eliminación.",
   "youAcceptedDeletion": "Aceptaste la solicitud de eliminación",
@@ -215,45 +214,49 @@
     }
   },
 
-  
   "completeProfile": "Completar perfil",
-  "@completeProfile": {
-    "description": "Título de la pantalla de completar perfil"
-  },
-
   "selectBirthdate": "Seleccionar fecha de nacimiento",
-  "@selectBirthdate": {
-    "description": "Etiqueta para seleccionar fecha de nacimiento"
-  },
-
   "city": "Ciudad",
-  "@city": {
-    "description": "Etiqueta del campo ciudad"
-  },
-
   "country": "País",
-  "@country": {
-    "description": "Etiqueta del campo país"
-  },
-
   "requiredField": "Este campo es obligatorio",
-  "@requiredField": {
-    "description": "Mensaje de validación para campos obligatorios"
-  },
-
   "selectAvailability": "Selecciona tu disponibilidad",
-  "@selectAvailability": {
-    "description": "Etiqueta para seleccionar disponibilidad"
-  },
-
   "save": "Guardar",
-  "@save": {
-    "description": "Texto del botón guardar"
-  },
-
   "editProfile": "Editar perfil",
-  "@editProfile": {
-    "description": "Título/botón de editar perfil"
-  }
 
+  "logMatchCard": "Registrar partido",
+  "logMatch": "Registrar un partido",
+  "logMatchSubtitle": "Guarda un partido contra cualquier oponente",
+  "guestOpponentName": "Nombre del oponente",
+  "guestOpponentPhone": "Número de WhatsApp del oponente (opcional)",
+  "guestMatchSaved": "Partido guardado exitosamente 🎾",
+  "failedToSaveGuestMatch": "Error al guardar el partido",
+  "shareViaWhatsApp": "Compartir por WhatsApp",
+  "skipSharing": "Omitir",
+  "shareMatchTitle": "¿Compartir resultado con tu oponente?",
+  "shareMatchSubtitle": "Envía este resultado por WhatsApp e invita a tu oponente a unirse a TennisMatch",
+  "whatsappNotInstalled": "WhatsApp no está instalado en este dispositivo",
+  "phoneNumberHint": "ej. +57 300 123 4567",
+  "phoneNumberLabel": "Número de teléfono (para vincular partidos)",
+  "phoneNumberSaved": "Número guardado",
+  "guestOpponent": "Invitado",
+  "claimedMatchesMerged": "Tus partidos anteriores han sido vinculados a tu cuenta 🎾",
+  "yourPhoneNumber": "Tu número de teléfono",
+  "phoneOptionalHint": "Se usa para vincular partidos registrados por oponentes",
+  "invalidPhoneNumber": "Ingresa un número válido con código de país",
+  "guestMatchBadge": "INVITADO",
+  "vsLabel": "vs",
+  "opponentLabel": "Oponente",
+  "whatsappMessageTemplate": "¡Hola {opponentName}! 🎾 Acabamos de jugar un partido de tenis y registré el resultado en TennisMatch:\n\n{playerName} vs {opponentName}\nMarcador: {score}\nUbicación: {location}\nFecha: {date}\n\n¡Descarga TennisMatch para guardar tus estadísticas y llevar el registro de tus partidos!\n{appLink}\n\n¡Hasta la próxima en la cancha! 🎾",
+  "@whatsappMessageTemplate": {
+    "placeholders": {
+      "opponentName": {},
+      "playerName": {},
+      "score": {},
+      "location": {},
+      "date": {},
+      "appLink": {}
+    }
+  },
+  "nameLabel": "Tu nombre",
+  "deleteGuestMatchConfirmation": "¿Estás seguro de que quieres eliminar este partido? Esta acción no se puede deshacer."
 }

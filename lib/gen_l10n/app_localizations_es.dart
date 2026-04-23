@@ -567,4 +567,97 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get editProfile => 'Editar perfil';
+
+  @override
+  String get logMatchCard => 'Registrar partido';
+
+  @override
+  String get logMatch => 'Registrar un partido';
+
+  @override
+  String get logMatchSubtitle => 'Guarda un partido contra cualquier oponente';
+
+  @override
+  String get guestOpponentName => 'Nombre del oponente';
+
+  @override
+  String get guestOpponentPhone => 'Número de WhatsApp del oponente (opcional)';
+
+  @override
+  String get guestMatchSaved => 'Partido guardado exitosamente 🎾';
+
+  @override
+  String get failedToSaveGuestMatch => 'Error al guardar el partido';
+
+  @override
+  String get shareViaWhatsApp => 'Compartir por WhatsApp';
+
+  @override
+  String get skipSharing => 'Omitir';
+
+  @override
+  String get shareMatchTitle => '¿Compartir resultado con tu oponente?';
+
+  @override
+  String get shareMatchSubtitle =>
+      'Envía este resultado por WhatsApp e invita a tu oponente a unirse a TennisMatch';
+
+  @override
+  String get whatsappNotInstalled =>
+      'WhatsApp no está instalado en este dispositivo';
+
+  @override
+  String get phoneNumberHint => 'ej. +57 300 123 4567';
+
+  @override
+  String get phoneNumberLabel => 'Número de teléfono (para vincular partidos)';
+
+  @override
+  String get phoneNumberSaved => 'Número guardado';
+
+  @override
+  String get guestOpponent => 'Invitado';
+
+  @override
+  String get claimedMatchesMerged =>
+      'Tus partidos anteriores han sido vinculados a tu cuenta 🎾';
+
+  @override
+  String get yourPhoneNumber => 'Tu número de teléfono';
+
+  @override
+  String get phoneOptionalHint =>
+      'Se usa para vincular partidos registrados por oponentes';
+
+  @override
+  String get invalidPhoneNumber =>
+      'Ingresa un número válido con código de país';
+
+  @override
+  String get guestMatchBadge => 'INVITADO';
+
+  @override
+  String get vsLabel => 'vs';
+
+  @override
+  String get opponentLabel => 'Oponente';
+
+  @override
+  String whatsappMessageTemplate(
+    Object opponentName,
+    Object playerName,
+    Object score,
+    Object location,
+    Object date,
+    Object appLink,
+  ) {
+    return '¡Hola $opponentName! 🎾 Acabamos de jugar un partido de tenis y registré el resultado en TennisMatch:\n\n$playerName vs $opponentName\nMarcador: $score\nUbicación: $location\nFecha: $date\n\n¡Descarga TennisMatch para guardar tus estadísticas y llevar el registro de tus partidos!\n$appLink\n\n¡Hasta la próxima en la cancha! 🎾';
+  }
+
+  @override
+  String get nameLabel => 'Tu nombre';
+
+  @override
+  String get deleteGuestMatchConfirmation =>
+      '¿Estás seguro de que quieres eliminar este partido? Esta acción no se puede deshacer.';
 }

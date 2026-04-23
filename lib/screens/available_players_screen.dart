@@ -166,7 +166,7 @@ class AvailablePlayersScreen extends StatelessWidget {
                   final data =
                       doc.data() as Map<String, dynamic>;
 
-                  if (data['uid'] == user.uid) return false;
+                  if (doc.id == user.uid) return false;
 
                   final List<String> otherAvailability =
                       normalizeDays(data['availability'] ?? []);
@@ -228,7 +228,7 @@ class AvailablePlayersScreen extends StatelessWidget {
                                         builder: (_) => PlayerProfileViewScreen(
                                           userData: data,
                                           onRequestMatch: () async {
-                                            await requestMatch(context, data['uid']);
+                                            await requestMatch(context, doc.id);
 
                                             if (!context.mounted) return;
                                             
