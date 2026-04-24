@@ -564,7 +564,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get editProfile => 'Edit Profile';
 
   @override
-  String get logMatchCard => 'Log Match';
+  String get logMatchCard => 'Log Singles Match';
 
   @override
   String get logMatch => 'Log a Match';
@@ -669,4 +669,83 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tiebreakWinnerMismatch => 'Tiebreak winner must match set winner.';
+
+  @override
+  String get logDoubles => 'Log Doubles Match';
+
+  @override
+  String get logDoublesMatch => 'Log a Doubles Match';
+
+  @override
+  String get team1 => 'Your Team';
+
+  @override
+  String get team2 => 'Opponent Team';
+
+  @override
+  String get yourPartner => 'Your partner\'s name';
+
+  @override
+  String get opponent1 => 'Opponent 1 name';
+
+  @override
+  String get opponent2 => 'Opponent 2 name';
+
+  @override
+  String get singles => 'Singles';
+
+  @override
+  String get doubles => 'Doubles';
+
+  @override
+  String get doublesMatchSaved => 'Doubles match saved 🎾';
+
+  @override
+  String get failedToSaveDoublesMatch => 'Failed to save doubles match';
+
+  @override
+  String get team1Won => 'Your team won';
+
+  @override
+  String get team2Won => 'Opponent team won';
+
+  @override
+  String get winnerTeam => 'Winner';
+
+  @override
+  String get doublesResult => 'Doubles Result';
+
+  @override
+  String get noDoublesHistory => 'No doubles matches yet';
+
+  @override
+  String get playDoublesToSeeHistory => 'Log a doubles match to see it here 🎾';
+
+  @override
+  String get noDoublesStats => 'No doubles stats yet';
+
+  @override
+  String get playFirstDoublesMatch =>
+      'Log your first doubles match to see your statistics 🎾';
+
+  @override
+  String get doublesMatchesPlayed => 'Doubles Played';
+
+  @override
+  String get doublesWins => 'Doubles Wins';
+
+  @override
+  String get doublesLosses => 'Doubles Losses';
+
+  @override
+  String get doublesWinRate => 'Doubles Win Rate';
+
+  @override
+  String get doublesSetsWon => 'Sets Won';
+
+  @override
+  String get doublesSetsLost => 'Sets Lost';
+
+  @override
+  String get doublesAvgDuration => 'Average Duration';
 }

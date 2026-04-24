@@ -385,7 +385,7 @@ class _LogGuestMatchScreenState extends State<LogGuestMatchScreen> {
     // Store what we need before popping (context will be gone after)
     final opponentPhoneCopy = opponentPhone;
     final opponentNameCopy = opponentName;
-    final formattedSetsCopy = List<Map<String, int>>.from(formattedSets);
+    final formattedSetsCopy = List<Map<String, dynamic>>.from(formattedSets);
     final locationCopy = location;
     final matchDateCopy = selectedMatchDate!;
 

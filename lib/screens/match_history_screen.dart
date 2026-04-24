@@ -6,6 +6,7 @@ import '../widgets/match_card.dart';
 import '../widgets/empty_state.dart';
 import 'match_details_screen.dart';
 import 'guest_match_details_screen.dart';
+import 'doubles_match_details_screen.dart';
 
 class MatchHistoryScreen extends StatefulWidget {
   const MatchHistoryScreen({super.key});
@@ -224,67 +225,297 @@ class _MatchHistoryScreenState extends State<MatchHistoryScreen> {
     );
   }
 
+  Widget _buildDoublesMatchCard(
+    BuildContext context,
+    DocumentSnapshot matchDoc,
+    AppLocalizations loc,
+    String currentUid,
+  ) {
+    final match = matchDoc.data() as Map<String, dynamic>;
+    final team1 = match['team1'] as Map<String, dynamic>? ?? {};
+    final team2 = match['team2'] as Map<String, dynamic>? ?? {};
+    final winnerTeam = match['winnerTeam'] as int? ?? 1;
+    final bool team1Won = winnerTeam == 1;
+
+    final rawSets = match['result']?['sets'] ?? [];
+    final location = match['result']?['location'] ?? '';
+    final duration = match['result']?['durationMinutes'] ?? 0;
+    Timestamp? matchDateTs = match['result']?['matchDate'];
+    final DateTime matchDate =
+        matchDateTs != null ? matchDateTs.toDate() : DateTime.now();
+
+    final team1Label = '${team1['player1'] ?? ''} / ${team1['player2'] ?? ''}';
+    final team2Label = '${team2['player1'] ?? ''} / ${team2['player2'] ?? ''}';
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      child: GestureDetector(
+        onTap: () async {
+          final result = await Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => DoublesMatchDetailsScreen(
+                matchId: matchDoc.id,
+                team1Player1: team1['player1'] ?? '',
+                team1Player2: team1['player2'] ?? '',
+                team2Player1: team2['player1'] ?? '',
+                team2Player2: team2['player2'] ?? '',
+                winnerTeam: winnerTeam,
+                sets: List.from(rawSets),
+                location: location,
+                duration: duration,
+                matchDate: matchDate,
+              ),
+            ),
+          );
+          if (result == true && mounted) {
+            Future.delayed(const Duration(milliseconds: 300), () {
+              if (!mounted) return;
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(loc.matchDeleted),
+                  duration: const Duration(seconds: 2)),
+              );
+            });
+          }
+        },
+        child: Card(
+          margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          child: Stack(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(12, 35, 12, 12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Team 1
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          child: Row(
+                            children: [
+                              Flexible(child: Text(team1Label,
+                                style: TextStyle(
+                                  fontWeight: team1Won
+                                      ? FontWeight.bold : FontWeight.normal),
+                                overflow: TextOverflow.ellipsis)),
+                              if (team1Won) ...[
+                                const SizedBox(width: 4),
+                                const Text('🏆'),
+                              ],
+                            ],
+                          ),
+                        ),
+                        Row(
+                          children: (rawSets as List).map<Widget>((set) {
+                            final p1 = set['p1'] ?? 0;
+                            final p2 = set['p2'] ?? 0;
+                            final won = p1 > p2;
+                            return Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 4),
+                              child: Text(p1.toString(),
+                                style: TextStyle(fontSize: 16,
+                                  fontWeight: won ? FontWeight.bold : FontWeight.normal,
+                                  color: won ? Colors.green.shade700 : Colors.grey)),
+                            );
+                          }).toList(),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    // Team 2
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          child: Row(
+                            children: [
+                              Flexible(child: Text(team2Label,
+                                style: TextStyle(
+                                  fontWeight: !team1Won
+                                      ? FontWeight.bold : FontWeight.normal),
+                                overflow: TextOverflow.ellipsis)),
+                              if (!team1Won) ...[
+                                const SizedBox(width: 4),
+                                const Text('🏆'),
+                              ],
+                            ],
+                          ),
+                        ),
+                        Row(
+                          children: (rawSets as List).map<Widget>((set) {
+                            final p1 = set['p1'] ?? 0;
+                            final p2 = set['p2'] ?? 0;
+                            final won = p2 > p1;
+                            return Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 4),
+                              child: Text(p2.toString(),
+                                style: TextStyle(fontSize: 16,
+                                  fontWeight: won ? FontWeight.bold : FontWeight.normal,
+                                  color: won ? Colors.green.shade700 : Colors.grey)),
+                            );
+                          }).toList(),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      '$location • ${matchDate.day}/${matchDate.month}/${matchDate.year} • $duration min',
+                      style: const TextStyle(color: Colors.grey),
+                    ),
+                  ],
+                ),
+              ),
+              // Win/Loss badge
+              Positioned(
+                top: 8, right: 8,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: team1Won ? Colors.green : Colors.red,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    team1Won ? loc.win : loc.loss,
+                    style: const TextStyle(color: Colors.white,
+                      fontWeight: FontWeight.bold, fontSize: 12),
+                  ),
+                ),
+              ),
+              // Doubles badge
+              Positioned(
+                top: 8, left: 8,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: Colors.blue.shade50,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.blue.shade200),
+                  ),
+                  child: Text(
+                    loc.doubles.toUpperCase(),
+                    style: TextStyle(fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.blue.shade700),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+    Widget _buildMatchList(
+    BuildContext context,
+    AppLocalizations loc,
+    String currentUid,
+    List<String> types,
+    String emptyTitle,
+    String emptySubtitle,
+  ) {
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('matches')
+          .where('players', arrayContains: currentUid)
+          .where('status', isEqualTo: 'completed')
+          .orderBy('completedAt', descending: true)
+          .snapshots(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const CircularProgressIndicator(),
+                const SizedBox(height: 8),
+                Text(loc.loading),
+              ],
+            ),
+          );
+        }
+
+        // Filter by type
+        final docs = snapshot.data!.docs.where((doc) {
+          final match = doc.data() as Map<String, dynamic>;
+          final type = match['type'] as String? ?? 'regular';
+          return types.contains(type);
+        }).toList();
+
+        if (docs.isEmpty) {
+          return EmptyState(
+            icon: Icons.history,
+            title: emptyTitle,
+            subtitle: emptySubtitle,
+          );
+        }
+
+        return ListView.builder(
+          itemCount: docs.length,
+          itemBuilder: (context, index) {
+            final matchDoc = docs[index];
+            final match = matchDoc.data() as Map<String, dynamic>;
+            final type = match['type'] as String? ?? 'regular';
+
+            if (type == 'doubles_guest') {
+              return _buildDoublesMatchCard(
+                context, matchDoc, loc, currentUid,
+              );
+            } else if (type == 'guest') {
+              return _buildGuestMatchCard(
+                context, matchDoc, loc, currentUid,
+              );
+            } else {
+              return _buildRegularMatchCard(
+                context, matchDoc, loc, currentUid,
+              );
+            }
+          },
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context)!;
     final currentUid = FirebaseAuth.instance.currentUser!.uid;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(loc.matchHistory),
-      ),
-      body: SafeArea(
-        child: StreamBuilder<QuerySnapshot>(
-          stream: FirebaseFirestore.instance
-              .collection('matches')
-              .where('players', arrayContains: currentUid)
-              .where('status', isEqualTo: 'completed')
-              .orderBy('completedAt', descending: true)
-              .snapshots(),
-          builder: (context, snapshot) {
-            if (!snapshot.hasData) {
-              return Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const CircularProgressIndicator(),
-                    const SizedBox(height: 8),
-                    Text(loc.loading),
-                  ],
-                ),
-              );
-            }
-
-            final docs = snapshot.data!.docs;
-
-            if (docs.isEmpty) {
-              return EmptyState(
-                icon: Icons.history,
-                title: loc.noMatchHistory,
-                subtitle: loc.playMatchesToSeeHistory,
-              );
-            }
-
-            return ListView.builder(
-              itemCount: docs.length,
-              itemBuilder: (context, index) {
-                final matchDoc = docs[index];
-                final match =
-                    matchDoc.data() as Map<String, dynamic>;
-                final isGuest = match['type'] == 'guest';
-
-                if (isGuest) {
-                  return _buildGuestMatchCard(
-                    context, matchDoc, loc, currentUid,
-                  );
-                } else {
-                  return _buildRegularMatchCard(
-                    context, matchDoc, loc, currentUid,
-                  );
-                }
-              },
-            );
-          },
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(loc.matchHistory),
+          bottom: TabBar(
+            labelColor: Colors.white,
+            unselectedLabelColor: Colors.white70,
+            indicatorColor: Colors.white,
+            tabs: [
+              Tab(text: loc.singles),
+              Tab(text: loc.doubles),
+            ],
+          ),
+        ),
+        body: SafeArea(
+          child: TabBarView(
+            children: [
+              // Singles tab: regular + guest matches
+              _buildMatchList(
+                context, loc, currentUid,
+                ['regular', 'guest'],
+                loc.noMatchHistory,
+                loc.playMatchesToSeeHistory,
+              ),
+              // Doubles tab: doubles_guest matches
+              _buildMatchList(
+                context, loc, currentUid,
+                ['doubles_guest'],
+                loc.noDoublesHistory,
+                loc.playDoublesToSeeHistory,
+              ),
+            ],
+          ),
         ),
       ),
     );

@@ -9,26 +9,27 @@ import 'outgoing_requests_screen.dart';
 import 'player_statistics_screen.dart';
 import 'my_profile_screen.dart';
 import 'log_guest_match_screen.dart'; // NEW
+import 'log_doubles_match_screen.dart'; // NEW
 import '../widgets/home_card.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:tennismatch/gen_l10n/app_localizations.dart';
-
+ 
 const double spaceXS = 4;
 const double spaceS = 8;
 const double spaceM = 16;
 const double spaceL = 24;
 const double spaceXL = 32;
-
+ 
 class NotificationBadge extends StatelessWidget {
   final Widget child;
   final int count;
-
+ 
   const NotificationBadge({
     super.key,
     required this.child,
     required this.count,
   });
-
+ 
   @override
   Widget build(BuildContext context) {
     return Stack(
@@ -64,26 +65,26 @@ class NotificationBadge extends StatelessWidget {
     );
   }
 }
-
+ 
 const weekOrder = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-
+ 
 class HomeScreen extends StatefulWidget {
   final User currentUser;
   final Map<String, dynamic> userData;
-
+ 
   const HomeScreen({
     super.key,
     required this.currentUser,
     required this.userData,
   });
-
+ 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
-
+ 
 class _HomeScreenState extends State<HomeScreen> {
   int? outgoingOverrideCount;
-
+ 
   String translateLevel(String level, AppLocalizations loc) {
     switch (level) {
       case 'Beginner': return loc.levelBeginner;
@@ -92,7 +93,7 @@ class _HomeScreenState extends State<HomeScreen> {
       default: return level;
     }
   }
-
+ 
   String translateDay(String day, AppLocalizations loc) {
     switch (day) {
       case 'Mon': return loc.mon;
@@ -105,7 +106,7 @@ class _HomeScreenState extends State<HomeScreen> {
       default: return day;
     }
   }
-
+ 
   List<String> normalizeDays(List rawDays) {
     final map = {
       'Mon': 'Mon', 'Tue': 'Tue', 'Wed': 'Wed',
@@ -118,21 +119,21 @@ class _HomeScreenState extends State<HomeScreen> {
         .toSet()
         .toList();
   }
-
+ 
   Widget buildProfileCard(AppLocalizations loc) {
     final String name = widget.currentUser.displayName ?? 'Player';
     final String rawLevel = widget.userData['tennisLevel'] ?? '';
     final String level =
         rawLevel.isEmpty ? loc.notSet : translateLevel(rawLevel, loc);
-
+ 
     final List availabilityRaw =
         normalizeDays(widget.userData['availability'] ?? []);
-
+ 
     final List<String> sortedAvailability =
         List<String>.from(availabilityRaw)
           ..sort((a, b) =>
               weekOrder.indexOf(a).compareTo(weekOrder.indexOf(b)));
-
+ 
     return Container(
       decoration: BoxDecoration(
         gradient: const LinearGradient(
@@ -219,37 +220,37 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
-
+ 
   Future<void> updateTennisLevel(String level) async {
     await FirebaseFirestore.instance
         .collection('users')
         .doc(widget.currentUser.uid)
         .update({'tennisLevel': level});
   }
-
+ 
   Future<void> updateAvailability(List<String> days) async {
     await FirebaseFirestore.instance
         .collection('users')
         .doc(widget.currentUser.uid)
         .update({'availability': days});
   }
-
+ 
   Future<void> openFeedbackForm(BuildContext context) async {
     final url = Uri.parse(
         'https://docs.google.com/forms/d/e/1FAIpQLScGcT2eC2znik4ndofkiExqAN1k7LL_A3eOOQfjeCkl-5RO-A/viewform');
     final messenger = ScaffoldMessenger.of(context);
     final loc = AppLocalizations.of(context)!;
-
+ 
     final success =
         await launchUrl(url, mode: LaunchMode.externalApplication);
-
+ 
     if (!success) {
       messenger.showSnackBar(
         SnackBar(content: Text(loc.failedToOpenFeedbackForm)),
       );
     }
   }
-
+ 
   Future<void> signOut(BuildContext context) async {
     final loc = AppLocalizations.of(context)!;
     await FirebaseAuth.instance.signOut();
@@ -258,7 +259,7 @@ class _HomeScreenState extends State<HomeScreen> {
       SnackBar(content: Text(loc.loggedOutSuccessfully)),
     );
   }
-
+ 
   Stream<int> getIncomingRequestsCount(String userId) {
     return FirebaseFirestore.instance
         .collection('match_requests')
@@ -267,7 +268,7 @@ class _HomeScreenState extends State<HomeScreen> {
         .snapshots()
         .map((s) => s.docs.length);
   }
-
+ 
   Stream<int> getNewMatchesCount(String userId) {
     return FirebaseFirestore.instance
         .collection('matches')
@@ -285,7 +286,7 @@ class _HomeScreenState extends State<HomeScreen> {
           return count;
         });
   }
-
+ 
   Stream<int> getOutgoingRequestsCount(String userId) {
     return FirebaseFirestore.instance
         .collection('match_requests')
@@ -294,7 +295,7 @@ class _HomeScreenState extends State<HomeScreen> {
         .snapshots()
         .map((s) => s.docs.length);
   }
-
+ 
   Stream<int> getPendingDeletionRequestsCount(String userId) {
     return FirebaseFirestore.instance
         .collection('matches')
@@ -320,7 +321,7 @@ class _HomeScreenState extends State<HomeScreen> {
           return count;
         });
   }
-
+ 
   @override
   Widget build(BuildContext context) {
     final String? tennisLevel = widget.userData['tennisLevel'];
@@ -328,19 +329,19 @@ class _HomeScreenState extends State<HomeScreen> {
         widget.userData['availability'] ?? [];
     final List<String> availability = normalizeDays(availabilityRaw);
     final loc = AppLocalizations.of(context)!;
-
+ 
     final dayMap = {
       'Mon': loc.monFull, 'Tue': loc.tueFull, 'Wed': loc.wedFull,
       'Thu': loc.thuFull, 'Fri': loc.friFull, 'Sat': loc.satFull,
       'Sun': loc.sunFull,
     };
-
+ 
     final levelMap = {
       'Beginner': loc.levelBeginner,
       'Intermediate': loc.levelIntermediate,
       'Advanced': loc.levelAdvanced,
     };
-
+ 
     return Scaffold(
       appBar: AppBar(
         title: Text(loc.appTitle),
@@ -377,11 +378,11 @@ class _HomeScreenState extends State<HomeScreen> {
             padding: const EdgeInsets.all(16),
             child: Column(
               children: [
-
+ 
                 buildProfileCard(loc),
-
+ 
                 const SizedBox(height: spaceL),
-
+ 
                 Align(
                   alignment: Alignment.centerLeft,
                   child: Text(
@@ -392,9 +393,9 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
                 ),
-
+ 
                 const SizedBox(height: spaceS),
-
+ 
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.all(spaceM),
@@ -460,9 +461,9 @@ class _HomeScreenState extends State<HomeScreen> {
                     }).toList(),
                   ),
                 ),
-
+ 
                 const SizedBox(height: spaceXL),
-
+ 
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.all(spaceM),
@@ -509,7 +510,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           final key = entry.key;
                           final label = entry.value;
                           final isSelected = availability.contains(key);
-
+ 
                           return GestureDetector(
                             onTap: () async {
                               final updated =
@@ -545,9 +546,9 @@ class _HomeScreenState extends State<HomeScreen> {
                     ],
                   ),
                 ),
-
+ 
                 const SizedBox(height: spaceL),
-
+ 
                 GridView.count(
                   crossAxisCount: 2,
                   shrinkWrap: true,
@@ -555,7 +556,51 @@ class _HomeScreenState extends State<HomeScreen> {
                   crossAxisSpacing: 12,
                   mainAxisSpacing: 12,
                   children: [
-
+ 
+                    // ── Log Singles Match card ──
+                    AspectRatio(
+                      aspectRatio: 1,
+                      child: HomeCard(
+                        title: loc.logMatchCard,
+                        icon: Icons.add_circle_outline,
+                        onTap: () async {
+                          final result = await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const LogGuestMatchScreen(),
+                            ),
+                          );
+                          if (result == true && mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text(loc.guestMatchSaved)),
+                            );
+                          }
+                        },
+                      ),
+                    ),
+ 
+                    // ── Log Doubles Match card ──
+                    AspectRatio(
+                      aspectRatio: 1,
+                      child: HomeCard(
+                        title: loc.logDoubles,
+                        icon: Icons.group_outlined,
+                        onTap: () async {
+                          final result = await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const LogDoublesMatchScreen(),
+                            ),
+                          );
+                          if (result == true && mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text(loc.doublesMatchSaved)),
+                            );
+                          }
+                        },
+                      ),
+                    ),
+ 
                     AspectRatio(
                       aspectRatio: 1,
                       child: HomeCard(
@@ -569,7 +614,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       ),
                     ),
-
+ 
                     StreamBuilder<int>(
                       stream: getNewMatchesCount(widget.currentUser.uid),
                       builder: (context, snapshot) {
@@ -597,7 +642,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         );
                       },
                     ),
-
+ 
                     StreamBuilder<int>(
                       stream: getPendingDeletionRequestsCount(
                           widget.currentUser.uid),
@@ -621,7 +666,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         );
                       },
                     ),
-
+ 
                     AspectRatio(
                       aspectRatio: 1,
                       child: HomeCard(
@@ -637,31 +682,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       ),
                     ),
-
-                    // ── NEW: Log Match card ──
-                    AspectRatio(
-                      aspectRatio: 1,
-                      child: HomeCard(
-                        title: loc.logMatchCard,
-                        icon: Icons.add_circle_outline,
-                        onTap: () async {
-                          final result = await Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => const LogGuestMatchScreen(),
-                            ),
-                          );
-                          if (result == true && mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(loc.guestMatchSaved),
-                              ),
-                            );
-                          }
-                        },
-                      ),
-                    ),
-
+ 
                     StreamBuilder<int>(
                       stream: getIncomingRequestsCount(
                           widget.currentUser.uid),
@@ -686,7 +707,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         );
                       },
                     ),
-
+ 
                     StreamBuilder<int>(
                       stream: getOutgoingRequestsCount(
                           widget.currentUser.uid),
@@ -724,7 +745,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         );
                       },
                     ),
-
+ 
                     AspectRatio(
                       aspectRatio: 1,
                       child: HomeCard(
@@ -738,7 +759,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       ),
                     ),
-
+ 
                     AspectRatio(
                       aspectRatio: 1,
                       child: HomeCard(

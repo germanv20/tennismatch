@@ -569,7 +569,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get editProfile => 'Editar perfil';
 
   @override
-  String get logMatchCard => 'Registrar partido';
+  String get logMatchCard => 'Registrar partido individual';
 
   @override
   String get logMatch => 'Registrar un partido';
@@ -678,4 +678,85 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get tiebreakWinnerMismatch =>
       'El ganador del tiebreak debe coincidir con el ganador del set.';
+
+  @override
+  String get logDoubles => 'Registrar partido de dobles';
+
+  @override
+  String get logDoublesMatch => 'Registrar partido de dobles';
+
+  @override
+  String get team1 => 'Tu equipo';
+
+  @override
+  String get team2 => 'Equipo rival';
+
+  @override
+  String get yourPartner => 'Nombre de tu compañero';
+
+  @override
+  String get opponent1 => 'Nombre del rival 1';
+
+  @override
+  String get opponent2 => 'Nombre del rival 2';
+
+  @override
+  String get singles => 'Individuales';
+
+  @override
+  String get doubles => 'Dobles';
+
+  @override
+  String get doublesMatchSaved => 'Partido de dobles guardado 🎾';
+
+  @override
+  String get failedToSaveDoublesMatch =>
+      'Error al guardar el partido de dobles';
+
+  @override
+  String get team1Won => 'Tu equipo ganó';
+
+  @override
+  String get team2Won => 'El equipo rival ganó';
+
+  @override
+  String get winnerTeam => 'Ganador';
+
+  @override
+  String get doublesResult => 'Resultado de dobles';
+
+  @override
+  String get noDoublesHistory => 'Aún no tienes partidos de dobles';
+
+  @override
+  String get playDoublesToSeeHistory =>
+      'Registra un partido de dobles para verlo aquí 🎾';
+
+  @override
+  String get noDoublesStats => 'Aún no tienes estadísticas de dobles';
+
+  @override
+  String get playFirstDoublesMatch =>
+      'Registra tu primer partido de dobles para ver tus estadísticas 🎾';
+
+  @override
+  String get doublesMatchesPlayed => 'Dobles jugados';
+
+  @override
+  String get doublesWins => 'Victorias en dobles';
+
+  @override
+  String get doublesLosses => 'Derrotas en dobles';
+
+  @override
+  String get doublesWinRate => 'Porcentaje de victorias';
+
+  @override
+  String get doublesSetsWon => 'Sets ganados';
+
+  @override
+  String get doublesSetsLost => 'Sets perdidos';
+
+  @override
+  String get doublesAvgDuration => 'Duración promedio';
 }

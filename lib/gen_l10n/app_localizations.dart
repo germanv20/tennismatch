@@ -1175,7 +1175,7 @@ abstract class AppLocalizations {
   /// No description provided for @logMatchCard.
   ///
   /// In en, this message translates to:
-  /// **'Log Match'**
+  /// **'Log Singles Match'**
   String get logMatchCard;
 
   /// No description provided for @logMatch.
@@ -1364,6 +1364,162 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Tiebreak winner must match set winner.'**
   String get tiebreakWinnerMismatch;
+
+  /// No description provided for @logDoubles.
+  ///
+  /// In en, this message translates to:
+  /// **'Log Doubles Match'**
+  String get logDoubles;
+
+  /// No description provided for @logDoublesMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Log a Doubles Match'**
+  String get logDoublesMatch;
+
+  /// No description provided for @team1.
+  ///
+  /// In en, this message translates to:
+  /// **'Your Team'**
+  String get team1;
+
+  /// No description provided for @team2.
+  ///
+  /// In en, this message translates to:
+  /// **'Opponent Team'**
+  String get team2;
+
+  /// No description provided for @yourPartner.
+  ///
+  /// In en, this message translates to:
+  /// **'Your partner\'s name'**
+  String get yourPartner;
+
+  /// No description provided for @opponent1.
+  ///
+  /// In en, this message translates to:
+  /// **'Opponent 1 name'**
+  String get opponent1;
+
+  /// No description provided for @opponent2.
+  ///
+  /// In en, this message translates to:
+  /// **'Opponent 2 name'**
+  String get opponent2;
+
+  /// No description provided for @singles.
+  ///
+  /// In en, this message translates to:
+  /// **'Singles'**
+  String get singles;
+
+  /// No description provided for @doubles.
+  ///
+  /// In en, this message translates to:
+  /// **'Doubles'**
+  String get doubles;
+
+  /// No description provided for @doublesMatchSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Doubles match saved 🎾'**
+  String get doublesMatchSaved;
+
+  /// No description provided for @failedToSaveDoublesMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to save doubles match'**
+  String get failedToSaveDoublesMatch;
+
+  /// No description provided for @team1Won.
+  ///
+  /// In en, this message translates to:
+  /// **'Your team won'**
+  String get team1Won;
+
+  /// No description provided for @team2Won.
+  ///
+  /// In en, this message translates to:
+  /// **'Opponent team won'**
+  String get team2Won;
+
+  /// No description provided for @winnerTeam.
+  ///
+  /// In en, this message translates to:
+  /// **'Winner'**
+  String get winnerTeam;
+
+  /// No description provided for @doublesResult.
+  ///
+  /// In en, this message translates to:
+  /// **'Doubles Result'**
+  String get doublesResult;
+
+  /// No description provided for @noDoublesHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'No doubles matches yet'**
+  String get noDoublesHistory;
+
+  /// No description provided for @playDoublesToSeeHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Log a doubles match to see it here 🎾'**
+  String get playDoublesToSeeHistory;
+
+  /// No description provided for @noDoublesStats.
+  ///
+  /// In en, this message translates to:
+  /// **'No doubles stats yet'**
+  String get noDoublesStats;
+
+  /// No description provided for @playFirstDoublesMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Log your first doubles match to see your statistics 🎾'**
+  String get playFirstDoublesMatch;
+
+  /// No description provided for @doublesMatchesPlayed.
+  ///
+  /// In en, this message translates to:
+  /// **'Doubles Played'**
+  String get doublesMatchesPlayed;
+
+  /// No description provided for @doublesWins.
+  ///
+  /// In en, this message translates to:
+  /// **'Doubles Wins'**
+  String get doublesWins;
+
+  /// No description provided for @doublesLosses.
+  ///
+  /// In en, this message translates to:
+  /// **'Doubles Losses'**
+  String get doublesLosses;
+
+  /// No description provided for @doublesWinRate.
+  ///
+  /// In en, this message translates to:
+  /// **'Doubles Win Rate'**
+  String get doublesWinRate;
+
+  /// No description provided for @doublesSetsWon.
+  ///
+  /// In en, this message translates to:
+  /// **'Sets Won'**
+  String get doublesSetsWon;
+
+  /// No description provided for @doublesSetsLost.
+  ///
+  /// In en, this message translates to:
+  /// **'Sets Lost'**
+  String get doublesSetsLost;
+
+  /// No description provided for @doublesAvgDuration.
+  ///
+  /// In en, this message translates to:
+  /// **'Average Duration'**
+  String get doublesAvgDuration;
 }
 
 class _AppLocalizationsDelegate
