@@ -106,9 +106,9 @@ class _StatsTabState extends State<_StatsTab>
 
         if (widget.isDoubles) {
           final winnerTeam = match['winnerTeam'] as int? ?? 0;
-          if (winnerTeam == 1) wins++; else losses++;
+          if (winnerTeam == 1) { wins++; } else { losses++; }
         } else {
-          if (match['winnerUid'] == uid) wins++; else losses++;
+          if (match['winnerUid'] == uid) { wins++; } else { losses++; }
         }
 
         final result = match['result'] as Map<String, dynamic>? ?? {};
@@ -125,7 +125,7 @@ class _StatsTabState extends State<_StatsTab>
           final p2 = (setMap['p2'] ?? 0) as int;
           final int myScore = userIsP1 ? p1 : p2;
           final int opponentScore = userIsP1 ? p2 : p1;
-          if (myScore > opponentScore) setsWon++; else setsLost++;
+          if (myScore > opponentScore) { setsWon++; } else { setsLost++; }
         }
       }
 

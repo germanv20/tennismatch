@@ -160,8 +160,11 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
             matchDocs.add(matchDoc);
           }
         } else {
+          debugPrint('⚠️ Match $matchId not found in phoneIndex');
         }
       } catch (e) {
+        // Skip unreadable matches — don't abort the whole claim
+        debugPrint('⚠️ Could not read match during claim: $e');
       }
     }
 

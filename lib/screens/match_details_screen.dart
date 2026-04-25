@@ -259,8 +259,11 @@ class _MatchDetailsScreenState extends State<MatchDetailsScreen> {
           final isAccepted = deletionRequest != null &&
               deletionRequest['status'] == 'accepted';
 
-          if (isAccepted) handleDeletionResult(true, deletionRequest!);
-          else if (isRejected) handleDeletionResult(false, deletionRequest!);
+          // Use null-check pattern: req is Map<String, dynamic> (non-nullable)
+          final req = deletionRequest;
+          if (req != null && (isAccepted || isRejected)) {
+            handleDeletionResult(isAccepted, req);
+          }
 
           return SafeArea(
             child: Padding(

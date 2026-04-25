@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:country_picker/country_picker.dart';
-import '../utils/day_utils.dart';
 import '../gen_l10n/app_localizations.dart';
 
 class EditProfileScreen extends StatefulWidget {

@@ -341,7 +341,7 @@ class _MatchHistoryScreenState extends State<MatchHistoryScreen> {
                           ),
                         ),
                         Row(
-                          children: (rawSets as List).map<Widget>((set) {
+                          children: rawSets.map<Widget>((set) {
                             final p1 = set['p1'] ?? 0;
                             final p2 = set['p2'] ?? 0;
                             final won = p1 > p2;
@@ -377,7 +377,7 @@ class _MatchHistoryScreenState extends State<MatchHistoryScreen> {
                           ),
                         ),
                         Row(
-                          children: (rawSets as List).map<Widget>((set) {
+                          children: rawSets.map<Widget>((set) {
                             final p1 = set['p1'] ?? 0;
                             final p2 = set['p2'] ?? 0;
                             final won = p2 > p1;

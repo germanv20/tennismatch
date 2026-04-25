@@ -187,7 +187,7 @@ class _LogDoublesMatchScreenState extends State<LogDoublesMatchScreen> {
       }
 
       formattedSets.add(data.toMap());
-      if (p1 > p2) team1Wins++; else team2Wins++;
+      if (p1 > p2) { team1Wins++; } else { team2Wins++; }
     }
 
     if (formattedSets.isEmpty) {

@@ -92,13 +92,6 @@ class MatchCard extends StatelessWidget {
 
     final bool isWin = winnerUid == currentUserUid;
 
-    final currentUid = currentUserUid;
-
-    final dr = deletionRequest;
-
-    final isRequester = dr != null && dr['requestedBy'] == currentUid;
-    final status = dr != null ? dr['status'] : null;
-
     final badge = Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(

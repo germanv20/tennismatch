@@ -242,8 +242,8 @@ class _AddMatchResultScreenState extends State<AddMatchResultScreen> {
 
     if (!mounted) return;
     setState(() {
-      player1Name = (results[0].data() as Map<String, dynamic>?)?['name'] ?? 'Player 1';
-      player2Name = (results[1].data() as Map<String, dynamic>?)?['name'] ?? 'Player 2';
+      player1Name = results[0].data()?['name'] as String? ?? 'Player 1';
+      player2Name = results[1].data()?['name'] as String? ?? 'Player 2';
     });
   }
 

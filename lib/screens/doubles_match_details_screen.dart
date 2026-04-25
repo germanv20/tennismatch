@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:tennismatch/gen_l10n/app_localizations.dart';
 
 class DoublesMatchDetailsScreen extends StatelessWidget {
@@ -28,18 +27,6 @@ class DoublesMatchDetailsScreen extends StatelessWidget {
     required this.duration,
     required this.matchDate,
   });
-
-  String _formatScore() {
-    return sets.map((s) {
-      final p1 = s['p1'] as int;
-      final p2 = s['p2'] as int;
-      if (s['tb1'] != null && s['tb2'] != null) {
-        final loserTb = p1 > p2 ? s['tb2'] : s['tb1'];
-        return '$p1-$p2 ($loserTb)';
-      }
-      return '$p1-$p2';
-    }).join(', ');
-  }
 
   Future<void> _deleteMatch(BuildContext context, AppLocalizations loc) async {
     final confirm = await showDialog<bool>(
@@ -81,16 +68,6 @@ class DoublesMatchDetailsScreen extends StatelessWidget {
 
     final team1Label = '$team1Player1 / $team1Player2';
     final team2Label = '$team2Player1 / $team2Player2';
-
-    int team1SetsWon = 0;
-    int team2SetsWon = 0;
-    for (var set in sets) {
-      if ((set['p1'] ?? 0) > (set['p2'] ?? 0)) {
-        team1SetsWon++;
-      } else {
-        team2SetsWon++;
-      }
-    }
 
     return Scaffold(
       appBar: AppBar(
