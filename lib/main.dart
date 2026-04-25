@@ -1,3 +1,4 @@
+import 'dart:ui' show PlatformDispatcher;
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:tennismatch/gen_l10n/app_localizations.dart';
@@ -6,7 +7,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:country_picker/country_picker.dart';
 import 'firebase_options.dart';
 import 'screens/match_chat_screen.dart';
 import 'screens/home_screen.dart';
@@ -52,7 +52,6 @@ class MyApp extends StatelessWidget {
 
       localizationsDelegates: const [
         AppLocalizations.delegate,
-        CountryLocalizations.delegate,
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
@@ -272,6 +271,11 @@ class _AuthTestState extends State<AuthTest> {
     if (!existing.containsKey('city')) toWrite['city'] = null;
     if (!existing.containsKey('country')) toWrite['country'] = null;
 
+    // Always update locale so Cloud Functions send notifications
+    // in the user's device language
+    final locale = PlatformDispatcher.instance.locale.languageCode;
+    toWrite['locale'] = locale;
+
     if (toWrite.isNotEmpty) {
       // merge: true so we never wipe fields not in toWrite
       await ref.set(toWrite, SetOptions(merge: true));
@@ -324,22 +328,43 @@ class _AuthTestState extends State<AuthTest> {
     return Row(
       children: [
         Container(
-          padding: const EdgeInsets.all(8),
+          padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.2),
+            color: Colors.white.withValues(alpha: 0.25),
             shape: BoxShape.circle,
+            border: Border.all(
+              color: Colors.white.withValues(alpha: 0.3),
+              width: 1,
+            ),
           ),
           child: Icon(icon, color: Colors.white, size: 20),
         ),
-        const SizedBox(width: 12),
+        const SizedBox(width: 14),
         Expanded(
           child: Text(
             text,
-            style: const TextStyle(color: Colors.white, fontSize: 14),
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 14,
+              height: 1.3,
+            ),
           ),
         ),
       ],
     );
+  }
+
+  // Cache the ensureUserDocument future so FutureBuilder doesn't
+  // re-call it on every rebuild — only re-runs when user UID changes
+  Future<void>? _ensureFuture;
+  String? _ensureUid;
+
+  Future<void> _getEnsureFuture(User user) {
+    if (_ensureUid != user.uid) {
+      _ensureUid = user.uid;
+      _ensureFuture = ensureUserDocument(user);
+    }
+    return _ensureFuture!;
   }
 
   @override
@@ -360,182 +385,395 @@ class _AuthTestState extends State<AuthTest> {
           final loc = AppLocalizations.of(context)!;
 
           return Scaffold(
-            body: Container(
-              width: double.infinity,
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Color(0xFF1B5E20), Color(0xFF66BB6A)],
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
+            body: Stack(
+              children: [
+                // ── Background gradient ──
+                Container(
+                  width: double.infinity,
+                  height: double.infinity,
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [Color(0xFF0D3B1E), Color(0xFF1B5E20), Color(0xFF2E7D32)],
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      stops: [0.0, 0.5, 1.0],
+                    ),
+                  ),
                 ),
-              ),
-              child: SafeArea(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: Column(
-                    children: [
 
-                      const SizedBox(height: 40),
+                // ── Tennis court lines at bottom ──
+                Positioned(
+                  bottom: 0,
+                  left: 0,
+                  right: 0,
+                  child: CustomPaint(
+                    size: const Size(double.infinity, 180),
+                    painter: _CourtLinesPainter(),
+                  ),
+                ),
 
-                      Column(
-                        children: const [
-                          Icon(Icons.sports_tennis, size: 90, color: Colors.white),
-                          SizedBox(height: 16),
-                          Text(
-                            "TennisMatch",
-                            style: TextStyle(
-                              fontSize: 32,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                              letterSpacing: 1.2,
-                            ),
-                          ),
-                        ],
-                      ),
+                // ── Main content ──
+                SafeArea(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 28),
+                    child: Column(
+                      children: [
 
-                      const SizedBox(height: 12),
+                        const SizedBox(height: 48),
 
-                      Text(
-                        loc.loginSubtitle,
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          color: Colors.white70,
-                        ),
-                      ),
-
-                      const SizedBox(height: 40),
-
-                      Container(
-                        padding: const EdgeInsets.all(20),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Column(
+                        // ── Logo + Title ──
+                        Column(
                           children: [
-                            _featureItem(
-                              icon: Icons.sports_tennis,
-                              text: loc.featureMatchByLevel,
+                            // Custom tennis ball logo
+                            CustomPaint(
+                              size: const Size(100, 100),
+                              painter: _TennisBallPainter(),
                             ),
-                            const SizedBox(height: 16),
-                            _featureItem(
-                              icon: Icons.calendar_today,
-                              text: loc.featureAvailability,
-                            ),
-                            const SizedBox(height: 16),
-                            _featureItem(
-                              icon: Icons.chat_bubble,
-                              text: loc.featureChat,
+                            const SizedBox(height: 20),
+                            const Text(
+                              "TennisMatch",
+                              style: TextStyle(
+                                fontSize: 36,
+                                fontWeight: FontWeight.w800,
+                                color: Colors.white,
+                                letterSpacing: 0.5,
+                                height: 1.0,
+                              ),
                             ),
                           ],
                         ),
-                      ),
 
-                      const Spacer(),
+                        const SizedBox(height: 12),
 
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: signInWithGoogle,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.white,
-                            foregroundColor: Colors.black87,
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(14),
-                            ),
-                            elevation: 3,
+                        // ── Tagline ──
+                        Text(
+                          loc.loginSubtitle,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            fontSize: 15,
+                            color: Colors.white70,
+                            fontStyle: FontStyle.italic,
+                            height: 1.4,
                           ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
+                        ),
+
+                        const SizedBox(height: 36),
+
+                        // ── Feature card ──
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20, vertical: 22),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: Colors.white.withValues(alpha: 0.2),
+                              width: 1,
+                            ),
+                          ),
+                          child: Column(
                             children: [
-                              Image.network(
-                                "https://developers.google.com/identity/images/g-logo.png",
-                                height: 22,
+                              _featureItem(
+                                icon: Icons.add_circle_outline,
+                                text: loc.featureRecord,
                               ),
-                              const SizedBox(width: 12),
-                              Text(
-                                loc.signInWithGoogle,
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600,
-                                ),
+                              const SizedBox(height: 16),
+                              _featureItem(
+                                icon: Icons.people_outline,
+                                text: loc.featureMatchByLevel,
+                              ),
+                              const SizedBox(height: 16),
+                              _featureItem(
+                                icon: Icons.calendar_today_outlined,
+                                text: loc.featureAvailability,
+                              ),
+                              const SizedBox(height: 16),
+                              _featureItem(
+                                icon: Icons.chat_bubble_outline,
+                                text: loc.featureChat,
                               ),
                             ],
                           ),
                         ),
-                      ),
 
-                      const SizedBox(height: 12),
+                        const Spacer(),
 
-                      Text(
-                        loc.loginDisclaimer,
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: Colors.white60,
+                        // ── Google Sign-In button ──
+                        Container(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(14),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.25),
+                                blurRadius: 12,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton(
+                              onPressed: signInWithGoogle,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.white,
+                                foregroundColor: Colors.black87,
+                                padding: const EdgeInsets.symmetric(vertical: 16),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(14),
+                                ),
+                                elevation: 0,
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Image.network(
+                                    "https://developers.google.com/identity/images/g-logo.png",
+                                    height: 22,
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Text(
+                                    loc.signInWithGoogle,
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
                         ),
-                      ),
 
-                      const SizedBox(height: 20),
-                    ],
+                        const SizedBox(height: 14),
+
+                        Text(
+                          loc.loginDisclaimer,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            fontSize: 11,
+                            color: Colors.white38,
+                          ),
+                        ),
+
+                        const SizedBox(height: 24),
+                      ],
+                    ),
                   ),
                 ),
-              ),
+              ],
             ),
           );
         }
 
-        return StreamBuilder<DocumentSnapshot>(
-          stream: FirebaseFirestore.instance
-              .collection('users')
-              .doc(user.uid)
-              .snapshots(),
-          builder: (context, userSnapshot) {
-
-            if (userSnapshot.connectionState == ConnectionState.waiting) {
+        // Use FutureBuilder to wait for ensureUserDocument to finish
+        // writing before streaming — prevents the CompleteProfileScreen flash
+        return FutureBuilder<void>(
+          future: _getEnsureFuture(user),
+          builder: (context, ensureSnapshot) {
+            if (ensureSnapshot.connectionState != ConnectionState.done) {
               return const Scaffold(
                 body: Center(child: CircularProgressIndicator()),
               );
             }
 
-            if (!userSnapshot.hasData || !userSnapshot.data!.exists) {
-              return Scaffold(
-                body: Center(
-                  child: Text(AppLocalizations.of(context)!.userProfileNotFound),
-                ),
-              );
-            }
+            return StreamBuilder<DocumentSnapshot>(
+              stream: FirebaseFirestore.instance
+                  .collection('users')
+                  .doc(user.uid)
+                  .snapshots(),
+              builder: (context, userSnapshot) {
 
-            final rawData = userSnapshot.data!.data();
-            if (rawData == null) {
-              return const Scaffold(
-                body: Center(child: CircularProgressIndicator()),
-              );
-            }
+                if (userSnapshot.connectionState == ConnectionState.waiting) {
+                  return const Scaffold(
+                    body: Center(child: CircularProgressIndicator()),
+                  );
+                }
 
-            final Map<String, dynamic> data = rawData as Map<String, dynamic>;
+                if (!userSnapshot.hasData || !userSnapshot.data!.exists) {
+                  return Scaffold(
+                    body: Center(
+                      child: Text(AppLocalizations.of(context)!.userProfileNotFound),
+                    ),
+                  );
+                }
 
-            bool isEmpty(value) => value == null || value.toString().isEmpty;
+                final rawData = userSnapshot.data!.data();
+                if (rawData == null) {
+                  return const Scaffold(
+                    body: Center(child: CircularProgressIndicator()),
+                  );
+                }
 
-            final isProfileIncomplete =
-                isEmpty(data['tennisLevel']) ||
-                data['birthDate'] == null ||
-                isEmpty(data['city']) ||
-                isEmpty(data['country']);
+                final Map<String, dynamic> data = rawData as Map<String, dynamic>;
 
-            if (isProfileIncomplete) {
-              return const CompleteProfileScreen();
-            }
+                bool isEmpty(value) => value == null || value.toString().isEmpty;
 
-            return HomeScreen(
-              currentUser: user,
-              userData: data,
+                final isProfileIncomplete =
+                    isEmpty(data['tennisLevel']) ||
+                    data['birthDate'] == null ||
+                    isEmpty(data['city']) ||
+                    isEmpty(data['country']);
+
+                if (isProfileIncomplete) {
+                  return const CompleteProfileScreen();
+                }
+
+                return HomeScreen(
+                  currentUser: user,
+                  userData: data,
+                );
+              },
             );
           },
         );
       },
     );
   }
+}
+
+
+// ══════════════════════════════════════════════════════════════
+// Tennis Ball Logo Painter
+// Draws a realistic tennis ball with curved seam lines
+// ══════════════════════════════════════════════════════════════
+class _TennisBallPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = size.width / 2;
+
+    // ── Outer glow / shadow ──
+    final shadowPaint = Paint()
+      ..color = Colors.black.withValues(alpha: 0.35)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 10);
+    canvas.drawCircle(center + const Offset(0, 4), radius, shadowPaint);
+
+    // ── Ball body — tennis yellow-green ──
+    final ballPaint = Paint()
+      ..shader = RadialGradient(
+        center: const Alignment(-0.3, -0.3),
+        radius: 0.9,
+        colors: const [Color(0xFFCCE040), Color(0xFFADC417)],
+      ).createShader(Rect.fromCircle(center: center, radius: radius));
+    canvas.drawCircle(center, radius, ballPaint);
+
+    // ── Subtle highlight (top-left shine) ──
+    final highlightPaint = Paint()
+      ..shader = RadialGradient(
+        center: const Alignment(-0.4, -0.5),
+        radius: 0.5,
+        colors: [
+          Colors.white.withValues(alpha: 0.35),
+          Colors.white.withValues(alpha: 0.0),
+        ],
+      ).createShader(Rect.fromCircle(center: center, radius: radius));
+    canvas.drawCircle(center, radius, highlightPaint);
+
+    // ── Seam lines — white curved paths ──
+    final seamPaint = Paint()
+      ..color = Colors.white.withValues(alpha: 0.9)
+      ..strokeWidth = size.width * 0.045
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round;
+
+    // Left seam — S-curve on left side
+    final leftSeam = Path();
+    leftSeam.moveTo(center.dx - radius * 0.1, center.dy - radius * 0.85);
+    leftSeam.cubicTo(
+      center.dx - radius * 0.75, center.dy - radius * 0.55,
+      center.dx - radius * 0.75, center.dy + radius * 0.55,
+      center.dx - radius * 0.1, center.dy + radius * 0.85,
+    );
+
+    // Right seam — mirror S-curve on right side
+    final rightSeam = Path();
+    rightSeam.moveTo(center.dx + radius * 0.1, center.dy - radius * 0.85);
+    rightSeam.cubicTo(
+      center.dx + radius * 0.75, center.dy - radius * 0.55,
+      center.dx + radius * 0.75, center.dy + radius * 0.55,
+      center.dx + radius * 0.1, center.dy + radius * 0.85,
+    );
+
+    // Clip seams to ball circle
+    canvas.save();
+    canvas.clipPath(Path()..addOval(
+      Rect.fromCircle(center: center, radius: radius - 1),
+    ));
+    canvas.drawPath(leftSeam, seamPaint);
+    canvas.drawPath(rightSeam, seamPaint);
+    canvas.restore();
+
+    // ── Thin dark border ──
+    final borderPaint = Paint()
+      ..color = Colors.black.withValues(alpha: 0.15)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.5;
+    canvas.drawCircle(center, radius - 0.5, borderPaint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+// ══════════════════════════════════════════════════════════════
+// Tennis Court Lines Painter
+// Draws subtle court line pattern at the bottom of the screen
+// ══════════════════════════════════════════════════════════════
+class _CourtLinesPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = Colors.white.withValues(alpha: 0.06)
+      ..strokeWidth = 1.5
+      ..style = PaintingStyle.stroke;
+
+    // Baseline
+    canvas.drawLine(
+      Offset(0, size.height * 0.85),
+      Offset(size.width, size.height * 0.85),
+      paint,
+    );
+
+    // Service line
+    canvas.drawLine(
+      Offset(0, size.height * 0.55),
+      Offset(size.width, size.height * 0.55),
+      paint,
+    );
+
+    // Net line
+    final netPaint = Paint()
+      ..color = Colors.white.withValues(alpha: 0.09)
+      ..strokeWidth = 2.5
+      ..style = PaintingStyle.stroke;
+    canvas.drawLine(
+      Offset(0, size.height * 0.25),
+      Offset(size.width, size.height * 0.25),
+      netPaint,
+    );
+
+    // Center service line (vertical)
+    canvas.drawLine(
+      Offset(size.width / 2, size.height * 0.25),
+      Offset(size.width / 2, size.height * 0.85),
+      paint,
+    );
+
+    // Left singles sideline
+    canvas.drawLine(
+      Offset(size.width * 0.12, 0),
+      Offset(size.width * 0.12, size.height),
+      paint,
+    );
+
+    // Right singles sideline
+    canvas.drawLine(
+      Offset(size.width * 0.88, 0),
+      Offset(size.width * 0.88, size.height),
+      paint,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

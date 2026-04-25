@@ -12,16 +12,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get appTitle => 'Tennis Match';
 
   @override
-  String get loginSubtitle => 'Find tennis partners near you';
+  String get loginSubtitle => 'Track every match. Improve every day.';
 
   @override
-  String get featureMatchByLevel => 'Match with players at your level';
+  String get featureMatchByLevel => 'Find players at your level';
 
   @override
   String get featureAvailability => 'Play based on your availability';
 
   @override
-  String get featureChat => 'Chat and organize matches';
+  String get featureChat => 'Chat and coordinate with your opponents';
 
   @override
   String get loginTitle => 'TennisMatch Login';
@@ -748,4 +748,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get doublesAvgDuration => 'Average Duration';
+
+  @override
+  String get featureRecord => 'Record singles and doubles matches';
 }

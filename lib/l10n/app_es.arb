@@ -1,10 +1,10 @@
 {
   "appTitle": "Tennis Match",
 
-  "loginSubtitle": "Encuentra compañeros de tenis cerca de ti",
+  "loginSubtitle": "Registra cada partido. Mejora cada día.",
   "featureMatchByLevel": "Encuentra jugadores de tu nivel",
   "featureAvailability": "Juega según tu disponibilidad",
-  "featureChat": "Chatea y organiza partidos",
+  "featureChat": "Chatea y coordina con tus oponentes",
 
   "loginTitle": "Inicio de sesión",
   "signInWithGoogle": "Iniciar sesión con Google",
@@ -289,5 +289,6 @@
   "doublesWinRate": "Porcentaje de victorias",
   "doublesSetsWon": "Sets ganados",
   "doublesSetsLost": "Sets perdidos",
-  "doublesAvgDuration": "Duración promedio"
+  "doublesAvgDuration": "Duración promedio",
+  "featureRecord": "Registra partidos individuales y de dobles"
 }

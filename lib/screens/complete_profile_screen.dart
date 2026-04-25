@@ -85,6 +85,16 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
     try {
       final uid = FirebaseAuth.instance.currentUser!.uid;
 
+      // ── Claim mechanic: run BEFORE profile update ──
+      // The profile update triggers navigation to HomeScreen via
+      // main.dart's FutureBuilder — if claim runs after, it gets
+      // interrupted mid-execution. Run it first while screen is stable.
+      final normalisedPhone =
+          phoneNumber != null ? _normalisePhone(phoneNumber!) : null;
+      if (normalisedPhone != null) {
+        await _claimGuestMatches(uid, normalisedPhone);
+      }
+
       final Map<String, dynamic> updateData = {
         'birthDate': Timestamp.fromDate(birthdate!),
         'age': getAge(birthdate!),
@@ -92,14 +102,10 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
         'country': country,
         'tennisLevel': tennisLevel,
         'availability': availability,
-        // Always write name here — covers cases where Google
-        // displayName was null during ensureUserDocument
         if (name != null && name!.isNotEmpty) 'name': name,
       };
 
       // Only store phone if valid E.164 format
-      final normalisedPhone =
-          phoneNumber != null ? _normalisePhone(phoneNumber!) : null;
       if (normalisedPhone != null) {
         updateData['phoneNumber'] = normalisedPhone;
       }
@@ -108,11 +114,6 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
           .collection('users')
           .doc(uid)
           .update(updateData);
-
-      // ── Claim mechanic: link any guest matches to this account ──
-      if (normalisedPhone != null) {
-        await _claimGuestMatches(uid, normalisedPhone);
-      }
 
       if (!mounted) return;
       Navigator.pop(context);
@@ -133,25 +134,21 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
   /// Uses a phoneIndex lookup collection to avoid Firestore security
   /// rule query restrictions on the matches collection.
   Future<void> _claimGuestMatches(String uid, String phone) async {
-    try {
-      // Step 1: Look up match IDs registered under this phone number
-      // phoneIndex/{phone}/matches/{matchId} — readable by any auth user
-      final indexSnapshot = await FirebaseFirestore.instance
-          .collection('phoneIndex')
-          .doc(phone)
-          .collection('matches')
-          .get();
 
+    // Step 1: Look up match IDs registered under this phone number
+    final indexSnapshot = await FirebaseFirestore.instance
+        .collection('phoneIndex')
+        .doc(phone)
+        .collection('matches')
+        .get();
 
-      if (indexSnapshot.docs.isEmpty) {
-          return;
-      }
+    if (indexSnapshot.docs.isEmpty) return;
 
-      // Step 2: Fetch each match document directly by ID
-      // Direct document reads are allowed by isParticipant OR type==guest
-      final List<DocumentSnapshot> matchDocs = [];
-      for (final indexDoc in indexSnapshot.docs) {
-        final matchId = indexDoc.id;
+    // Step 2: Fetch each match document directly by ID
+    final List<DocumentSnapshot> matchDocs = [];
+    for (final indexDoc in indexSnapshot.docs) {
+      final matchId = indexDoc.id;
+      try {
         final matchDoc = await FirebaseFirestore.instance
             .collection('matches')
             .doc(matchId)
@@ -159,26 +156,24 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
         if (matchDoc.exists) {
           final data = matchDoc.data();
           final guest = data?['guestOpponent'] as Map<String, dynamic>?;
-          // Only include unclaimed matches
           if (guest != null && guest['claimedBy'] == null) {
             matchDocs.add(matchDoc);
           }
+        } else {
         }
+      } catch (e) {
       }
+    }
 
+    if (matchDocs.isEmpty) return;
 
-      if (matchDocs.isEmpty) {
-          return;
-      }
-
-      final docs = matchDocs;
-
+    try {
       final batch = FirebaseFirestore.instance.batch();
       int claimedWins = 0;
       int claimedLosses = 0;
       int claimedDuration = 0;
 
-      for (final doc in docs) {
+      for (final doc in matchDocs) {
         final data = doc.data() as Map<String, dynamic>? ?? {};
 
         // The original logger was player1 (p1 = them, p2 = guest/us)
@@ -200,9 +195,18 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
         claimedDuration += duration.toInt();
 
         // Flip sets so p1 = claimant, p2 = original logger
-        final List flippedSets = rawSets
-            .map((s) => {'p1': s['p2'], 'p2': s['p1']})
-            .toList();
+        // Also flip tb1/tb2 to maintain correct tiebreak perspective
+        final List flippedSets = rawSets.map((s) {
+          final flipped = <String, dynamic>{
+            'p1': s['p2'],
+            'p2': s['p1'],
+          };
+          if (s['tb1'] != null && s['tb2'] != null) {
+            flipped['tb1'] = s['tb2'];
+            flipped['tb2'] = s['tb1'];
+          }
+          return flipped;
+        }).toList();
 
         // Mark match as claimed and add claimant to players array
         batch.update(doc.reference, {
@@ -223,7 +227,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
           .doc(uid);
 
       batch.update(userRef, {
-        'matchesPlayed': FieldValue.increment(docs.length),
+        'matchesPlayed': FieldValue.increment(matchDocs.length),
         'totalDuration': FieldValue.increment(claimedDuration),
         'wins': FieldValue.increment(claimedWins),
         'losses': FieldValue.increment(claimedLosses),

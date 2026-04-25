@@ -106,17 +106,30 @@ class _MatchDetailsScreenState extends State<MatchDetailsScreen> {
               onPressed: () async {
                 Navigator.pop(context);
                 if (isAccepted) {
-                  await FirebaseFirestore.instance
-                      .collection('matches')
-                      .doc(widget.matchId)
-                      .delete();
-                  if (!mounted) return;
-                  Navigator.pop(context, true);
+                  try {
+                    await FirebaseFirestore.instance
+                        .collection('matches')
+                        .doc(widget.matchId)
+                        .delete();
+                    if (!mounted) return;
+                    Navigator.pop(context, true);
+                  } catch (e) {
+                    debugPrint('Delete failed: $e');
+                    if (!mounted) return;
+                    hasShownResultDialog = false;
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(loc.somethingWentWrong)),
+                    );
+                  }
                 } else {
-                  await FirebaseFirestore.instance
-                      .collection('matches')
-                      .doc(widget.matchId)
-                      .update({'deletionRequest': FieldValue.delete()});
+                  try {
+                    await FirebaseFirestore.instance
+                        .collection('matches')
+                        .doc(widget.matchId)
+                        .update({'deletionRequest': FieldValue.delete()});
+                  } catch (e) {
+                    debugPrint('Clear deletion request failed: $e');
+                  }
                 }
               },
               child: Text(loc.ok),

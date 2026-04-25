@@ -107,13 +107,13 @@ abstract class AppLocalizations {
   /// No description provided for @loginSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Find tennis partners near you'**
+  /// **'Track every match. Improve every day.'**
   String get loginSubtitle;
 
   /// No description provided for @featureMatchByLevel.
   ///
   /// In en, this message translates to:
-  /// **'Match with players at your level'**
+  /// **'Find players at your level'**
   String get featureMatchByLevel;
 
   /// No description provided for @featureAvailability.
@@ -125,7 +125,7 @@ abstract class AppLocalizations {
   /// No description provided for @featureChat.
   ///
   /// In en, this message translates to:
-  /// **'Chat and organize matches'**
+  /// **'Chat and coordinate with your opponents'**
   String get featureChat;
 
   /// No description provided for @loginTitle.
@@ -1520,6 +1520,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Average Duration'**
   String get doublesAvgDuration;
+
+  /// No description provided for @featureRecord.
+  ///
+  /// In en, this message translates to:
+  /// **'Record singles and doubles matches'**
+  String get featureRecord;
 }
 
 class _AppLocalizationsDelegate

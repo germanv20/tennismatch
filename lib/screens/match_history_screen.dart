@@ -160,12 +160,40 @@ class _MatchHistoryScreenState extends State<MatchHistoryScreen> {
   ) {
     final match = matchDoc.data() as Map<String, dynamic>;
     final guest = match['guestOpponent'] as Map<String, dynamic>? ?? {};
-    final opponentName = guest['name'] ?? loc.guestOpponent;
-    final opponentPhone = guest['phone'] ?? '';
+    // p1 in Firestore is always the match creator (createdBy).
+    // If the current user claimed the match (is not the creator),
+    // flip scores and names so the current user always sees their
+    // own perspective on the left.
+    final createdBy = match['createdBy'] as String? ?? '';
+    final bool userIsCreator = createdBy == currentUid;
+
+    // Creator sees guestOpponent as opponent.
+    // Claimant sees the creator as opponent — name from playerNames.
+    final String opponentName;
+    final String opponentPhone;
+    if (userIsCreator) {
+      opponentName = guest['name'] ?? loc.guestOpponent;
+      opponentPhone = guest['phone'] ?? '';
+    } else {
+      final playerNames = match['playerNames'] as Map<String, dynamic>? ?? {};
+      opponentName = playerNames[createdBy] as String? ?? loc.guestOpponent;
+      opponentPhone = '';
+    }
 
     final rawSets = match['result']?['sets'] ?? [];
-    // Guest matches: p1 is always current user — no flip needed
-    final List sets = List.from(rawSets);
+    final List sets = userIsCreator
+        ? List.from(rawSets)
+        : rawSets.map((s) {
+            final flipped = <String, dynamic>{
+              'p1': s['p2'],
+              'p2': s['p1'],
+            };
+            if (s['tb1'] != null && s['tb2'] != null) {
+              flipped['tb1'] = s['tb2'];
+              flipped['tb2'] = s['tb1'];
+            }
+            return flipped;
+          }).toList();
 
     final location = match['result']?['location'] ?? '';
     final duration = match['result']?['durationMinutes'] ?? 0;
@@ -175,7 +203,11 @@ class _MatchHistoryScreenState extends State<MatchHistoryScreen> {
         matchDateTs != null ? matchDateTs.toDate() : DateTime.now();
 
     final winnerUid = match['winnerUid'] ?? '';
-    final bool currentUserWon = winnerUid == currentUid;
+    // winnerUid stores the creator's UID when they won.
+    // For a claimed match viewed by the claimant, flip the win/loss perspective.
+    final bool currentUserWon = userIsCreator
+        ? winnerUid == currentUid
+        : winnerUid != currentUid;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -193,7 +225,9 @@ class _MatchHistoryScreenState extends State<MatchHistoryScreen> {
                 location: location,
                 duration: duration,
                 matchDate: matchDate,
-                winnerUid: winnerUid,
+                // Pass a synthetic winnerUid from current user's perspective:
+                // if currentUserWon, use currentUid; otherwise use a placeholder
+                winnerUid: currentUserWon ? currentUid : 'opponent',
                 currentUserUid: currentUid,
               ),
             ),

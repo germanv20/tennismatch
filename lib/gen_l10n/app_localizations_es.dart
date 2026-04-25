@@ -12,7 +12,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get appTitle => 'Tennis Match';
 
   @override
-  String get loginSubtitle => 'Encuentra compañeros de tenis cerca de ti';
+  String get loginSubtitle => 'Registra cada partido. Mejora cada día.';
 
   @override
   String get featureMatchByLevel => 'Encuentra jugadores de tu nivel';
@@ -21,7 +21,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get featureAvailability => 'Juega según tu disponibilidad';
 
   @override
-  String get featureChat => 'Chatea y organiza partidos';
+  String get featureChat => 'Chatea y coordina con tus oponentes';
 
   @override
   String get loginTitle => 'Inicio de sesión';
@@ -759,4 +759,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get doublesAvgDuration => 'Duración promedio';
+
+  @override
+  String get featureRecord => 'Registra partidos individuales y de dobles';
 }
