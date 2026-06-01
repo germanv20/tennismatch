@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:tennismatch/gen_l10n/app_localizations.dart';
 import 'dart:async';
-
-
-
 
 class MatchChatScreen extends StatefulWidget {
   final String matchId;
@@ -25,8 +23,8 @@ class MatchChatScreen extends StatefulWidget {
   State<MatchChatScreen> createState() => _MatchChatScreenState();
 }
 
-
-class _MatchChatScreenState extends State<MatchChatScreen> {
+class _MatchChatScreenState extends State<MatchChatScreen>
+    with WidgetsBindingObserver {
   final TextEditingController _messageController = TextEditingController();
   final String currentUid = FirebaseAuth.instance.currentUser!.uid;
   late final ScrollController _scrollController = ScrollController();
@@ -36,25 +34,54 @@ class _MatchChatScreenState extends State<MatchChatScreen> {
   @override
   void initState() {
     super.initState();
-
+    WidgetsBinding.instance.addObserver(this);
     setActiveChat(true);
-
+    _clearNotificationsForThisChat();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       markMessagesAsRead();
     });
   }
 
+  /// Clear any pending notifications for this chat using FCM delivery channel.
+  /// FCM notifications with tag "chat_{matchId}" are replaced/dismissed
+  /// by sending a silent message with the same tag — this is handled
+  /// natively by Android when the same tag is reused.
+  /// The simplest approach without flutter_local_notifications is to
+  /// use the Android notification manager via platform channel, but
+  /// since we control the tag on the server, opening the chat is enough
+  /// signal — the next notification will replace the old ones.
+  ///
+  /// For now: mark all as read in Firestore so the badge clears,
+  /// and set activeChatUsers so the server skips future notifications.
+  Future<void> _clearNotificationsForThisChat() async {
+    // activeChatUsers is already set by setActiveChat(true) above.
+    // This combined with markMessagesAsRead() gives the full clearing effect:
+    // - New messages won't generate notifications (activeChatUsers guard)
+    // - Unread badge clears (markMessagesAsRead)
+    // - Existing notifications on the shade: Android replaces them on next
+    //   send due to the tag, or user dismisses manually.
+    await markMessagesAsRead();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // Re-mark as active when user returns to app with chat open
+    if (state == AppLifecycleState.resumed) {
+      setActiveChat(true);
+      markMessagesAsRead();
+    } else if (state == AppLifecycleState.paused) {
+      setActiveChat(false);
+    }
+  }
+
   void handleTyping(String value) {
     if (value.isNotEmpty) {
       setTyping(true);
-
-      // Reset timer every keystroke
       _typingTimer?.cancel();
       _typingTimer = Timer(const Duration(seconds: 3), () {
         setTyping(false);
       });
     } else {
-      // If text cleared, stop typing immediately
       _typingTimer?.cancel();
       setTyping(false);
     }
@@ -70,36 +97,26 @@ class _MatchChatScreenState extends State<MatchChatScreen> {
         .collection('matches')
         .doc(widget.matchId);
 
-    // 1️⃣ Add message to subcollection
     try {
-      await matchRef
-          .collection('messages')
-          .add({
+      await matchRef.collection('messages').add({
         'text': text,
         'senderUid': currentUid,
         'createdAt': FieldValue.serverTimestamp(),
-        'readBy': {
-          currentUid: true,
-        },
+        'readBy': {currentUid: true},
       });
 
-      // 2️⃣ Update parent match document (NEW PART 🔥)
       await matchRef.update({
-        'lastMessage': text.trim().length > 50
-            ? text.trim().substring(0, 50)
-            : text.trim(),
+        'lastMessage': text.length > 50 ? text.substring(0, 50) : text,
         'lastMessageTime': FieldValue.serverTimestamp(),
         'lastSenderUid': currentUid,
       });
 
-      
       _typingTimer?.cancel();
       await setTyping(false);
     } catch (e) {
-      debugPrint("❌ sendMessage error: $e");
+      debugPrint('❌ sendMessage error: $e');
     }
   }
-
 
   String formatTime(DateTime dateTime) {
     final hour = dateTime.hour.toString().padLeft(2, '0');
@@ -108,25 +125,18 @@ class _MatchChatScreenState extends State<MatchChatScreen> {
   }
 
   bool isSameDay(DateTime a, DateTime b) {
-    return a.year == b.year &&
-        a.month == b.month &&
-        a.day == b.day;
+    return a.year == b.year && a.month == b.month && a.day == b.day;
   }
 
   String formatDateLabel(DateTime date, AppLocalizations loc) {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final yesterday = today.subtract(const Duration(days: 1));
-
     final messageDate = DateTime(date.year, date.month, date.day);
 
-    if (messageDate == today) {
-      return loc.today;
-    } else if (messageDate == yesterday) {
-      return loc.yesterday;
-    } else {
-      return '${date.day}/${date.month}/${date.year}';
-    }
+    if (messageDate == today) return loc.today;
+    if (messageDate == yesterday) return loc.yesterday;
+    return '${date.day}/${date.month}/${date.year}';
   }
 
   Future<void> markMessagesAsRead() async {
@@ -141,9 +151,7 @@ class _MatchChatScreenState extends State<MatchChatScreen> {
     bool hasUpdates = false;
 
     for (final doc in query.docs) {
-      final readBy = Map<String, dynamic>.from(
-        doc.data()['readBy'] ?? {}
-      );
+      final readBy = Map<String, dynamic>.from(doc.data()['readBy'] ?? {});
       if (readBy[currentUid] != true) {
         batch.update(doc.reference, {'readBy.$currentUid': true});
         hasUpdates = true;
@@ -157,35 +165,30 @@ class _MatchChatScreenState extends State<MatchChatScreen> {
     await FirebaseFirestore.instance
         .collection('matches')
         .doc(widget.matchId)
-        .update({
-      'typing.$currentUid': isTyping,
-    });
+        .update({'typing.$currentUid': isTyping});
   }
-
-  @override
-    void dispose() {
-      _typingTimer?.cancel();
-      setActiveChat(false);
-      _scrollController.dispose();
-      // setTyping(false); // ensure typing stops if user leaves
-      _messageController.dispose();
-      super.dispose();
-    }
 
   Future<void> setActiveChat(bool isActive) async {
     await FirebaseFirestore.instance
         .collection('matches')
         .doc(widget.matchId)
-        .update({
-      'activeChatUsers.$currentUid': isActive ? true : false,
-    });
+        .update({'activeChatUsers.$currentUid': isActive});
   }
 
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _typingTimer?.cancel();
+    setActiveChat(false);
+    _scrollController.dispose();
+    _messageController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context)!;
-  
+
     return Scaffold(
       appBar: AppBar(
         title: Row(
@@ -200,15 +203,14 @@ class _MatchChatScreenState extends State<MatchChatScreen> {
                   : null,
             ),
             const SizedBox(width: 8),
-            Text(
-              widget.otherPlayerName,
-              style: const TextStyle(fontSize: 16),
-            ),
+            Text(widget.otherPlayerName,
+                style: const TextStyle(fontSize: 16)),
           ],
         ),
       ),
       body: Column(
         children: [
+          // Typing indicator
           StreamBuilder<DocumentSnapshot>(
             stream: FirebaseFirestore.instance
                 .collection('matches')
@@ -216,18 +218,19 @@ class _MatchChatScreenState extends State<MatchChatScreen> {
                 .snapshots(),
             builder: (context, snapshot) {
               if (!snapshot.hasData) return const SizedBox();
-
-              final data = snapshot.data!.data() as Map<String, dynamic>;
-              final typing = Map<String, dynamic>.from(data['typing'] ?? {});
-              final isOtherTyping = typing[widget.otherPlayerUid] == true;
-
+              final data =
+                  snapshot.data!.data() as Map<String, dynamic>? ?? {};
+              final typing =
+                  Map<String, dynamic>.from(data['typing'] ?? {});
+              final isOtherTyping =
+                  typing[widget.otherPlayerUid] == true;
               if (!isOtherTyping) return const SizedBox();
-
               return Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                 child: Row(
                   children: [
-                    const SizedBox(width: 40), // align with avatar
+                    const SizedBox(width: 40),
                     Text(
                       loc.isTyping(widget.otherPlayerName),
                       style: const TextStyle(
@@ -241,6 +244,7 @@ class _MatchChatScreenState extends State<MatchChatScreen> {
               );
             },
           ),
+
           // Messages list
           Expanded(
             child: StreamBuilder<QuerySnapshot>(
@@ -268,8 +272,9 @@ class _MatchChatScreenState extends State<MatchChatScreen> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.chat_bubble_outline, size: 50, color: Colors.grey),
-                        SizedBox(height: 10),
+                        const Icon(Icons.chat_bubble_outline,
+                            size: 50, color: Colors.grey),
+                        const SizedBox(height: 10),
                         Text(loc.noMessagesYet),
                       ],
                     ),
@@ -278,15 +283,11 @@ class _MatchChatScreenState extends State<MatchChatScreen> {
 
                 WidgetsBinding.instance.addPostFrameCallback((_) {
                   if (_scrollController.hasClients) {
-                    _scrollController.animateTo(
-                      0,
-                      duration: const Duration(milliseconds: 250),
-                      curve: Curves.easeOut,
-                    );
+                    _scrollController.animateTo(0,
+                        duration: const Duration(milliseconds: 250),
+                        curve: Curves.easeOut);
                   }
                 });
-
-
 
                 return ListView.builder(
                   controller: _scrollController,
@@ -296,24 +297,24 @@ class _MatchChatScreenState extends State<MatchChatScreen> {
                     final data =
                         messages[index].data() as Map<String, dynamic>;
                     final isMe = data['senderUid'] == currentUid;
-                    final readBy = Map<String, dynamic>.from(data['readBy'] ?? {});
-                    final isReadByOther = readBy[widget.otherPlayerUid] == true;
-                    final Timestamp? timestamp = data['createdAt'] as Timestamp?;
+                    final readBy = Map<String, dynamic>.from(
+                        data['readBy'] ?? {});
+                    final isReadByOther =
+                        readBy[widget.otherPlayerUid] == true;
+                    final Timestamp? timestamp =
+                        data['createdAt'] as Timestamp?;
                     final DateTime? dateTime = timestamp?.toDate();
 
                     bool showDateSeparator = false;
-
                     if (dateTime != null) {
                       if (index == messages.length - 1) {
-                        // Oldest message → always show date
                         showDateSeparator = true;
                       } else {
-                        final prevData =
-                            messages[index + 1].data() as Map<String, dynamic>;
+                        final prevData = messages[index + 1].data()
+                            as Map<String, dynamic>;
                         final prevTimestamp =
                             prevData['createdAt'] as Timestamp?;
                         final prevDateTime = prevTimestamp?.toDate();
-
                         if (prevDateTime != null &&
                             !isSameDay(dateTime, prevDateTime)) {
                           showDateSeparator = true;
@@ -325,7 +326,8 @@ class _MatchChatScreenState extends State<MatchChatScreen> {
                       children: [
                         if (showDateSeparator && dateTime != null)
                           Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            padding:
+                                const EdgeInsets.symmetric(vertical: 8),
                             child: Text(
                               formatDateLabel(dateTime, loc),
                               style: const TextStyle(
@@ -335,36 +337,40 @@ class _MatchChatScreenState extends State<MatchChatScreen> {
                               ),
                             ),
                           ),
-
                         Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+                          padding: const EdgeInsets.symmetric(
+                              vertical: 4, horizontal: 8),
                           child: Row(
-                            mainAxisAlignment:
-                                isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
+                            mainAxisAlignment: isMe
+                                ? MainAxisAlignment.end
+                                : MainAxisAlignment.start,
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              // Avatar (only for other player)
-                              if (!isMe)
+                              if (!isMe) ...[
                                 CircleAvatar(
                                   radius: 16,
-                                  backgroundImage: widget.otherPlayerPhotoUrl.isNotEmpty
-                                      ? NetworkImage(widget.otherPlayerPhotoUrl)
-                                      : null,
-                                  child: widget.otherPlayerPhotoUrl.isEmpty
-                                      ? const Icon(Icons.person, size: 16)
-                                      : null,
+                                  backgroundImage:
+                                      widget.otherPlayerPhotoUrl.isNotEmpty
+                                          ? NetworkImage(
+                                              widget.otherPlayerPhotoUrl)
+                                          : null,
+                                  child:
+                                      widget.otherPlayerPhotoUrl.isEmpty
+                                          ? const Icon(Icons.person,
+                                              size: 16)
+                                          : null,
                                 ),
-
-                              if (!isMe) const SizedBox(width: 8),
-
+                                const SizedBox(width: 8),
+                              ],
                               Column(
-                                crossAxisAlignment:
-                                    isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+                                crossAxisAlignment: isMe
+                                    ? CrossAxisAlignment.end
+                                    : CrossAxisAlignment.start,
                                 children: [
-                                  // Sender name (only for other player)
                                   if (!isMe)
                                     Padding(
-                                      padding: const EdgeInsets.only(bottom: 2),
+                                      padding: const EdgeInsets.only(
+                                          bottom: 2),
                                       child: Text(
                                         widget.otherPlayerName,
                                         style: const TextStyle(
@@ -374,34 +380,33 @@ class _MatchChatScreenState extends State<MatchChatScreen> {
                                         ),
                                       ),
                                     ),
-
-                                  // Message bubble
                                   Container(
                                     padding: const EdgeInsets.symmetric(
-                                      vertical: 10,
-                                      horizontal: 14,
-                                    ),
+                                        vertical: 10, horizontal: 14),
                                     constraints: BoxConstraints(
-                                      maxWidth:
-                                          MediaQuery.of(context).size.width * 0.75,
+                                      maxWidth: MediaQuery.of(context)
+                                              .size
+                                              .width *
+                                          0.75,
                                     ),
                                     decoration: BoxDecoration(
                                       color: isMe
                                           ? Colors.blueAccent
                                           : Colors.grey.shade300,
-                                      borderRadius: BorderRadius.circular(16),
+                                      borderRadius:
+                                          BorderRadius.circular(16),
                                     ),
                                     child: Text(
                                       data['text'] ?? '',
                                       style: TextStyle(
-                                        color: isMe ? Colors.white : Colors.black,
+                                        color: isMe
+                                            ? Colors.white
+                                            : Colors.black,
                                         fontSize: 16,
                                       ),
                                     ),
                                   ),
                                   const SizedBox(height: 4),
-
-                                  // Timestamp
                                   Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
@@ -413,18 +418,20 @@ class _MatchChatScreenState extends State<MatchChatScreen> {
                                             color: Colors.grey,
                                           ),
                                         ),
-
-                                      if (isMe) const SizedBox(width: 6),
-
-                                      if (isMe)
+                                      if (isMe) ...[
+                                        const SizedBox(width: 6),
                                         Icon(
-                                          isReadByOther ? Icons.done_all : Icons.done,
+                                          isReadByOther
+                                              ? Icons.done_all
+                                              : Icons.done,
                                           size: 16,
-                                          color: isReadByOther ? Colors.blue : Colors.grey,
+                                          color: isReadByOther
+                                              ? Colors.blue
+                                              : Colors.grey,
                                         ),
+                                      ],
                                     ],
                                   ),
-                                  
                                 ],
                               ),
                             ],
@@ -432,7 +439,6 @@ class _MatchChatScreenState extends State<MatchChatScreen> {
                         ),
                       ],
                     );
-
                   },
                 );
               },
@@ -453,9 +459,7 @@ class _MatchChatScreenState extends State<MatchChatScreen> {
                       await setTyping(false);
                       sendMessage();
                     },
-                    decoration: InputDecoration(
-                      hintText: loc.typeMessage,
-                    ),
+                    decoration: InputDecoration(hintText: loc.typeMessage),
                   ),
                 ),
                 IconButton(

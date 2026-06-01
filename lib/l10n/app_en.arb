@@ -290,5 +290,10 @@
   "doublesSetsWon": "Sets Won",
   "doublesSetsLost": "Sets Lost",
   "doublesAvgDuration": "Average Duration",
-  "featureRecord": "Record singles and doubles matches"
+  "featureRecord": "Record singles and doubles matches",
+  "allowTie": "Allow tie result",
+  "tieMatchLabel": "TIE",
+  "matchEndedAsTie": "This match ended as a tie",
+  "tieTooltip": "Check this if the match ended without a winner (e.g. time ran out or both players won equal sets)",
+  "ties": "Ties"
 }

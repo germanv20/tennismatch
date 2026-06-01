@@ -290,5 +290,10 @@
   "doublesSetsWon": "Sets ganados",
   "doublesSetsLost": "Sets perdidos",
   "doublesAvgDuration": "Duración promedio",
-  "featureRecord": "Registra partidos individuales y de dobles"
+  "featureRecord": "Registra partidos individuales y de dobles",
+  "allowTie": "Permitir empate",
+  "tieMatchLabel": "EMPATE",
+  "matchEndedAsTie": "Este partido terminó en empate",
+  "tieTooltip": "Marca esto si el partido terminó sin ganador (por ejemplo, se acabó el tiempo o cada jugador ganó los mismos sets)",
+  "ties": "Empates"
 }

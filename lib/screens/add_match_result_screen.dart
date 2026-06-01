@@ -31,6 +31,7 @@ class _AddMatchResultScreenState extends State<AddMatchResultScreen> {
   String? player1Name;
   String? player2Name;
   bool isSaving = false;
+  bool allowTie = false;
 
   @override
   void initState() {
@@ -150,7 +151,7 @@ class _AddMatchResultScreenState extends State<AddMatchResultScreen> {
       showError(loc.addAtLeastOneSet);
       return;
     }
-    if (p1Wins == p2Wins) {
+    if (p1Wins == p2Wins && !allowTie) {
       showError(loc.mustHaveWinner);
       return;
     }
@@ -172,7 +173,10 @@ class _AddMatchResultScreenState extends State<AddMatchResultScreen> {
     final players = widget.matchData['players'] as List;
     final currentUid = FirebaseAuth.instance.currentUser!.uid;
     final opponentUid = players.firstWhere((uid) => uid != currentUid);
-    final winnerUid = p1Wins > p2Wins ? currentUid : opponentUid;
+    // For ties, winnerUid is null
+    final String? winnerUid = (p1Wins == p2Wins)
+        ? null
+        : (p1Wins > p2Wins ? currentUid : opponentUid);
     final currentUserName = player1Name ?? 'Player 1';
     final opponentName = player2Name ?? 'Player 2';
 
@@ -185,7 +189,8 @@ class _AddMatchResultScreenState extends State<AddMatchResultScreen> {
     batch.update(matchRef, {
       'status': 'completed',
       'completedAt': FieldValue.serverTimestamp(),
-      'winnerUid': winnerUid,
+      'winnerUid': winnerUid, // null for ties
+      'isTie': p1Wins == p2Wins,
       'player1Uid': currentUid,
       'player2Uid': opponentUid,
       'playerNames': {currentUid: currentUserName, opponentUid: opponentName},
@@ -205,7 +210,13 @@ class _AddMatchResultScreenState extends State<AddMatchResultScreen> {
     });
 
     final userRef = FirebaseFirestore.instance.collection('users').doc(currentUid);
-    if (winnerUid == currentUid) {
+    // Ties count matchesPlayed and duration but no win or loss
+    if (p1Wins == p2Wins) {
+      batch.update(userRef, {
+        'matchesPlayed': FieldValue.increment(1),
+        'totalDuration': FieldValue.increment(duration),
+      });
+    } else if (winnerUid == currentUid) {
       batch.update(userRef, {
         'matchesPlayed': FieldValue.increment(1),
         'totalDuration': FieldValue.increment(duration),
@@ -279,7 +290,7 @@ class _AddMatchResultScreenState extends State<AddMatchResultScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Expanded(child: Text(loc.useOfficialScoring, style: const TextStyle(fontSize: 13))),
+                Expanded(child: Text(loc.useOfficialScoring, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500))),
                 Switch(value: useOfficialScoring, onChanged: (v) => setState(() => useOfficialScoring = v)),
               ],
             ),
@@ -312,6 +323,43 @@ class _AddMatchResultScreenState extends State<AddMatchResultScreen> {
               icon: const Icon(Icons.add),
               label: Text(loc.addSet),
             ),
+
+            // ── Tie option ──
+            Row(
+              children: [
+                Checkbox(
+                  value: allowTie,
+                  onChanged: isSaving
+                      ? null
+                      : (v) => setState(() => allowTie = v ?? false),
+                ),
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () => setState(() => allowTie = !allowTie),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          loc.allowTie,
+                          style: const TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        Text(
+                          loc.tieTooltip,
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+
             const SizedBox(height: 16),
             Text(loc.matchDetailsTitle, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 12),

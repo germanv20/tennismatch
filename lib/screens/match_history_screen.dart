@@ -146,6 +146,7 @@ class _MatchHistoryScreenState extends State<MatchHistoryScreen> {
           matchDate: matchDate,
           winnerUid: match['winnerUid'] ?? '',
           currentUserUid: currentUid,
+          isTie: match['isTie'] == true,
         ),
       ),
     );
@@ -253,6 +254,7 @@ class _MatchHistoryScreenState extends State<MatchHistoryScreen> {
           duration: duration,
           matchDate: matchDate,
           currentUserWon: currentUserWon,
+          isTie: false, // guest matches can't be tied via app flow
           loc: loc,
         ),
       ),
@@ -565,6 +567,7 @@ class _GuestMatchCard extends StatelessWidget {
   final int duration;
   final DateTime matchDate;
   final bool currentUserWon;
+  final bool isTie;
   final AppLocalizations loc;
 
   const _GuestMatchCard({
@@ -575,6 +578,7 @@ class _GuestMatchCard extends StatelessWidget {
     required this.duration,
     required this.matchDate,
     required this.currentUserWon,
+    required this.isTie,
     required this.loc,
   });
 
@@ -692,7 +696,7 @@ class _GuestMatchCard extends StatelessWidget {
             ),
           ),
 
-          // Win/Loss badge top-right
+          // Win/Loss/Tie badge top-right
           Positioned(
             top: 8,
             right: 8,
@@ -702,11 +706,14 @@ class _GuestMatchCard extends StatelessWidget {
                 vertical: 4,
               ),
               decoration: BoxDecoration(
-                color: currentUserWon ? Colors.green : Colors.red,
+                color: isTie
+                    ? Colors.grey[600]
+                    : currentUserWon ? Colors.green : Colors.red,
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Text(
-                currentUserWon ? loc.win : loc.loss,
+                isTie ? loc.tieMatchLabel
+                    : currentUserWon ? loc.win : loc.loss,
                 style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,

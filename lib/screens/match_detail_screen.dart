@@ -36,13 +36,27 @@ class MatchDetailScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context)!;
     final data = matchDoc.data() as Map<String, dynamic>? ?? {};
-    final String otherPlayerUid = opponentData['uid'];
-    final String otherPlayerName = opponentData['name'] ?? loc.unknown; // 'Player'
-    final String otherPlayerPhotoUrl = opponentData['photoUrl'] ?? '';
+
+    // Use 'uid' field if present, otherwise derive from match players array
+    // This handles both old documents (without uid field) and new ones
+    final currentUid = FirebaseAuth.instance.currentUser!.uid;
+    final players = List<String>.from(data['players'] ?? []);
+    final derivedOpponentUid = players.firstWhere(
+      (uid) => uid != currentUid,
+      orElse: () => '',
+    );
+
+    final String otherPlayerUid =
+        (opponentData['uid'] as String?)?.isNotEmpty == true
+            ? opponentData['uid'] as String
+            : derivedOpponentUid;
+
+    final String otherPlayerName = opponentData['name'] as String? ?? loc.unknown;
+    final String otherPlayerPhotoUrl = opponentData['photoUrl'] as String? ?? '';
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(loc.matchDetailsTitle), // 'Match Details'
+        title: Text(loc.matchDetailsTitle),
         actions: [
           IconButton(
             icon: const Icon(Icons.link_off),
@@ -50,17 +64,16 @@ class MatchDetailScreen extends StatelessWidget {
               final confirm = await showDialog(
                 context: context,
                 builder: (context) => AlertDialog(
-                  title: Text(loc.unmatchTitle), // 'Unmatch?'
-                  content: Text(
-                      loc.unmatchConfirmation), // 'Are you sure you want to unmatch? This will remove the chat.'
+                  title: Text(loc.unmatchTitle),
+                  content: Text(loc.unmatchConfirmation),
                   actions: [
                     TextButton(
                       onPressed: () => Navigator.pop(context, false),
-                      child: Text(loc.cancel), // 'Cancel'
+                      child: Text(loc.cancel),
                     ),
                     TextButton(
                       onPressed: () => Navigator.pop(context, true),
-                      child: Text(loc.unmatch), // 'Unmatch'
+                      child: Text(loc.unmatch),
                     ),
                   ],
                 ),
@@ -72,51 +85,45 @@ class MatchDetailScreen extends StatelessWidget {
                 await FirebaseFirestore.instance
                     .collection('matches')
                     .doc(matchDoc.id)
-                    .update({
-                  'status': 'cancelled',
-                });
-
-                final currentUid = FirebaseAuth.instance.currentUser!.uid;
-                final opponentUid = opponentData['uid'];
+                    .update({'status': 'cancelled'});
 
                 await H2HService.recalculateHeadToHead(
                   userA: currentUid,
-                  userB: opponentUid,
+                  userB: otherPlayerUid,
                 );
 
                 if (!context.mounted) return;
-
-                if (context.mounted && Navigator.canPop(context)) {
+                if (Navigator.canPop(context)) {
                   Navigator.pop(context, 'cancelled');
-                } // Exit chat screen
+                }
               }
             },
           ),
         ],
       ),
       body: SafeArea(
-          child: Padding(
+        child: Padding(
           padding: const EdgeInsets.all(16),
           child: SingleChildScrollView(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+
                 // Opponent header
                 Row(
                   children: [
                     CircleAvatar(
                       radius: 30,
-                      backgroundImage: (opponentData['photoUrl'] != null &&
-                              opponentData['photoUrl'].toString().isNotEmpty)
-                          ? NetworkImage(opponentData['photoUrl'])
+                      backgroundImage: otherPlayerPhotoUrl.isNotEmpty
+                          ? NetworkImage(otherPlayerPhotoUrl)
                           : null,
-                      child: opponentData['photoUrl'] == null
+                      child: otherPlayerPhotoUrl.isEmpty
                           ? const Icon(Icons.person)
                           : null,
                     ),
                     const SizedBox(width: 16),
                     Text(
-                      opponentData['name'] ?? loc.unknown, // 'Unknown'
+                      otherPlayerName,
                       style: const TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
@@ -128,7 +135,7 @@ class MatchDetailScreen extends StatelessWidget {
                 const SizedBox(height: 24),
 
                 Text(
-                  '${loc.statusLabel}: ${translateStatus(data['status'], loc)}', // Status
+                  '${loc.statusLabel}: ${translateStatus(data['status'] as String? ?? '', loc)}',
                   style: const TextStyle(fontSize: 16),
                 ),
 
@@ -141,9 +148,9 @@ class MatchDetailScreen extends StatelessWidget {
                   ),
 
                 const SizedBox(height: 30),
-
                 const Divider(),
 
+                // ── Open Chat button with unread badge ──
                 StreamBuilder<QuerySnapshot>(
                   stream: FirebaseFirestore.instance
                       .collection('matches')
@@ -151,36 +158,18 @@ class MatchDetailScreen extends StatelessWidget {
                       .collection('messages')
                       .snapshots(),
                   builder: (context, snapshot) {
-                    if (!snapshot.hasData) {
-                      return ElevatedButton.icon(
-                        icon: const Icon(Icons.chat),
-                        label: Text(loc.openChat),
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => MatchChatScreen(
-                                matchId: matchDoc.id,
-                                otherPlayerUid: otherPlayerUid,
-                                otherPlayerName: otherPlayerName,
-                                otherPlayerPhotoUrl: otherPlayerPhotoUrl,
-                              ),
-                            ),
-                          );
-                        },
-                      );
+                    int unreadCount = 0;
+
+                    if (snapshot.hasData) {
+                      unreadCount = snapshot.data!.docs.where((doc) {
+                        final msg = doc.data() as Map<String, dynamic>;
+                        if (msg['senderUid'] == currentUid) return false;
+                        final readBy = Map<String, dynamic>.from(
+                          msg['readBy'] ?? {},
+                        );
+                        return readBy[currentUid] != true;
+                      }).length;
                     }
-
-                    final currentUid = FirebaseAuth.instance.currentUser!.uid;
-
-                    int unreadCount = snapshot.data!.docs.where((doc) {
-                      final data = doc.data() as Map<String, dynamic>;
-
-                      if (data['senderUid'] == currentUid) return false;
-
-                      final readBy = Map<String, dynamic>.from(data['readBy'] ?? {});
-                      return readBy[currentUid] != true;
-                    }).length;
 
                     final hasUnread = unreadCount > 0;
 
@@ -203,41 +192,38 @@ class MatchDetailScreen extends StatelessWidget {
                             );
                           },
                         ),
-
-                       // 🔴 Badge
-                      if (hasUnread)
-                        Positioned(
-                          right: 2,
-                          top: 2,
-                          child: Container(
-                            padding: const EdgeInsets.all(4),
-                            decoration: const BoxDecoration(
-                              color: Colors.red,
-                              shape: BoxShape.circle,
-                            ),
-                            child: Text(
-                              unreadCount > 9 ? '9+' : unreadCount.toString(),
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
+                        if (hasUnread)
+                          Positioned(
+                            right: 2,
+                            top: 2,
+                            child: Container(
+                              padding: const EdgeInsets.all(4),
+                              decoration: const BoxDecoration(
+                                color: Colors.red,
+                                shape: BoxShape.circle,
+                              ),
+                              child: Text(
+                                unreadCount > 9 ? '9+' : unreadCount.toString(),
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                             ),
                           ),
-                        ),
                       ],
                     );
                   },
                 ),
 
-                const SizedBox(height: 10),
-
-                if (data['status'] != 'completed' && data['status'] != 'cancelled') ...[
+                // ── Add Match Result button ──
+                if (data['status'] != 'completed' &&
+                    data['status'] != 'cancelled') ...[
                   const SizedBox(height: 20),
-
                   ElevatedButton.icon(
                     icon: const Icon(Icons.emoji_events),
-                    label: Text(loc.addMatchResult), // 'Add Match Result'
+                    label: Text(loc.addMatchResult),
                     onPressed: () async {
                       final result = await Navigator.push(
                         context,
@@ -248,35 +234,37 @@ class MatchDetailScreen extends StatelessWidget {
                           ),
                         ),
                       );
-
                       if (result == true && context.mounted) {
-                        Navigator.pop(context, true); // 🔥 propagate to My Matches
+                        Navigator.pop(context, true);
                       }
                     },
                   ),
                 ],
 
-                if (data['status'] == 'completed' && data['result'] != null) ...[
+                // ── Completed match result ──
+                if (data['status'] == 'completed' &&
+                    data['result'] != null) ...[
                   const SizedBox(height: 20),
                   Text(
-                    loc.matchResult, //'Match Result'
-                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    loc.matchResult,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   const SizedBox(height: 10),
-
                   ...List.generate(
                     (data['result']['sets'] as List).length,
                     (index) {
                       final set = data['result']['sets'][index];
                       return Text(
-                        '${loc.setLabel(index + 1)}: ${set['p1']} - ${set['p2']}', // Set
+                        '${loc.setLabel(index + 1)}: ${set['p1']} - ${set['p2']}',
                       );
                     },
                   ),
-
                   const SizedBox(height: 10),
-                  Text('${loc.locationLabel}: ${data['result']['location']}'), // Location
-                  Text('${loc.durationLabel}: ${data['result']['durationMinutes']} min'), // Duration
+                  Text('${loc.locationLabel}: ${data['result']['location']}'),
+                  Text('${loc.durationLabel}: ${data['result']['durationMinutes']} min'),
                 ],
 
               ],

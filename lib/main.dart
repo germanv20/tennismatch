@@ -170,6 +170,10 @@ class _AuthTestState extends State<AuthTest> {
         _fcmInitialized = true;
         setupFCM();
       }
+      // Reset flag on sign-out so fresh token is fetched on next login
+      if (user == null) {
+        _fcmInitialized = false;
+      }
     });
 
     // When app opened from background
@@ -293,18 +297,26 @@ class _AuthTestState extends State<AuthTest> {
   }
 
   Future<void> setupFCM() async {
-    debugPrint('🔥 setupFCM started');
-
     final messaging = FirebaseMessaging.instance;
 
-    // Permission already requested in main() — no need to request again
+    // Delete the cached token first to force a completely fresh one.
+    // Without this, getToken() returns the same cached token even after
+    // it has been invalidated or deleted from Firestore.
+    try {
+      await messaging.deleteToken();
+    } catch (e) {
+      debugPrint('FCM deleteToken error (non-fatal): $e');
+    }
+
+    // Now request a fresh token from FCM servers
     final token = await messaging.getToken();
 
     if (token != null) {
       await saveFcmToken(token);
+      debugPrint('✅ Fresh FCM token saved');
     }
 
-    // Listen for token refresh
+    // Listen for future token refreshes
     FirebaseMessaging.instance.onTokenRefresh.listen((newToken) async {
       await saveFcmToken(newToken);
     });

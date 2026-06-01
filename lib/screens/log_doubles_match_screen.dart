@@ -369,7 +369,7 @@ class _LogDoublesMatchScreenState extends State<LogDoublesMatchScreen> {
                 Expanded(
                   child: Text(
                     loc.useOfficialScoring,
-                    style: const TextStyle(fontSize: 13),
+                    style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
                   ),
                 ),
                 Switch(

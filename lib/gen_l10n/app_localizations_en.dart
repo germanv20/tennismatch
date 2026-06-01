@@ -751,4 +751,20 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get featureRecord => 'Record singles and doubles matches';
+
+  @override
+  String get allowTie => 'Allow tie result';
+
+  @override
+  String get tieMatchLabel => 'TIE';
+
+  @override
+  String get matchEndedAsTie => 'This match ended as a tie';
+
+  @override
+  String get tieTooltip =>
+      'Check this if the match ended without a winner (e.g. time ran out or both players won equal sets)';
+
+  @override
+  String get ties => 'Ties';
 }

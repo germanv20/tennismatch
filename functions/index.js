@@ -84,7 +84,9 @@ async function sendPushToUser(recipientUid, payload) {
     const resp = response.responses[i];
     if (!resp.success) {
       const errorCode = resp.error && resp.error.code;
-      console.log("❌ Failed token:", tokens[i], "Error:", errorCode);
+      const errorMsg = resp.error && resp.error.message;
+      console.log("❌ Failed token:", tokens[i],
+          "Code:", errorCode, "Message:", errorMsg);
 
       if (
         errorCode === "messaging/registration-token-not-registered" ||
@@ -160,6 +162,15 @@ exports.onNewChatMessage = onDocumentCreated(
 
       // Chat notifications use sender name + message text —
       // no localization needed as the content is always user-written
+      const androidNotification = {
+        channelId: "default",
+      };
+
+      // Only include imageUrl if it's a non-empty string
+      if (senderPhotoUrl && senderPhotoUrl.length > 0) {
+        androidNotification.imageUrl = senderPhotoUrl;
+      }
+
       await sendPushToUser(recipientUid, {
         notification: {
           title: senderName,
@@ -167,8 +178,10 @@ exports.onNewChatMessage = onDocumentCreated(
         },
         android: {
           notification: {
-            imageUrl: senderPhotoUrl,
-            channelId: "default",
+            ...androidNotification,
+            // Use matchId as tag so messages in the same chat
+            // replace each other instead of stacking
+            tag: `chat_${matchId}`,
           },
         },
         data: {

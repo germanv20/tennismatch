@@ -694,7 +694,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             count: count,
                             child: HomeCard(
                               title: loc.incomingRequests,
-                              icon: Icons.mail,
+                              icon: Icons.move_to_inbox,
                               onTap: () => Navigator.push(
                                 context,
                                 MaterialPageRoute(

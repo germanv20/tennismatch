@@ -762,4 +762,20 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get featureRecord => 'Registra partidos individuales y de dobles';
+
+  @override
+  String get allowTie => 'Permitir empate';
+
+  @override
+  String get tieMatchLabel => 'EMPATE';
+
+  @override
+  String get matchEndedAsTie => 'Este partido terminó en empate';
+
+  @override
+  String get tieTooltip =>
+      'Marca esto si el partido terminó sin ganador (por ejemplo, se acabó el tiempo o cada jugador ganó los mismos sets)';
+
+  @override
+  String get ties => 'Empates';
 }

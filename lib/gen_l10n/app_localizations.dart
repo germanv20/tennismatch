@@ -1526,6 +1526,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Record singles and doubles matches'**
   String get featureRecord;
+
+  /// No description provided for @allowTie.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow tie result'**
+  String get allowTie;
+
+  /// No description provided for @tieMatchLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'TIE'**
+  String get tieMatchLabel;
+
+  /// No description provided for @matchEndedAsTie.
+  ///
+  /// In en, this message translates to:
+  /// **'This match ended as a tie'**
+  String get matchEndedAsTie;
+
+  /// No description provided for @tieTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Check this if the match ended without a winner (e.g. time ran out or both players won equal sets)'**
+  String get tieTooltip;
+
+  /// No description provided for @ties.
+  ///
+  /// In en, this message translates to:
+  /// **'Ties'**
+  String get ties;
 }
 
 class _AppLocalizationsDelegate

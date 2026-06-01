@@ -38,6 +38,7 @@ class _MatchDetailsScreenState extends State<MatchDetailsScreen> {
   int h2hMatches = 0;
   int h2hWins = 0;
   int h2hLosses = 0;
+  int h2hTies = 0;
   int h2hSetsWon = 0;
   int h2hSetsLost = 0;
 
@@ -153,6 +154,7 @@ class _MatchDetailsScreenState extends State<MatchDetailsScreen> {
     int matches = 0;
     int wins = 0;
     int losses = 0;
+    int ties = 0;
     int setsWon = 0;
     int setsLost = 0;
 
@@ -161,7 +163,14 @@ class _MatchDetailsScreenState extends State<MatchDetailsScreen> {
       final players = List<String>.from(data['players'] ?? []);
       if (!players.contains(opponentUid)) continue;
       matches++;
-      if (data['winnerUid'] == uid) wins++; else losses++;
+      final bool isTie = data['isTie'] == true;
+      if (isTie) {
+        ties++;
+      } else if (data['winnerUid'] == uid) {
+        wins++;
+      } else {
+        losses++;
+      }
 
       final result = data['result'] ?? {};
       final sets = result['sets'] ?? [];
@@ -181,6 +190,7 @@ class _MatchDetailsScreenState extends State<MatchDetailsScreen> {
       h2hMatches = matches;
       h2hWins = wins;
       h2hLosses = losses;
+      h2hTies = ties;
       h2hSetsWon = setsWon;
       h2hSetsLost = setsLost;
       loadingH2H = false;
@@ -277,14 +287,33 @@ class _MatchDetailsScreenState extends State<MatchDetailsScreen> {
                       style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
                     const SizedBox(height: 10),
 
-                    RichText(
-                      text: TextSpan(
-                        style: const TextStyle(color: Colors.black, fontSize: 16),
-                        children: [
-                          TextSpan(text: loc.matchResultSentence(winnerName, loserName)),
-                        ],
+                    // Show tie label or winner sentence
+                    if (data['isTie'] == true)
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: Colors.grey[200],
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          loc.matchEndedAsTie,
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.grey[700],
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      )
+                    else
+                      RichText(
+                        text: TextSpan(
+                          style: const TextStyle(color: Colors.black, fontSize: 16),
+                          children: [
+                            TextSpan(text: loc.matchResultSentence(winnerName, loserName)),
+                          ],
+                        ),
                       ),
-                    ),
 
                     const SizedBox(height: 20),
 
@@ -439,6 +468,9 @@ class _MatchDetailsScreenState extends State<MatchDetailsScreen> {
                                   children: [Text(loc.wins), Text(h2hWins.toString())]),
                                 Row(mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: [Text(loc.losses), Text(h2hLosses.toString())]),
+                                if (h2hTies > 0)
+                                  Row(mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [Text(loc.ties), Text(h2hTies.toString())]),
                                 Row(mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: [Text(loc.totalSetsWon), Text(h2hSetsWon.toString())]),
                                 Row(mainAxisAlignment: MainAxisAlignment.spaceBetween,
