@@ -6,7 +6,6 @@ import 'match_chat_screen.dart';
 import 'add_match_result_screen.dart';
 import 'package:tennismatch/services/h2h_service.dart';
 
-
 class MatchDetailScreen extends StatelessWidget {
   final DocumentSnapshot matchDoc;
   final Map<String, dynamic> opponentData;
@@ -19,16 +18,118 @@ class MatchDetailScreen extends StatelessWidget {
 
   String translateStatus(String status, AppLocalizations loc) {
     switch (status) {
-      case 'pending':
-        return loc.statusPending;
-      case 'confirmed':
-        return loc.statusConfirmed;
-      case 'completed':
-        return loc.statusCompleted;
-      case 'cancelled':
-        return loc.statusCancelled;
-      default:
-        return status;
+      case 'pending': return loc.statusPending;
+      case 'confirmed': return loc.statusConfirmed;
+      case 'completed': return loc.statusCompleted;
+      case 'cancelled': return loc.statusCancelled;
+      default: return status;
+    }
+  }
+
+  /// Pick a date and time for the match, constrained to the next 7 days.
+  Future<DateTime?> _pickScheduledDateTime(
+    BuildContext context,
+    AppLocalizations loc,
+  ) async {
+    final now = DateTime.now();
+    final maxDate = now.add(const Duration(days: 7));
+
+    final date = await showDatePicker(
+      context: context,
+      initialDate: now.add(const Duration(days: 1)),
+      firstDate: now,
+      lastDate: maxDate,
+    );
+    if (date == null) return null;
+    if (!context.mounted) return null;
+
+    final time = await showTimePicker(
+      context: context,
+      initialTime: const TimeOfDay(hour: 10, minute: 0),
+    );
+    if (time == null) return null;
+
+    final scheduled = DateTime(
+      date.year, date.month, date.day,
+      time.hour, time.minute,
+    );
+
+    // Must be in the future
+    if (scheduled.isBefore(now)) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(loc.schedulePastError)),
+        );
+      }
+      return null;
+    }
+
+    return scheduled;
+  }
+
+  Future<void> _saveScheduledDate(
+    BuildContext context,
+    AppLocalizations loc,
+    DateTime scheduled,
+  ) async {
+    await FirebaseFirestore.instance
+        .collection('matches')
+        .doc(matchDoc.id)
+        .update({
+      'scheduledDate': Timestamp.fromDate(scheduled),
+    });
+
+    if (context.mounted) {
+      // Refresh the screen so the scheduled card appears immediately
+      final updatedDoc = await FirebaseFirestore.instance
+          .collection('matches')
+          .doc(matchDoc.id)
+          .get();
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(loc.matchScheduledConfirm),
+            backgroundColor: Colors.green,
+          ),
+        );
+        // Replace current screen with fresh data
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (_) => MatchDetailScreen(
+              matchDoc: updatedDoc,
+              opponentData: opponentData,
+            ),
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _clearScheduledDate(BuildContext context) async {
+    await FirebaseFirestore.instance
+        .collection('matches')
+        .doc(matchDoc.id)
+        .update({'scheduledDate': FieldValue.delete()});
+
+    if (context.mounted) {
+      final updatedDoc = await FirebaseFirestore.instance
+          .collection('matches')
+          .doc(matchDoc.id)
+          .get();
+
+      if (context.mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (_) => MatchDetailScreen(
+              matchDoc: updatedDoc,
+              opponentData: opponentData,
+            ),
+          ),
+        );
+      }
     }
   }
 
@@ -37,8 +138,6 @@ class MatchDetailScreen extends StatelessWidget {
     final loc = AppLocalizations.of(context)!;
     final data = matchDoc.data() as Map<String, dynamic>? ?? {};
 
-    // Use 'uid' field if present, otherwise derive from match players array
-    // This handles both old documents (without uid field) and new ones
     final currentUid = FirebaseAuth.instance.currentUser!.uid;
     final players = List<String>.from(data['players'] ?? []);
     final derivedOpponentUid = players.firstWhere(
@@ -51,8 +150,14 @@ class MatchDetailScreen extends StatelessWidget {
             ? opponentData['uid'] as String
             : derivedOpponentUid;
 
-    final String otherPlayerName = opponentData['name'] as String? ?? loc.unknown;
-    final String otherPlayerPhotoUrl = opponentData['photoUrl'] as String? ?? '';
+    final String otherPlayerName =
+        opponentData['name'] as String? ?? loc.unknown;
+    final String otherPlayerPhotoUrl =
+        opponentData['photoUrl'] as String? ?? '';
+
+    // Scheduled date if set
+    final Timestamp? scheduledTs = data['scheduledDate'] as Timestamp?;
+    final DateTime? scheduledDate = scheduledTs?.toDate();
 
     return Scaffold(
       appBar: AppBar(
@@ -109,7 +214,7 @@ class MatchDetailScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
 
-                // Opponent header
+                // ── Opponent header ──
                 Row(
                   children: [
                     CircleAvatar(
@@ -150,7 +255,7 @@ class MatchDetailScreen extends StatelessWidget {
                 const SizedBox(height: 30),
                 const Divider(),
 
-                // ── Open Chat button with unread badge ──
+                // ── Open Chat button ──
                 StreamBuilder<QuerySnapshot>(
                   stream: FirebaseFirestore.instance
                       .collection('matches')
@@ -159,7 +264,6 @@ class MatchDetailScreen extends StatelessWidget {
                       .snapshots(),
                   builder: (context, snapshot) {
                     int unreadCount = 0;
-
                     if (snapshot.hasData) {
                       unreadCount = snapshot.data!.docs.where((doc) {
                         final msg = doc.data() as Map<String, dynamic>;
@@ -170,8 +274,6 @@ class MatchDetailScreen extends StatelessWidget {
                         return readBy[currentUid] != true;
                       }).length;
                     }
-
-                    final hasUnread = unreadCount > 0;
 
                     return Stack(
                       children: [
@@ -192,7 +294,7 @@ class MatchDetailScreen extends StatelessWidget {
                             );
                           },
                         ),
-                        if (hasUnread)
+                        if (unreadCount > 0)
                           Positioned(
                             right: 2,
                             top: 2,
@@ -217,10 +319,100 @@ class MatchDetailScreen extends StatelessWidget {
                   },
                 ),
 
+                // ── Scheduled date card ──
+                if (data['status'] != 'completed' &&
+                    data['status'] != 'cancelled') ...[
+
+                  const SizedBox(height: 20),
+
+                  if (scheduledDate != null) ...[
+                    // Scheduled date is set — show it prominently
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: Colors.green.shade50,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.green.shade200),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(Icons.event,
+                                color: Colors.green.shade700, size: 20),
+                              const SizedBox(width: 8),
+                              Text(
+                                loc.scheduledFor,
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: Colors.green.shade700,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            '${scheduledDate.day}/${scheduledDate.month}/${scheduledDate.year}'
+                            '  ${scheduledDate.hour.toString().padLeft(2, '0')}:'
+                            '${scheduledDate.minute.toString().padLeft(2, '0')}',
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          Row(
+                            children: [
+                              OutlinedButton(
+                                onPressed: () async {
+                                  final newDate =
+                                      await _pickScheduledDateTime(
+                                          context, loc);
+                                  if (newDate != null && context.mounted) {
+                                    await _saveScheduledDate(
+                                        context, loc, newDate);
+                                  }
+                                },
+                                child: Text(loc.changeSchedule),
+                              ),
+                              const SizedBox(width: 8),
+                              TextButton(
+                                onPressed: () async {
+                                  await _clearScheduledDate(context);
+                                },
+                                child: Text(
+                                  loc.cancelSchedule,
+                                  style: const TextStyle(color: Colors.red),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ] else ...[
+                    // No date scheduled yet — show schedule button
+                    OutlinedButton.icon(
+                      icon: const Icon(Icons.event),
+                      label: Text(loc.scheduleMatch),
+                      onPressed: () async {
+                        final scheduled =
+                            await _pickScheduledDateTime(context, loc);
+                        if (scheduled != null && context.mounted) {
+                          await _saveScheduledDate(context, loc, scheduled);
+                        }
+                      },
+                    ),
+                  ],
+                ],
+
                 // ── Add Match Result button ──
                 if (data['status'] != 'completed' &&
                     data['status'] != 'cancelled') ...[
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 12),
                   ElevatedButton.icon(
                     icon: const Icon(Icons.emoji_events),
                     label: Text(loc.addMatchResult),
@@ -241,7 +433,7 @@ class MatchDetailScreen extends StatelessWidget {
                   ),
                 ],
 
-                // ── Completed match result ──
+                // ── Completed match result summary ──
                 if (data['status'] == 'completed' &&
                     data['result'] != null) ...[
                   const SizedBox(height: 20),
@@ -263,8 +455,10 @@ class MatchDetailScreen extends StatelessWidget {
                     },
                   ),
                   const SizedBox(height: 10),
-                  Text('${loc.locationLabel}: ${data['result']['location']}'),
-                  Text('${loc.durationLabel}: ${data['result']['durationMinutes']} min'),
+                  Text(
+                    '${loc.locationLabel}: ${data['result']['location']}'),
+                  Text(
+                    '${loc.durationLabel}: ${data['result']['durationMinutes']} min'),
                 ],
 
               ],

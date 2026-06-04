@@ -8,7 +8,10 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'firebase_options.dart';
+import 'package:provider/provider.dart';
 import 'screens/match_chat_screen.dart';
+import 'services/theme_service.dart';
+import 'screens/match_detail_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/complete_profile_screen.dart';
 
@@ -36,7 +39,16 @@ void main() async {
 
   debugPrint("🔔 Permission status: ${settings.authorizationStatus}");
 
-  runApp(const MyApp());
+  // Load saved theme before first frame
+  final themeNotifier = ThemeNotifier();
+  await themeNotifier.loadSavedTheme();
+
+  runApp(
+    ChangeNotifierProvider.value(
+      value: themeNotifier,
+      child: const MyApp(),
+    ),
+  );
 }
 
 
@@ -45,6 +57,9 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeNotifier = context.watch<ThemeNotifier>();
+    final tennisTheme = themeNotifier.current;
+
     return MaterialApp(
       scaffoldMessengerKey: rootScaffoldMessengerKey,
       debugShowCheckedModeBanner: false,
@@ -75,33 +90,14 @@ class MyApp extends StatelessWidget {
 
       navigatorKey: navigatorKey,
 
-      theme: ThemeData(
-        primarySwatch: Colors.green,
-
-        scaffoldBackgroundColor: const Color(0xFFF5F5F5),
-
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Color(0xFF2E7D32),
-          foregroundColor: Colors.white,
-          elevation: 2,
-        ),
-
+      // Apply the selected tennis theme
+      theme: tennisTheme.toThemeData().copyWith(
         cardTheme: CardThemeData(
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
           elevation: 3,
           margin: const EdgeInsets.symmetric(vertical: 6),
-        ),
-
-        elevatedButtonTheme: ElevatedButtonThemeData(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF4CAF50),
-            foregroundColor: Colors.white,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
         ),
       ),
 
@@ -150,6 +146,60 @@ Future<void> navigateToChat(String matchId) async {
   );
 }
 
+/// Navigates to MatchDetailScreen — used for match_reminder notifications
+Future<void> navigateToMatchDetail(String matchId) async {
+  final currentUser = FirebaseAuth.instance.currentUser;
+  if (currentUser == null) return;
+
+  final matchDoc = await FirebaseFirestore.instance
+      .collection('matches')
+      .doc(matchId)
+      .get();
+
+  if (!matchDoc.exists) return;
+
+  final matchData = matchDoc.data() as Map<String, dynamic>;
+
+  final opponentUid =
+      matchData['player1Uid'] == currentUser.uid
+          ? matchData['player2Uid']
+          : matchData['player1Uid'];
+
+  final opponentSnap = await FirebaseFirestore.instance
+      .collection('users')
+      .doc(opponentUid)
+      .get();
+
+  if (!opponentSnap.exists) return;
+
+  final opponentData = opponentSnap.data() as Map<String, dynamic>;
+
+  navigatorKey.currentState?.pushAndRemoveUntil(
+    MaterialPageRoute(
+      builder: (_) => MatchDetailScreen(
+        matchDoc: matchDoc,
+        opponentData: opponentData,
+      ),
+    ),
+    (route) => route.isFirst,
+  );
+}
+
+/// Routes to the correct screen based on notification type
+Future<void> handleNotificationTap(Map<String, dynamic> data) async {
+  final type = data['type'] as String? ?? '';
+  final matchId = data['matchId'] as String?;
+
+  if (matchId == null) return;
+
+  if (type == 'match_reminder') {
+    await navigateToMatchDetail(matchId);
+  } else {
+    // chat_message, match_request, match_accepted all go to chat/home
+    await navigateToChat(matchId);
+  }
+}
+
 class AuthTest extends StatefulWidget {
   const AuthTest({super.key});
 
@@ -181,7 +231,7 @@ class _AuthTestState extends State<AuthTest> {
       final matchId = message.data['matchId'];
       if (matchId != null) {
         Future.delayed(const Duration(milliseconds: 500), () {
-          navigateToChat(matchId);
+          handleNotificationTap(message.data);
         });
       }
     });
@@ -192,7 +242,7 @@ class _AuthTestState extends State<AuthTest> {
         final matchId = message.data['matchId'];
         if (matchId != null) {
           Future.delayed(const Duration(milliseconds: 500), () {
-            navigateToChat(matchId);
+            handleNotificationTap(message.data);
           });
         }
       }

@@ -295,5 +295,19 @@
   "tieMatchLabel": "TIE",
   "matchEndedAsTie": "This match ended as a tie",
   "tieTooltip": "Check this if the match ended without a winner (e.g. time ran out or both players won equal sets)",
-  "ties": "Ties"
+  "ties": "Ties",
+  "scheduleMatch": "Schedule Match",
+  "scheduleMatchDate": "Schedule a date for this match",
+  "scheduledFor": "Scheduled for",
+  "changeSchedule": "Change",
+  "cancelSchedule": "Remove",
+  "matchScheduledConfirm": "Match scheduled!",
+  "matchReminderTitle": "🎾 Match Reminder",
+  "matchReminder24hBody": "Your match with {opponent} is tomorrow!",
+  "@matchReminder24hBody": {"placeholders": {"opponent": {"type": "String"}}},
+  "matchReminder1hBody": "Your match with {opponent} starts in 1 hour!",
+  "@matchReminder1hBody": {"placeholders": {"opponent": {"type": "String"}}},
+  "scheduleMaxDaysError": "You can only schedule up to 7 days ahead",
+  "schedulePastError": "Please select a future date and time",
+  "themeSelector": "Theme"
 }

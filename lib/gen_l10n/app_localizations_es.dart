@@ -778,4 +778,46 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get ties => 'Empates';
+
+  @override
+  String get scheduleMatch => 'Programar partido';
+
+  @override
+  String get scheduleMatchDate => 'Programa una fecha para este partido';
+
+  @override
+  String get scheduledFor => 'Programado para';
+
+  @override
+  String get changeSchedule => 'Cambiar';
+
+  @override
+  String get cancelSchedule => 'Quitar';
+
+  @override
+  String get matchScheduledConfirm => '¡Partido programado!';
+
+  @override
+  String get matchReminderTitle => '🎾 Recordatorio de partido';
+
+  @override
+  String matchReminder24hBody(String opponent) {
+    return '¡Tu partido con $opponent es mañana!';
+  }
+
+  @override
+  String matchReminder1hBody(String opponent) {
+    return '¡Tu partido con $opponent comienza en 1 hora!';
+  }
+
+  @override
+  String get scheduleMaxDaysError =>
+      'Solo puedes programar hasta 7 días adelante';
+
+  @override
+  String get schedulePastError =>
+      'Por favor selecciona una fecha y hora futura';
+
+  @override
+  String get themeSelector => 'Tema';
 }

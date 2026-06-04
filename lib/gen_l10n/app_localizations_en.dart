@@ -767,4 +767,44 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get ties => 'Ties';
+
+  @override
+  String get scheduleMatch => 'Schedule Match';
+
+  @override
+  String get scheduleMatchDate => 'Schedule a date for this match';
+
+  @override
+  String get scheduledFor => 'Scheduled for';
+
+  @override
+  String get changeSchedule => 'Change';
+
+  @override
+  String get cancelSchedule => 'Remove';
+
+  @override
+  String get matchScheduledConfirm => 'Match scheduled!';
+
+  @override
+  String get matchReminderTitle => '🎾 Match Reminder';
+
+  @override
+  String matchReminder24hBody(String opponent) {
+    return 'Your match with $opponent is tomorrow!';
+  }
+
+  @override
+  String matchReminder1hBody(String opponent) {
+    return 'Your match with $opponent starts in 1 hour!';
+  }
+
+  @override
+  String get scheduleMaxDaysError => 'You can only schedule up to 7 days ahead';
+
+  @override
+  String get schedulePastError => 'Please select a future date and time';
+
+  @override
+  String get themeSelector => 'Theme';
 }

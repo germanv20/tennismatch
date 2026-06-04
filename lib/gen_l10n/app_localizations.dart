@@ -1556,6 +1556,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Ties'**
   String get ties;
+
+  /// No description provided for @scheduleMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Schedule Match'**
+  String get scheduleMatch;
+
+  /// No description provided for @scheduleMatchDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Schedule a date for this match'**
+  String get scheduleMatchDate;
+
+  /// No description provided for @scheduledFor.
+  ///
+  /// In en, this message translates to:
+  /// **'Scheduled for'**
+  String get scheduledFor;
+
+  /// No description provided for @changeSchedule.
+  ///
+  /// In en, this message translates to:
+  /// **'Change'**
+  String get changeSchedule;
+
+  /// No description provided for @cancelSchedule.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get cancelSchedule;
+
+  /// No description provided for @matchScheduledConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Match scheduled!'**
+  String get matchScheduledConfirm;
+
+  /// No description provided for @matchReminderTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'🎾 Match Reminder'**
+  String get matchReminderTitle;
+
+  /// No description provided for @matchReminder24hBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your match with {opponent} is tomorrow!'**
+  String matchReminder24hBody(String opponent);
+
+  /// No description provided for @matchReminder1hBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your match with {opponent} starts in 1 hour!'**
+  String matchReminder1hBody(String opponent);
+
+  /// No description provided for @scheduleMaxDaysError.
+  ///
+  /// In en, this message translates to:
+  /// **'You can only schedule up to 7 days ahead'**
+  String get scheduleMaxDaysError;
+
+  /// No description provided for @schedulePastError.
+  ///
+  /// In en, this message translates to:
+  /// **'Please select a future date and time'**
+  String get schedulePastError;
+
+  /// No description provided for @themeSelector.
+  ///
+  /// In en, this message translates to:
+  /// **'Theme'**
+  String get themeSelector;
 }
 
 class _AppLocalizationsDelegate

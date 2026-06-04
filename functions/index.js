@@ -2,6 +2,7 @@ const {
   onDocumentCreated,
   onDocumentUpdated,
 } = require("firebase-functions/v2/firestore");
+const {onSchedule} = require("firebase-functions/v2/scheduler");
 const {getFirestore} = require("firebase-admin/firestore");
 const {getMessaging} = require("firebase-admin/messaging");
 const admin = require("firebase-admin");
@@ -22,6 +23,11 @@ const strings = {
     matchAcceptedTitle: "🎾 ¡Solicitud de partido aceptada!",
     matchAcceptedBody: (name) =>
       `${name} aceptó tu solicitud de partido. ¡Ya puedes chatear!`,
+    matchReminderTitle: "🎾 Recordatorio de partido",
+    matchReminder24hBody: (name) =>
+      `¡Tu partido con ${name} es mañana!`,
+    matchReminder1hBody: (name) =>
+      `¡Tu partido con ${name} comienza en 1 hora!`,
   },
   en: {
     matchRequestTitle: "🎾 New Match Request",
@@ -30,6 +36,11 @@ const strings = {
     matchAcceptedTitle: "🎾 Match Request Accepted!",
     matchAcceptedBody: (name) =>
       `${name} accepted your match request. You can now chat!`,
+    matchReminderTitle: "🎾 Match Reminder",
+    matchReminder24hBody: (name) =>
+      `Your match with ${name} is tomorrow!`,
+    matchReminder1hBody: (name) =>
+      `Your match with ${name} starts in 1 hour!`,
   },
 };
 
@@ -311,3 +322,97 @@ exports.onMatchRequestAccepted = onDocumentUpdated(
       });
     },
 );
+
+// ─────────────────────────────────────────────────────
+// 4. MATCH SCHEDULE REMINDERS
+//    Runs every 30 minutes. Sends push notifications to
+//    both players when a match is scheduled within the
+//    next 24 hours (24h reminder) or next hour (1h reminder).
+// ─────────────────────────────────────────────────────
+exports.onMatchScheduleReminder = onSchedule("every 30 minutes", async () => {
+  const now = new Date();
+
+  // Window boundaries
+  const in23h = new Date(now.getTime() + 23 * 60 * 60 * 1000);
+  const in25h = new Date(now.getTime() + 25 * 60 * 60 * 1000);
+  const in30min = new Date(now.getTime() + 30 * 60 * 1000);
+  const in90min = new Date(now.getTime() + 90 * 60 * 1000);
+
+  // Fetch all confirmed matches with a scheduledDate
+  const snapshot = await db.collection("matches")
+      .where("status", "==", "confirmed")
+      .where("scheduledDate", ">=", in30min)
+      .where("scheduledDate", "<=", in25h)
+      .get();
+
+  if (snapshot.empty) {
+    console.log("No scheduled matches found in reminder window.");
+    return;
+  }
+
+  console.log(`Found ${snapshot.docs.length} matches in reminder window.`);
+
+  for (const doc of snapshot.docs) {
+    const match = doc.data();
+    const scheduledDate = match.scheduledDate.toDate();
+    const matchId = doc.id;
+    const players = match.players || [];
+
+    if (players.length < 2) continue;
+
+    const player1Uid = match.player1Uid || players[0];
+    const player2Uid = match.player2Uid || players[1];
+
+    // Determine which reminder type based on scheduled time
+    const is24hWindow = scheduledDate >= in23h && scheduledDate <= in25h;
+    const is1hWindow = scheduledDate >= in30min && scheduledDate <= in90min;
+
+    if (!is24hWindow && !is1hWindow) continue;
+
+    // Get both players' names
+    const [p1Snap, p2Snap] = await Promise.all([
+      db.collection("users").doc(player1Uid).get(),
+      db.collection("users").doc(player2Uid).get(),
+    ]);
+
+    const p1Name = p1Snap.exists ?
+        (p1Snap.data().name || "Your opponent") : "Your opponent";
+    const p2Name = p2Snap.exists ?
+        (p2Snap.data().name || "Your opponent") : "Your opponent";
+
+    // Send to player 1 — opponent is player 2
+    const p1Locale = p1Snap.exists ?
+        (p1Snap.data().locale || "en") : "en";
+    const t1 = getStrings(p1Locale);
+    const body1 = is24hWindow ?
+        t1.matchReminder24hBody(p2Name) :
+        t1.matchReminder1hBody(p2Name);
+
+    await sendPushToUser(player1Uid, {
+      notification: {title: t1.matchReminderTitle, body: body1},
+      android: {notification: {channelId: "default",
+        tag: `reminder_${matchId}`}},
+      data: {type: "match_reminder", matchId: matchId},
+    });
+
+    // Send to player 2 — opponent is player 1
+    const p2Locale = p2Snap.exists ?
+        (p2Snap.data().locale || "en") : "en";
+    const t2 = getStrings(p2Locale);
+    const body2 = is24hWindow ?
+        t2.matchReminder24hBody(p1Name) :
+        t2.matchReminder1hBody(p1Name);
+
+    await sendPushToUser(player2Uid, {
+      notification: {title: t2.matchReminderTitle, body: body2},
+      android: {notification: {channelId: "default",
+        tag: `reminder_${matchId}`}},
+      data: {type: "match_reminder", matchId: matchId},
+    });
+
+    console.log(
+        `✅ Reminder sent for match ${matchId}`,
+        `(${is24hWindow ? "24h" : "1h"} window)`,
+    );
+  }
+});

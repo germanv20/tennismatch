@@ -295,5 +295,19 @@
   "tieMatchLabel": "EMPATE",
   "matchEndedAsTie": "Este partido terminó en empate",
   "tieTooltip": "Marca esto si el partido terminó sin ganador (por ejemplo, se acabó el tiempo o cada jugador ganó los mismos sets)",
-  "ties": "Empates"
+  "ties": "Empates",
+  "scheduleMatch": "Programar partido",
+  "scheduleMatchDate": "Programa una fecha para este partido",
+  "scheduledFor": "Programado para",
+  "changeSchedule": "Cambiar",
+  "cancelSchedule": "Quitar",
+  "matchScheduledConfirm": "¡Partido programado!",
+  "matchReminderTitle": "🎾 Recordatorio de partido",
+  "matchReminder24hBody": "¡Tu partido con {opponent} es mañana!",
+  "@matchReminder24hBody": {"placeholders": {"opponent": {"type": "String"}}},
+  "matchReminder1hBody": "¡Tu partido con {opponent} comienza en 1 hora!",
+  "@matchReminder1hBody": {"placeholders": {"opponent": {"type": "String"}}},
+  "scheduleMaxDaysError": "Solo puedes programar hasta 7 días adelante",
+  "schedulePastError": "Por favor selecciona una fecha y hora futura",
+  "themeSelector": "Tema"
 }

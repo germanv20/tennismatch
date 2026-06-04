@@ -1,5 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../services/theme_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'available_players_screen.dart';
 import 'match_history_screen.dart';
@@ -134,17 +136,21 @@ class _HomeScreenState extends State<HomeScreen> {
           ..sort((a, b) =>
               weekOrder.indexOf(a).compareTo(weekOrder.indexOf(b)));
  
+    // Use theme playerCardColor for the gradient
+    final cardColor = context.read<ThemeNotifier>().current.playerCardColor;
+    final cardColorLight = Color.lerp(cardColor, Colors.white, 0.3) ?? cardColor;
+ 
     return Container(
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF2E7D32), Color(0xFF4CAF50)],
+        gradient: LinearGradient(
+          colors: [cardColor, cardColorLight],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.15),
+            color: Colors.black.withValues(alpha: 0.15),
             blurRadius: 10,
             offset: const Offset(0, 6),
           ),
@@ -251,6 +257,79 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
  
+  void _showThemeSelector(BuildContext context) {
+    final themeNotifier = context.read<ThemeNotifier>();
+    final loc = AppLocalizations.of(context)!;
+ 
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) {
+        return ChangeNotifierProvider.value(
+          value: themeNotifier,
+          child: Consumer<ThemeNotifier>(
+            builder: (context, notifier, _) {
+              return Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      loc.themeSelector,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    ...allThemes.map((theme) {
+                      final isSelected = notifier.current.code == theme.code;
+                      return ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        leading: Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: theme.playerCardColor,
+                            shape: BoxShape.circle,
+                            border: isSelected
+                                ? Border.all(
+                                    color: Colors.black26, width: 2)
+                                : null,
+                          ),
+                        ),
+                        title: Text(
+                          theme.label,
+                          style: TextStyle(
+                            fontWeight: isSelected
+                                ? FontWeight.bold
+                                : FontWeight.normal,
+                          ),
+                        ),
+                        trailing: isSelected
+                            ? Icon(Icons.check_circle,
+                                color: theme.playerCardColor)
+                            : null,
+                        onTap: () async {
+                          await notifier.setTheme(theme);
+                          if (context.mounted) Navigator.pop(context);
+                        },
+                      );
+                    }),
+                    const SizedBox(height: 8),
+                  ],
+                ),
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
+ 
   Future<void> signOut(BuildContext context) async {
     final loc = AppLocalizations.of(context)!;
     await FirebaseAuth.instance.signOut();
@@ -346,6 +425,12 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         title: Text(loc.appTitle),
         actions: [
+          // Theme selector button
+          IconButton(
+            icon: const Icon(Icons.palette_outlined),
+            tooltip: loc.themeSelector,
+            onPressed: () => _showThemeSelector(context),
+          ),
           IconButton(
             icon: const Icon(Icons.logout),
             tooltip: loc.signOut,
@@ -424,14 +509,15 @@ class _HomeScreenState extends State<HomeScreen> {
                               horizontal: 16, vertical: 12),
                           decoration: BoxDecoration(
                             color: isSelected
-                                ? const Color(0xFF2E7D32)
+                                ? context.read<ThemeNotifier>().current.selectionColor
                                 : Colors.grey.shade200,
                             borderRadius: BorderRadius.circular(30),
                             boxShadow: isSelected
                                 ? [
                                     BoxShadow(
-                                      color:
-                                          Colors.green.withOpacity(0.3),
+                                      color: context.read<ThemeNotifier>()
+                                          .current.selectionColor
+                                          .withValues(alpha: 0.3),
                                       blurRadius: 8,
                                       offset: const Offset(0, 3),
                                     )
@@ -526,7 +612,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   horizontal: 14, vertical: 10),
                               decoration: BoxDecoration(
                                 color: isSelected
-                                    ? const Color(0xFF2E7D32)
+                                    ? context.read<ThemeNotifier>().current.selectionColor
                                     : Colors.grey.shade200,
                                 borderRadius: BorderRadius.circular(20),
                               ),
