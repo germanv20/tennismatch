@@ -13,6 +13,7 @@ class DoublesMatchDetailsScreen extends StatelessWidget {
   final String location;
   final int duration;
   final DateTime matchDate;
+  final String? notes;
 
   const DoublesMatchDetailsScreen({
     super.key,
@@ -26,6 +27,7 @@ class DoublesMatchDetailsScreen extends StatelessWidget {
     required this.location,
     required this.duration,
     required this.matchDate,
+    this.notes,
   });
 
   Future<void> _deleteMatch(BuildContext context, AppLocalizations loc) async {
@@ -298,6 +300,28 @@ class DoublesMatchDetailsScreen extends StatelessWidget {
               const SizedBox(height: 4),
               Text('${loc.dateLabel}: ${matchDate.day}/${matchDate.month}/${matchDate.year}',
                 style: const TextStyle(fontWeight: FontWeight.w500)),
+
+              if (notes != null && notes!.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(Icons.notes_outlined,
+                        size: 16, color: Colors.grey[600]),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        notes!,
+                        style: TextStyle(
+                          color: Colors.grey[700],
+                          fontStyle: FontStyle.italic,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
 
               const SizedBox(height: 32),
 

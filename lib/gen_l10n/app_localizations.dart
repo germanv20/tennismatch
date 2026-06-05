@@ -1628,6 +1628,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Theme'**
   String get themeSelector;
+
+  /// No description provided for @matchNotesLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Match Notes'**
+  String get matchNotesLabel;
+
+  /// No description provided for @matchNotesHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Add any additional comments about this match (optional)'**
+  String get matchNotesHint;
+
+  /// No description provided for @matchNotesSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Notes'**
+  String get matchNotesSection;
+
+  /// No description provided for @requestExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'Request expired'**
+  String get requestExpired;
+
+  /// No description provided for @requestExpiredTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'🎾 Match Request Expired'**
+  String get requestExpiredTitle;
+
+  /// No description provided for @requestExpiredBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your match request to {opponent} has expired after 2 days'**
+  String requestExpiredBody(String opponent);
 }
 
 class _AppLocalizationsDelegate

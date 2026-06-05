@@ -26,6 +26,7 @@ class _AddMatchResultScreenState extends State<AddMatchResultScreen> {
 
   final durationController = TextEditingController();
   final locationController = TextEditingController();
+  final notesController = TextEditingController();
   bool useOfficialScoring = true;
   DateTime? selectedMatchDate;
   String? player1Name;
@@ -57,6 +58,7 @@ class _AddMatchResultScreenState extends State<AddMatchResultScreen> {
   void dispose() {
     durationController.dispose();
     locationController.dispose();
+    notesController.dispose();
     super.dispose();
   }
 
@@ -199,6 +201,8 @@ class _AddMatchResultScreenState extends State<AddMatchResultScreen> {
         'location': locationController.text.trim(),
         'durationMinutes': duration,
         'matchDate': Timestamp.fromDate(selectedMatchDate!),
+        if (notesController.text.trim().isNotEmpty)
+          'notes': notesController.text.trim(),
       },
       'summary': {
         'p1Name': currentUserName,
@@ -380,6 +384,22 @@ class _AddMatchResultScreenState extends State<AddMatchResultScreen> {
               controller: locationController,
               textCapitalization: TextCapitalization.words,
               decoration: InputDecoration(labelText: loc.location, border: const OutlineInputBorder(), prefixIcon: const Icon(Icons.location_on_outlined)),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: notesController,
+              textCapitalization: TextCapitalization.sentences,
+              maxLines: 3,
+              decoration: InputDecoration(
+                labelText: loc.matchNotesLabel,
+                hintText: loc.matchNotesHint,
+                border: const OutlineInputBorder(),
+                prefixIcon: const Padding(
+                  padding: EdgeInsets.only(bottom: 40),
+                  child: Icon(Icons.notes_outlined),
+                ),
+                alignLabelWithHint: true,
+              ),
             ),
             const SizedBox(height: 32),
             SizedBox(

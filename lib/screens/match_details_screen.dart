@@ -15,6 +15,7 @@ class MatchDetailsScreen extends StatefulWidget {
   final DateTime matchDate;
   final String matchId;
   final List players;
+  final String? notes;
 
   const MatchDetailsScreen({
     super.key,
@@ -27,6 +28,7 @@ class MatchDetailsScreen extends StatefulWidget {
     required this.location,
     required this.duration,
     required this.matchDate,
+    this.notes,
   });
 
   @override
@@ -448,6 +450,28 @@ class _MatchDetailsScreenState extends State<MatchDetailsScreen> {
                       style: const TextStyle(fontWeight: FontWeight.w500)),
                     Text('${loc.dateLabel}: ${widget.matchDate.day}/${widget.matchDate.month}/${widget.matchDate.year}',
                       style: const TextStyle(fontWeight: FontWeight.w500)),
+
+                    if (widget.notes != null && widget.notes!.isNotEmpty) ...[
+                      const SizedBox(height: 8),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Icon(Icons.notes_outlined,
+                              size: 16, color: Colors.grey[600]),
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: Text(
+                              widget.notes!,
+                              style: TextStyle(
+                                color: Colors.grey[700],
+                                fontStyle: FontStyle.italic,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
 
                     const SizedBox(height: 30),
 

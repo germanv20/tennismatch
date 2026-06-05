@@ -18,6 +18,7 @@ class MatchCard extends StatelessWidget {
   final bool hasDeleteRequest;
   final Map<String, dynamic>? deletionRequest;
   final bool isTie;
+  final String? notes;
 
   const MatchCard({
     super.key,
@@ -35,6 +36,7 @@ class MatchCard extends StatelessWidget {
     required this.hasDeleteRequest,
     required this.deletionRequest,
     this.isTie = false,
+    this.notes,
   });
 
   Widget? buildDeletionStatus(BuildContext context) {
@@ -135,6 +137,7 @@ class MatchCard extends StatelessWidget {
               location: location,
               duration: duration,
               matchDate: matchDate,
+              notes: notes,
             ),
           ),
         );

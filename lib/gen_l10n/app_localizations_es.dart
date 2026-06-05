@@ -820,4 +820,25 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get themeSelector => 'Tema';
+
+  @override
+  String get matchNotesLabel => 'Notas del partido';
+
+  @override
+  String get matchNotesHint =>
+      'Agrega cualquier comentario adicional sobre este partido (opcional)';
+
+  @override
+  String get matchNotesSection => 'Notas';
+
+  @override
+  String get requestExpired => 'Solicitud expirada';
+
+  @override
+  String get requestExpiredTitle => '🎾 Solicitud de partido expirada';
+
+  @override
+  String requestExpiredBody(String opponent) {
+    return 'Tu solicitud de partido a $opponent expiró después de 2 días';
+  }
 }

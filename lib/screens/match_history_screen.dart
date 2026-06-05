@@ -88,6 +88,7 @@ class _MatchHistoryScreenState extends State<MatchHistoryScreen> {
 
     final location = match['result']?['location'] ?? '';
     final duration = match['result']?['durationMinutes'] ?? 0;
+    final notes = match['result']?['notes']?.toString();
     final deletionRequest = match['deletionRequest'];
 
     final bool hasDeleteNotification = deletionRequest != null &&
@@ -116,6 +117,7 @@ class _MatchHistoryScreenState extends State<MatchHistoryScreen> {
                 location: location,
                 duration: duration,
                 matchDate: matchDate,
+                notes: notes,
               ),
             ),
           );
@@ -147,6 +149,7 @@ class _MatchHistoryScreenState extends State<MatchHistoryScreen> {
           winnerUid: match['winnerUid'] ?? '',
           currentUserUid: currentUid,
           isTie: match['isTie'] == true,
+          notes: notes,
         ),
       ),
     );
@@ -198,6 +201,7 @@ class _MatchHistoryScreenState extends State<MatchHistoryScreen> {
 
     final location = match['result']?['location'] ?? '';
     final duration = match['result']?['durationMinutes'] ?? 0;
+    final guestNotes = match['result']?['notes']?.toString();
 
     Timestamp? matchDateTs = match['result']?['matchDate'];
     final DateTime matchDate =
@@ -226,10 +230,9 @@ class _MatchHistoryScreenState extends State<MatchHistoryScreen> {
                 location: location,
                 duration: duration,
                 matchDate: matchDate,
-                // Pass a synthetic winnerUid from current user's perspective:
-                // if currentUserWon, use currentUid; otherwise use a placeholder
                 winnerUid: currentUserWon ? currentUid : 'opponent',
                 currentUserUid: currentUid,
+                notes: guestNotes,
               ),
             ),
           );
@@ -276,6 +279,7 @@ class _MatchHistoryScreenState extends State<MatchHistoryScreen> {
     final rawSets = match['result']?['sets'] ?? [];
     final location = match['result']?['location'] ?? '';
     final duration = match['result']?['durationMinutes'] ?? 0;
+    final doublesNotes = match['result']?['notes']?.toString();
     Timestamp? matchDateTs = match['result']?['matchDate'];
     final DateTime matchDate =
         matchDateTs != null ? matchDateTs.toDate() : DateTime.now();
@@ -301,6 +305,7 @@ class _MatchHistoryScreenState extends State<MatchHistoryScreen> {
                 location: location,
                 duration: duration,
                 matchDate: matchDate,
+                notes: doublesNotes,
               ),
             ),
           );

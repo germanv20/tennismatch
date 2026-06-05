@@ -10,6 +10,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'firebase_options.dart';
 import 'package:provider/provider.dart';
 import 'screens/match_chat_screen.dart';
+import 'screens/incoming_requests_screen.dart';
 import 'services/theme_service.dart';
 import 'screens/match_detail_screen.dart';
 import 'screens/home_screen.dart';
@@ -190,12 +191,22 @@ Future<void> handleNotificationTap(Map<String, dynamic> data) async {
   final type = data['type'] as String? ?? '';
   final matchId = data['matchId'] as String?;
 
-  if (matchId == null) return;
+  // Wait until the navigator is ready
+  if (navigatorKey.currentState == null) {
+    await Future.delayed(const Duration(milliseconds: 500));
+  }
+  if (navigatorKey.currentState == null) return;
 
-  if (type == 'match_reminder') {
+  if (type == 'match_reminder' && matchId != null) {
     await navigateToMatchDetail(matchId);
-  } else {
-    // chat_message, match_request, match_accepted all go to chat/home
+  } else if (type == 'match_request') {
+    // Navigate to Incoming Requests screen so user can accept/reject
+    navigatorKey.currentState?.pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => const IncomingRequestsScreen()),
+      (route) => route.isFirst,
+    );
+  } else if (matchId != null) {
+    // chat_message, match_accepted → open chat
     await navigateToChat(matchId);
   }
 }
@@ -228,23 +239,18 @@ class _AuthTestState extends State<AuthTest> {
 
     // When app opened from background
     FirebaseMessaging.onMessageOpenedApp.listen((message) {
-      final matchId = message.data['matchId'];
-      if (matchId != null) {
-        Future.delayed(const Duration(milliseconds: 500), () {
-          handleNotificationTap(message.data);
-        });
-      }
+      Future.delayed(const Duration(milliseconds: 500), () {
+        handleNotificationTap(message.data);
+      });
     });
 
     // When app opened from terminated state
     FirebaseMessaging.instance.getInitialMessage().then((message) {
       if (message != null) {
-        final matchId = message.data['matchId'];
-        if (matchId != null) {
-          Future.delayed(const Duration(milliseconds: 500), () {
-            handleNotificationTap(message.data);
-          });
-        }
+        // Longer delay needed — navigator not ready immediately on cold start
+        Future.delayed(const Duration(milliseconds: 1500), () {
+          handleNotificationTap(message.data);
+        });
       }
     });
   }

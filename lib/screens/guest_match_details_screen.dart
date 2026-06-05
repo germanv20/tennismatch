@@ -14,6 +14,7 @@ class GuestMatchDetailsScreen extends StatelessWidget {
   final DateTime matchDate;
   final String winnerUid;
   final String currentUserUid;
+  final String? notes;
 
   const GuestMatchDetailsScreen({
     super.key,
@@ -27,6 +28,7 @@ class GuestMatchDetailsScreen extends StatelessWidget {
     required this.matchDate,
     required this.winnerUid,
     required this.currentUserUid,
+    this.notes,
   });
 
   String _formatScore() {
@@ -352,6 +354,28 @@ class GuestMatchDetailsScreen extends StatelessWidget {
                 '${loc.dateLabel}: ${matchDate.day}/${matchDate.month}/${matchDate.year}',
                 style: const TextStyle(fontWeight: FontWeight.w500),
               ),
+
+              if (notes != null && notes!.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(Icons.notes_outlined,
+                        size: 16, color: Colors.grey[600]),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        notes!,
+                        style: TextStyle(
+                          color: Colors.grey[700],
+                          fontStyle: FontStyle.italic,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
 
               if (opponentPhone.isNotEmpty) ...[
                 const SizedBox(height: 4),

@@ -54,6 +54,15 @@ class TennisTheme {
         labelColor: onPrimary,
         unselectedLabelColor: onPrimary.withValues(alpha: 0.7),
         indicatorColor: onPrimary,
+        labelStyle: const TextStyle(
+          fontSize: 15,
+          fontWeight: FontWeight.bold,
+          letterSpacing: 0.3,
+        ),
+        unselectedLabelStyle: const TextStyle(
+          fontSize: 15,
+          fontWeight: FontWeight.w400,
+        ),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
@@ -137,8 +146,7 @@ const TennisTheme themeFR = TennisTheme(
   surface: Colors.white,
   onPrimary: Colors.white,
   playerCardColor: Color(0xFFC85A1A),
-  //selectionColor: Color(0xFF1A5C38),
-  selectionColor: Color(0xFFC85A1A),
+  selectionColor: Color(0xFF1A5C38),
 );
 
 const TennisTheme themeENG = TennisTheme(

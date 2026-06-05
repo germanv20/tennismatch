@@ -22,6 +22,7 @@ class _LogDoublesMatchScreenState extends State<LogDoublesMatchScreen> {
   // Match info
   final durationController = TextEditingController();
   final locationController = TextEditingController();
+  final notesController = TextEditingController();
 
   // Sets
   final List<GlobalKey<SetScoreRowState>> _setKeys = [];
@@ -74,6 +75,7 @@ class _LogDoublesMatchScreenState extends State<LogDoublesMatchScreen> {
     opponent2Controller.dispose();
     durationController.dispose();
     locationController.dispose();
+    notesController.dispose();
     super.dispose();
   }
 
@@ -239,6 +241,8 @@ class _LogDoublesMatchScreenState extends State<LogDoublesMatchScreen> {
         'location': location,
         'durationMinutes': duration,
         'matchDate': Timestamp.fromDate(selectedMatchDate!),
+        if (notesController.text.trim().isNotEmpty)
+          'notes': notesController.text.trim(),
       },
     };
 
@@ -481,6 +485,24 @@ class _LogDoublesMatchScreenState extends State<LogDoublesMatchScreen> {
                 labelText: loc.location,
                 border: const OutlineInputBorder(),
                 prefixIcon: const Icon(Icons.location_on_outlined),
+              ),
+            ),
+
+            const SizedBox(height: 12),
+
+            TextField(
+              controller: notesController,
+              textCapitalization: TextCapitalization.sentences,
+              maxLines: 3,
+              decoration: InputDecoration(
+                labelText: loc.matchNotesLabel,
+                hintText: loc.matchNotesHint,
+                border: const OutlineInputBorder(),
+                prefixIcon: const Padding(
+                  padding: EdgeInsets.only(bottom: 40),
+                  child: Icon(Icons.notes_outlined),
+                ),
+                alignLabelWithHint: true,
               ),
             ),
 

@@ -309,5 +309,12 @@
   "@matchReminder1hBody": {"placeholders": {"opponent": {"type": "String"}}},
   "scheduleMaxDaysError": "Solo puedes programar hasta 7 días adelante",
   "schedulePastError": "Por favor selecciona una fecha y hora futura",
-  "themeSelector": "Tema"
+  "themeSelector": "Tema",
+  "matchNotesLabel": "Notas del partido",
+  "matchNotesHint": "Agrega cualquier comentario adicional sobre este partido (opcional)",
+  "matchNotesSection": "Notas",
+  "requestExpired": "Solicitud expirada",
+  "requestExpiredTitle": "🎾 Solicitud de partido expirada",
+  "requestExpiredBody": "Tu solicitud de partido a {opponent} expiró después de 2 días",
+  "@requestExpiredBody": {"placeholders": {"opponent": {"type": "String"}}}
 }

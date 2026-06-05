@@ -309,5 +309,12 @@
   "@matchReminder1hBody": {"placeholders": {"opponent": {"type": "String"}}},
   "scheduleMaxDaysError": "You can only schedule up to 7 days ahead",
   "schedulePastError": "Please select a future date and time",
-  "themeSelector": "Theme"
+  "themeSelector": "Theme",
+  "matchNotesLabel": "Match Notes",
+  "matchNotesHint": "Add any additional comments about this match (optional)",
+  "matchNotesSection": "Notes",
+  "requestExpired": "Request expired",
+  "requestExpiredTitle": "🎾 Match Request Expired",
+  "requestExpiredBody": "Your match request to {opponent} has expired after 2 days",
+  "@requestExpiredBody": {"placeholders": {"opponent": {"type": "String"}}}
 }

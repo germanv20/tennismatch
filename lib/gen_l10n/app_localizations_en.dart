@@ -807,4 +807,25 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get themeSelector => 'Theme';
+
+  @override
+  String get matchNotesLabel => 'Match Notes';
+
+  @override
+  String get matchNotesHint =>
+      'Add any additional comments about this match (optional)';
+
+  @override
+  String get matchNotesSection => 'Notes';
+
+  @override
+  String get requestExpired => 'Request expired';
+
+  @override
+  String get requestExpiredTitle => '🎾 Match Request Expired';
+
+  @override
+  String requestExpiredBody(String opponent) {
+    return 'Your match request to $opponent has expired after 2 days';
+  }
 }

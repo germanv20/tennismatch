@@ -19,10 +19,7 @@ class OutgoingRequestsScreen extends StatelessWidget {
       await FirebaseFirestore.instance
           .collection('match_requests')
           .doc(requestId)
-          .update({
-        'status': 'cancelled',
-      });
-
+          .update({'status': 'cancelled'});
     } catch (e) {
       debugPrint('❌ Error cancelling request: $e');
     }
@@ -36,13 +33,15 @@ class OutgoingRequestsScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(loc.outgoingRequests), // 'Outgoing Requests'
+        title: Text(loc.outgoingRequests),
       ),
       body: SafeArea(
-          child: StreamBuilder<QuerySnapshot>(
+        child: StreamBuilder<QuerySnapshot>(
+          // Include pending AND expired so we can show the expiry badge
+          // before the user dismisses it by cancelling
           stream: requestsRef
               .where('fromUid', isEqualTo: currentUser.uid)
-              .where('status', isEqualTo: 'pending')
+              .where('status', whereIn: ['pending', 'expired'])
               .orderBy('createdAt', descending: true)
               .snapshots(),
           builder: (context, snapshot) {
@@ -52,28 +51,43 @@ class OutgoingRequestsScreen extends StatelessWidget {
             }
 
             if (snapshot.hasError) {
-              return ErrorState(
-                message: loc.failedToLoadOutgoing, // "Failed to load outgoing requests"
-              );
+              return ErrorState(message: loc.failedToLoadOutgoing);
             }
 
-            if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+            // Filter to show: pending + recently expired (last 7 days)
+            // so user sees the expiry notification, then it disappears
+            final allDocs = snapshot.data?.docs ?? [];
+            final now = DateTime.now();
+            final requests = allDocs.where((doc) {
+              final data = doc.data() as Map<String, dynamic>;
+              final status = data['status'] as String? ?? '';
+              if (status == 'pending') return true;
+              if (status == 'expired') {
+                // Show expired requests for 1 day so user sees the badge
+                final createdAt = data['createdAt'] as Timestamp?;
+                if (createdAt == null) return false;
+                final age = now.difference(createdAt.toDate());
+                return age.inDays <= 3; // 2 days pending + 1 day visible
+              }
+              return false;
+            }).toList();
+
+            if (requests.isEmpty) {
               return EmptyState(
                 icon: Icons.outbox,
-                title: loc.noOutgoingRequests, // "No outgoing requests"
-                subtitle: loc.outgoingRequestsSubtitle, // "Requests you send will appear here"
+                title: loc.noOutgoingRequests,
+                subtitle: loc.outgoingRequestsSubtitle,
               );
             }
-
-            final requests = snapshot.data!.docs;
 
             return ListView.builder(
               itemCount: requests.length,
               itemBuilder: (context, index) {
                 final request = requests[index];
                 final data = request.data() as Map<String, dynamic>;
-
-                final toUid = data['toUid'];
+                final toUid = data['toUid'] as String? ?? '';
+                final status = data['status'] as String? ?? 'pending';
+                final isExpired = status == 'expired';
 
                 return FutureBuilder<DocumentSnapshot>(
                   future: FirebaseFirestore.instance
@@ -83,19 +97,17 @@ class OutgoingRequestsScreen extends StatelessWidget {
                   builder: (context, userSnapshot) {
 
                     if (userSnapshot.hasError) {
-                      return ListTile(
-                        title: Text(loc.failedToLoadUser), // 'Failed to load user'
-                      );
+                      return ListTile(title: Text(loc.failedToLoadUser));
                     }
 
                     if (!userSnapshot.hasData) {
                       return const Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        padding: EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 6),
                         child: Card(
                           child: ListTile(
                             leading: CircleAvatar(
-                              child: Icon(Icons.person),
-                            ),
+                                child: Icon(Icons.person)),
                             title: SizedBox(
                               height: 12,
                               child: LinearProgressIndicator(),
@@ -105,30 +117,36 @@ class OutgoingRequestsScreen extends StatelessWidget {
                       );
                     }
 
-                    final userData =
-                        userSnapshot.data!.data() as Map<String, dynamic>? ?? {};
+                    final userData = userSnapshot.data!.data()
+                        as Map<String, dynamic>? ?? {};
+
                     return Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 6),
                       child: Card(
+                        // Grey out expired requests
+                        color: isExpired ? Colors.grey[100] : null,
                         child: ListTile(
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => PlayerProfileViewScreen(
-                                  userData: userData,
-
-                                  onCancel: () async {
-                                    await cancelRequest(request.id); // ✅ no context
-                                  },
-                                ),
-                              ),
-                            );
-                          },
-
+                          onTap: isExpired
+                              ? null
+                              : () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => PlayerProfileViewScreen(
+                                        userData: userData,
+                                        onCancel: () async {
+                                          await cancelRequest(request.id);
+                                        },
+                                      ),
+                                    ),
+                                  );
+                                },
                           leading: CircleAvatar(
                             backgroundImage: (userData['photoUrl'] != null &&
-                                    userData['photoUrl'].toString().isNotEmpty)
+                                    userData['photoUrl']
+                                        .toString()
+                                        .isNotEmpty)
                                 ? NetworkImage(userData['photoUrl'])
                                 : null,
                             child: userData['photoUrl'] == null
@@ -137,11 +155,28 @@ class OutgoingRequestsScreen extends StatelessWidget {
                           ),
                           title: Text(
                             userData['name'] ?? loc.unknown,
-                            style: const TextStyle(fontWeight: FontWeight.bold),
-                          ), // Unknown
-                          subtitle: Text(loc.waitingForResponse), // 'Waiting for response'
-
-                          trailing: const Icon(Icons.arrow_forward_ios),
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: isExpired ? Colors.grey[600] : null,
+                            ),
+                          ),
+                          subtitle: Text(
+                            isExpired
+                                ? loc.requestExpired
+                                : loc.waitingForResponse,
+                            style: TextStyle(
+                              color: isExpired
+                                  ? Colors.orange[700]
+                                  : Colors.grey,
+                              fontWeight: isExpired
+                                  ? FontWeight.w500
+                                  : FontWeight.normal,
+                            ),
+                          ),
+                          trailing: isExpired
+                              ? Icon(Icons.timer_off,
+                                  color: Colors.orange[700])
+                              : const Icon(Icons.arrow_forward_ios),
                         ),
                       ),
                     );

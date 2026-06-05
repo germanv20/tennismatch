@@ -28,6 +28,9 @@ const strings = {
       `¡Tu partido con ${name} es mañana!`,
     matchReminder1hBody: (name) =>
       `¡Tu partido con ${name} comienza en 1 hora!`,
+    requestExpiredTitle: "🎾 Solicitud de partido expirada",
+    requestExpiredBody: (name) =>
+      `Tu solicitud de partido a ${name} expiró después de 2 días`,
   },
   en: {
     matchRequestTitle: "🎾 New Match Request",
@@ -41,6 +44,9 @@ const strings = {
       `Your match with ${name} is tomorrow!`,
     matchReminder1hBody: (name) =>
       `Your match with ${name} starts in 1 hour!`,
+    requestExpiredTitle: "🎾 Match Request Expired",
+    requestExpiredBody: (name) =>
+      `Your match request to ${name} has expired after 2 days`,
   },
 };
 
@@ -414,5 +420,68 @@ exports.onMatchScheduleReminder = onSchedule("every 30 minutes", async () => {
         `✅ Reminder sent for match ${matchId}`,
         `(${is24hWindow ? "24h" : "1h"} window)`,
     );
+  }
+});
+
+// ─────────────────────────────────────────────────────
+// 5. MATCH REQUEST AUTO-EXPIRY
+//    Runs daily. Finds pending requests older than 2 days
+//    and marks them expired, then notifies the sender.
+// ─────────────────────────────────────────────────────
+exports.onMatchRequestExpiry = onSchedule("every 24 hours", async () => {
+  const twoDaysAgo = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000);
+
+  const snapshot = await db.collection("match_requests")
+      .where("status", "==", "pending")
+      .where("createdAt", "<", twoDaysAgo)
+      .get();
+
+  if (snapshot.empty) {
+    console.log("No expired match requests found.");
+    return;
+  }
+
+  console.log(`Found ${snapshot.docs.length} expired request(s).`);
+
+  for (const doc of snapshot.docs) {
+    const request = doc.data();
+    const fromUid = request.fromUid;
+    const toUid = request.toUid;
+
+    // Mark as expired
+    await doc.ref.update({status: "expired"});
+
+    // Get both user names for the notification
+    const [fromSnap, toSnap] = await Promise.all([
+      db.collection("users").doc(fromUid).get(),
+      db.collection("users").doc(toUid).get(),
+    ]);
+
+    const toName = toSnap.exists ?
+        (toSnap.data().name || "your opponent") : "your opponent";
+
+    // Notify the sender in their language
+    const fromLocale = fromSnap.exists ?
+        (fromSnap.data().locale || "en") : "en";
+    const t = getStrings(fromLocale);
+
+    await sendPushToUser(fromUid, {
+      notification: {
+        title: t.requestExpiredTitle,
+        body: t.requestExpiredBody(toName),
+      },
+      android: {
+        notification: {
+          channelId: "default",
+          tag: `expired_${doc.id}`,
+        },
+      },
+      data: {
+        type: "request_expired",
+        requestId: doc.id,
+      },
+    });
+
+    console.log(`✅ Expired request ${doc.id} (from ${fromUid} to ${toUid})`);
   }
 });

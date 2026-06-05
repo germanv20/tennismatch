@@ -24,6 +24,7 @@ class _LogGuestMatchScreenState extends State<LogGuestMatchScreen> {
   // Match info
   final durationController = TextEditingController();
   final locationController = TextEditingController();
+  final notesController = TextEditingController();
   bool useOfficialScoring = true;
   DateTime? selectedMatchDate;
 
@@ -77,6 +78,7 @@ class _LogGuestMatchScreenState extends State<LogGuestMatchScreen> {
     opponentPhoneController.dispose();
     durationController.dispose();
     locationController.dispose();
+    notesController.dispose();
     super.dispose();
   }
 
@@ -327,6 +329,8 @@ class _LogGuestMatchScreenState extends State<LogGuestMatchScreen> {
         'location': location,
         'durationMinutes': duration,
         'matchDate': Timestamp.fromDate(selectedMatchDate!),
+        if (notesController.text.trim().isNotEmpty)
+          'notes': notesController.text.trim(),
       },
       'summary': {
         'p1Name': currentUserName ?? 'Player',
@@ -634,6 +638,24 @@ class _LogGuestMatchScreenState extends State<LogGuestMatchScreen> {
                 labelText: loc.location,
                 border: const OutlineInputBorder(),
                 prefixIcon: const Icon(Icons.location_on_outlined),
+              ),
+            ),
+
+            const SizedBox(height: 12),
+
+            TextField(
+              controller: notesController,
+              textCapitalization: TextCapitalization.sentences,
+              maxLines: 3,
+              decoration: InputDecoration(
+                labelText: loc.matchNotesLabel,
+                hintText: loc.matchNotesHint,
+                border: const OutlineInputBorder(),
+                prefixIcon: const Padding(
+                  padding: EdgeInsets.only(bottom: 40),
+                  child: Icon(Icons.notes_outlined),
+                ),
+                alignLabelWithHint: true,
               ),
             ),
 
