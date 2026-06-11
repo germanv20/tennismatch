@@ -33,6 +33,7 @@ class _LogGuestMatchScreenState extends State<LogGuestMatchScreen> {
   String? currentUserUid;
 
   bool isSaving = false;
+  bool allowTie = false;
 
   @override
   void initState() {
@@ -269,7 +270,7 @@ class _LogGuestMatchScreenState extends State<LogGuestMatchScreen> {
       return;
     }
 
-    if (p1Wins == p2Wins) {
+    if (p1Wins == p2Wins && !allowTie) {
       showError(loc.mustHaveWinner);
       return;
     }
@@ -302,8 +303,10 @@ class _LogGuestMatchScreenState extends State<LogGuestMatchScreen> {
         : rawPhoneInput;
 
     // p1 = current user (always), p2 = guest opponent
-    final bool currentUserWon = p1Wins > p2Wins;
-    final String winnerUid = currentUserWon ? uid : 'guest';
+    final bool isTie = allowTie && p1Wins == p2Wins;
+    final bool currentUserWon = !isTie && p1Wins > p2Wins;
+    final String? winnerUid = isTie ? null
+        : (currentUserWon ? uid : 'guest');
 
     final matchData = {
       'type': 'guest',
@@ -322,6 +325,7 @@ class _LogGuestMatchScreenState extends State<LogGuestMatchScreen> {
       },
       'status': 'completed',
       'winnerUid': winnerUid,
+      if (isTie) 'isTie': true,
       'createdAt': FieldValue.serverTimestamp(),
       'completedAt': FieldValue.serverTimestamp(),
       'result': {
@@ -589,6 +593,42 @@ class _LogGuestMatchScreenState extends State<LogGuestMatchScreen> {
               onPressed: isSaving ? null : addSet,
               icon: const Icon(Icons.add),
               label: Text(loc.addSet),
+            ),
+
+            // ── Tie option ──
+            Row(
+              children: [
+                Checkbox(
+                  value: allowTie,
+                  onChanged: isSaving
+                      ? null
+                      : (v) => setState(() => allowTie = v ?? false),
+                ),
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () => setState(() => allowTie = !allowTie),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          loc.allowTie,
+                          style: const TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        Text(
+                          loc.tieTooltip,
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             ),
 
             const SizedBox(height: 16),

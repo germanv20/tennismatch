@@ -1664,6 +1664,132 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Your match request to {opponent} has expired after 2 days'**
   String requestExpiredBody(String opponent);
+
+  /// No description provided for @themeDefault.
+  ///
+  /// In en, this message translates to:
+  /// **'Default'**
+  String get themeDefault;
+
+  /// No description provided for @themeHardCourt1.
+  ///
+  /// In en, this message translates to:
+  /// **'Hard court 1'**
+  String get themeHardCourt1;
+
+  /// No description provided for @themeClay.
+  ///
+  /// In en, this message translates to:
+  /// **'Clay'**
+  String get themeClay;
+
+  /// No description provided for @themeGrass.
+  ///
+  /// In en, this message translates to:
+  /// **'Grass'**
+  String get themeGrass;
+
+  /// No description provided for @themeHardCourt2.
+  ///
+  /// In en, this message translates to:
+  /// **'Hard court 2'**
+  String get themeHardCourt2;
+
+  /// No description provided for @filterTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Filter matches'**
+  String get filterTitle;
+
+  /// No description provided for @filterClear.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear all'**
+  String get filterClear;
+
+  /// No description provided for @filterApply.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply filters'**
+  String get filterApply;
+
+  /// No description provided for @filterByName.
+  ///
+  /// In en, this message translates to:
+  /// **'By opponent name'**
+  String get filterByName;
+
+  /// No description provided for @filterNameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search opponent...'**
+  String get filterNameHint;
+
+  /// No description provided for @filterByResult.
+  ///
+  /// In en, this message translates to:
+  /// **'By result'**
+  String get filterByResult;
+
+  /// No description provided for @filterByType.
+  ///
+  /// In en, this message translates to:
+  /// **'By match type'**
+  String get filterByType;
+
+  /// No description provided for @filterGuest.
+  ///
+  /// In en, this message translates to:
+  /// **'Guest'**
+  String get filterGuest;
+
+  /// No description provided for @filterByDate.
+  ///
+  /// In en, this message translates to:
+  /// **'By date'**
+  String get filterByDate;
+
+  /// No description provided for @filterThisMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'This month'**
+  String get filterThisMonth;
+
+  /// No description provided for @filterLast3Months.
+  ///
+  /// In en, this message translates to:
+  /// **'Last 3 months'**
+  String get filterLast3Months;
+
+  /// No description provided for @filterRegistered.
+  ///
+  /// In en, this message translates to:
+  /// **'Registered'**
+  String get filterRegistered;
+
+  /// No description provided for @uploadingPhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Uploading photo...'**
+  String get uploadingPhoto;
+
+  /// No description provided for @photoUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile photo updated!'**
+  String get photoUpdated;
+
+  /// No description provided for @photoUploadError.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to upload photo. Please try again.'**
+  String get photoUploadError;
+
+  /// No description provided for @tapToChangePhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to change photo'**
+  String get tapToChangePhoto;
 }
 
 class _AppLocalizationsDelegate

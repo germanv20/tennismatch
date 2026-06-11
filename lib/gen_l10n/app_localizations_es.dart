@@ -841,4 +841,67 @@ class AppLocalizationsEs extends AppLocalizations {
   String requestExpiredBody(String opponent) {
     return 'Tu solicitud de partido a $opponent expiró después de 2 días';
   }
+
+  @override
+  String get themeDefault => 'Por defecto';
+
+  @override
+  String get themeHardCourt1 => 'Cancha dura 1';
+
+  @override
+  String get themeClay => 'Polvo de ladrillo';
+
+  @override
+  String get themeGrass => 'Césped';
+
+  @override
+  String get themeHardCourt2 => 'Cancha dura 2';
+
+  @override
+  String get filterTitle => 'Filtrar partidos';
+
+  @override
+  String get filterClear => 'Limpiar';
+
+  @override
+  String get filterApply => 'Aplicar filtros';
+
+  @override
+  String get filterByName => 'Por nombre del oponente';
+
+  @override
+  String get filterNameHint => 'Buscar oponente...';
+
+  @override
+  String get filterByResult => 'Por resultado';
+
+  @override
+  String get filterByType => 'Por tipo de partido';
+
+  @override
+  String get filterGuest => 'Invitado';
+
+  @override
+  String get filterByDate => 'Por fecha';
+
+  @override
+  String get filterThisMonth => 'Este mes';
+
+  @override
+  String get filterLast3Months => 'Últimos 3 meses';
+
+  @override
+  String get filterRegistered => 'Registrado';
+
+  @override
+  String get uploadingPhoto => 'Subiendo foto...';
+
+  @override
+  String get photoUpdated => '¡Foto de perfil actualizada!';
+
+  @override
+  String get photoUploadError => 'Error al subir la foto. Intenta de nuevo.';
+
+  @override
+  String get tapToChangePhoto => 'Toca para cambiar la foto';
 }

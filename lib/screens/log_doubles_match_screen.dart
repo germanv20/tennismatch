@@ -30,6 +30,7 @@ class _LogDoublesMatchScreenState extends State<LogDoublesMatchScreen> {
   bool useOfficialScoring = true;
   DateTime? selectedMatchDate;
   bool isSaving = false;
+  bool allowTie = false;
 
   // Winner selection: 1 = your team, 2 = opponent team
   // Determined automatically from set wins
@@ -196,7 +197,7 @@ class _LogDoublesMatchScreenState extends State<LogDoublesMatchScreen> {
       showError(loc.addAtLeastOneSet);
       return;
     }
-    if (team1Wins == team2Wins) {
+    if (team1Wins == team2Wins && !allowTie) {
       showError(loc.mustHaveWinner);
       return;
     }
@@ -218,7 +219,9 @@ class _LogDoublesMatchScreenState extends State<LogDoublesMatchScreen> {
 
     final uid = currentUserUid!;
     final myName = currentUserName ?? 'Player';
-    final winnerTeam = team1Wins > team2Wins ? 1 : 2;
+    final bool isTie = allowTie && team1Wins == team2Wins;
+    final int? winnerTeam = isTie ? null
+        : (team1Wins > team2Wins ? 1 : 2);
 
     final matchData = {
       'type': 'doubles_guest',
@@ -226,6 +229,7 @@ class _LogDoublesMatchScreenState extends State<LogDoublesMatchScreen> {
       'players': [uid],
       'status': 'completed',
       'winnerTeam': winnerTeam,
+      if (isTie) 'isTie': true,
       'team1': {
         'player1': myName,
         'player2': partnerName,
@@ -440,6 +444,42 @@ class _LogDoublesMatchScreenState extends State<LogDoublesMatchScreen> {
               onPressed: isSaving ? null : _addSet,
               icon: const Icon(Icons.add),
               label: Text(loc.addSet),
+            ),
+
+            // ── Tie option ──
+            Row(
+              children: [
+                Checkbox(
+                  value: allowTie,
+                  onChanged: isSaving
+                      ? null
+                      : (v) => setState(() => allowTie = v ?? false),
+                ),
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () => setState(() => allowTie = !allowTie),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          loc.allowTie,
+                          style: const TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        Text(
+                          loc.tieTooltip,
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             ),
 
             const SizedBox(height: 16),

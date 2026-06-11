@@ -828,4 +828,67 @@ class AppLocalizationsEn extends AppLocalizations {
   String requestExpiredBody(String opponent) {
     return 'Your match request to $opponent has expired after 2 days';
   }
+
+  @override
+  String get themeDefault => 'Default';
+
+  @override
+  String get themeHardCourt1 => 'Hard court 1';
+
+  @override
+  String get themeClay => 'Clay';
+
+  @override
+  String get themeGrass => 'Grass';
+
+  @override
+  String get themeHardCourt2 => 'Hard court 2';
+
+  @override
+  String get filterTitle => 'Filter matches';
+
+  @override
+  String get filterClear => 'Clear all';
+
+  @override
+  String get filterApply => 'Apply filters';
+
+  @override
+  String get filterByName => 'By opponent name';
+
+  @override
+  String get filterNameHint => 'Search opponent...';
+
+  @override
+  String get filterByResult => 'By result';
+
+  @override
+  String get filterByType => 'By match type';
+
+  @override
+  String get filterGuest => 'Guest';
+
+  @override
+  String get filterByDate => 'By date';
+
+  @override
+  String get filterThisMonth => 'This month';
+
+  @override
+  String get filterLast3Months => 'Last 3 months';
+
+  @override
+  String get filterRegistered => 'Registered';
+
+  @override
+  String get uploadingPhoto => 'Uploading photo...';
+
+  @override
+  String get photoUpdated => 'Profile photo updated!';
+
+  @override
+  String get photoUploadError => 'Failed to upload photo. Please try again.';
+
+  @override
+  String get tapToChangePhoto => 'Tap to change photo';
 }

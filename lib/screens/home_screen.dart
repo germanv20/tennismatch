@@ -1,6 +1,9 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'dart:io';
 import '../services/theme_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'available_players_screen.dart';
@@ -159,18 +162,43 @@ class _HomeScreenState extends State<HomeScreen> {
       padding: const EdgeInsets.all(16),
       child: Row(
         children: [
-          CircleAvatar(
-            radius: 32,
-            backgroundColor: Colors.white,
-            child: CircleAvatar(
-              radius: 29,
-              backgroundImage: (widget.userData['photoUrl'] != null &&
-                      widget.userData['photoUrl'].toString().isNotEmpty)
-                  ? NetworkImage(widget.userData['photoUrl'])
-                  : null,
-              child: widget.userData['photoUrl'] == null
-                  ? const Icon(Icons.person, size: 30)
-                  : null,
+          // Tappable profile photo with camera overlay
+          GestureDetector(
+            onTap: () => _pickAndUploadPhoto(context, loc),
+            child: Stack(
+              children: [
+                CircleAvatar(
+                  radius: 32,
+                  backgroundColor: Colors.white,
+                  child: CircleAvatar(
+                    radius: 29,
+                    backgroundImage: (widget.userData['photoUrl'] != null &&
+                            widget.userData['photoUrl'].toString().isNotEmpty)
+                        ? NetworkImage(widget.userData['photoUrl'])
+                        : null,
+                    child: widget.userData['photoUrl'] == null
+                        ? const Icon(Icons.person, size: 30)
+                        : null,
+                  ),
+                ),
+                // Camera icon badge
+                Positioned(
+                  bottom: 0,
+                  right: 0,
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: const BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.camera_alt,
+                      size: 14,
+                      color: Colors.grey[700],
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
           const SizedBox(width: spaceM),
@@ -257,6 +285,86 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
  
+  Future<void> _pickAndUploadPhoto(
+      BuildContext context, AppLocalizations loc) async {
+    final picker = ImagePicker();
+    final XFile? image = await picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 75,       // compress to reduce upload size
+      maxWidth: 512,
+      maxHeight: 512,
+    );
+ 
+    if (image == null) return; // user cancelled
+ 
+    final uid = widget.currentUser.uid;
+ 
+    // Show uploading indicator
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const SizedBox(
+                width: 20, height: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Text(loc.uploadingPhoto),
+            ],
+          ),
+          duration: const Duration(seconds: 10),
+        ),
+      );
+    }
+ 
+    try {
+      // Upload to Firebase Storage
+      final ref = FirebaseStorage.instance
+          .ref()
+          .child('profile_photos')
+          .child('$uid.jpg');
+ 
+      await ref.putFile(
+        File(image.path),
+        SettableMetadata(contentType: 'image/jpeg'),
+      );
+ 
+      final downloadUrl = await ref.getDownloadURL();
+ 
+      // Update Firestore user document
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(uid)
+          .update({'photoUrl': downloadUrl});
+ 
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(loc.photoUpdated),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      debugPrint('❌ Photo upload error: $e');
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(loc.photoUploadError),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+ 
   void _showThemeSelector(BuildContext context) {
     final themeNotifier = context.read<ThemeNotifier>();
     final loc = AppLocalizations.of(context)!;
@@ -271,6 +379,7 @@ class _HomeScreenState extends State<HomeScreen> {
           value: themeNotifier,
           child: Consumer<ThemeNotifier>(
             builder: (context, notifier, _) {
+              final loc2 = AppLocalizations.of(context)!;
               return Padding(
                 padding: const EdgeInsets.all(24),
                 child: Column(
@@ -287,6 +396,17 @@ class _HomeScreenState extends State<HomeScreen> {
                     const SizedBox(height: 16),
                     ...allThemes.map((theme) {
                       final isSelected = notifier.current.code == theme.code;
+ 
+                      // Resolve localized name from ARB key
+                      final localizedLabel = switch (theme.labelKey) {
+                        'themeDefault'    => loc2.themeDefault,
+                        'themeClay'       => loc2.themeClay,
+                        'themeGrass'      => loc2.themeGrass,
+                        'themeHardCourt1' => loc2.themeHardCourt1,
+                        'themeHardCourt2' => loc2.themeHardCourt2,
+                        _                 => theme.label,
+                      };
+ 
                       return ListTile(
                         contentPadding: EdgeInsets.zero,
                         leading: Container(
@@ -302,7 +422,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                         ),
                         title: Text(
-                          theme.label,
+                          localizedLabel,
                           style: TextStyle(
                             fontWeight: isSelected
                                 ? FontWeight.bold

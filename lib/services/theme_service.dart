@@ -7,7 +7,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class TennisTheme {
   final String code;
-  final String label;
+  final String label;      // Fallback English label
+  final String labelKey;   // ARB key for localized name
   final String flag;
   final Color primary;     // AppBar
   final Color primaryDark;
@@ -20,6 +21,7 @@ class TennisTheme {
   const TennisTheme({
     required this.code,
     required this.label,
+    required this.labelKey,
     required this.flag,
     required this.primary,
     required this.primaryDark,
@@ -110,35 +112,14 @@ class TennisTheme {
 // Theme definitions
 // ─────────────────────────────────────────────────────────────────────────────
 
-const TennisTheme themeDefault = TennisTheme(
-  code: 'default',
-  label: 'Default',
-  flag: '🎾',
-  primary: Color(0xFF2E7D32),
-  primaryDark: Color(0xFF1B5E20),
-  background: Color(0xFFF5F5F5),
-  surface: Colors.white,
-  onPrimary: Colors.white,
-  playerCardColor: Color(0xFF2E7D32),
-  selectionColor: Color(0xFF2E7D32),
-);
-
-const TennisTheme themeAUS = TennisTheme(
-  code: 'aus',
-  label: 'Hard court 1',
-  flag: '',
-  primary: Color(0xFF009BDE),
-  primaryDark: Color(0xFF0077B3),
-  background: Color(0xFFE8F6FF),
-  surface: Colors.white,
-  onPrimary: Colors.white,
-  playerCardColor: Color(0xFF009BDE),
-  selectionColor: Color(0xFF009BDE),
-);
+// ─────────────────────────────────────────────────────────────────────────────
+// Theme definitions — alphabetical by English name
+// ─────────────────────────────────────────────────────────────────────────────
 
 const TennisTheme themeFR = TennisTheme(
   code: 'fr',
   label: 'Clay',
+  labelKey: 'themeClay',
   flag: '',
   primary: Color(0xFFC85A1A),
   primaryDark: Color(0xFF9E4410),
@@ -149,22 +130,54 @@ const TennisTheme themeFR = TennisTheme(
   selectionColor: Color(0xFF1A5C38),
 );
 
+const TennisTheme themeDefault = TennisTheme(
+  code: 'default',
+  label: 'Default',
+  labelKey: 'themeDefault',
+  flag: '🎾',
+  primary: Color(0xFF2E7D32),
+  primaryDark: Color(0xFF1B5E20),
+  background: Color(0xFFF5F5F5),
+  surface: Colors.white,
+  onPrimary: Colors.white,
+  playerCardColor: Color(0xFF2E7D32),
+  selectionColor: Color(0xFF2E7D32),
+);
+
 const TennisTheme themeENG = TennisTheme(
   code: 'eng',
   label: 'Grass',
+  labelKey: 'themeGrass',
   flag: '',
-  primary: Color(0xFF2E7D32),
+  //primary: Color(0xFF2E7D32),
+  primary: Color(0xFF1B5E20),
   primaryDark: Color(0xFF1B5E20),
   background: Color(0xFFF5F0FF),
   surface: Colors.white,
   onPrimary: Colors.white,
-  playerCardColor: Color(0xFF2E7D32),
+  // playerCardColor: Color(0xFF2E7D32),
+  playerCardColor: Color(0xFF1B5E20),
   selectionColor: Color(0xFF4B2E83),
+);
+
+const TennisTheme themeAUS = TennisTheme(
+  code: 'aus',
+  label: 'Hard court 1',
+  labelKey: 'themeHardCourt1',
+  flag: '',
+  primary: Color(0xFF009BDE),
+  primaryDark: Color(0xFF0077B3),
+  background: Color(0xFFE8F6FF),
+  surface: Colors.white,
+  onPrimary: Colors.white,
+  playerCardColor: Color(0xFF009BDE),
+  selectionColor: Color(0xFF009BDE),
 );
 
 const TennisTheme themeUS = TennisTheme(
   code: 'us',
   label: 'Hard court 2',
+  labelKey: 'themeHardCourt2',
   flag: '',
   primary: Color(0xFF00308F),
   primaryDark: Color(0xFF001F5E),
@@ -175,11 +188,12 @@ const TennisTheme themeUS = TennisTheme(
   selectionColor: Color(0xFF00308F),
 );
 
+// Alphabetical by English name: Clay, Default, Grass, Hard court 1, Hard court 2
 const List<TennisTheme> allThemes = [
-  themeDefault,
-  themeAUS,
   themeFR,
+  themeDefault,
   themeENG,
+  themeAUS,
   themeUS,
 ];
 
