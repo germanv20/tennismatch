@@ -904,4 +904,19 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get tapToChangePhoto => 'Toca para cambiar la foto';
+
+  @override
+  String get filterMyCity => 'Mi ciudad';
+
+  @override
+  String get filterAllCities => 'Todas las ciudades';
+
+  @override
+  String cityFilterHint(String city) {
+    return 'Mostrando jugadores en $city';
+  }
+
+  @override
+  String get noCitySet =>
+      'Configura tu ciudad en tu perfil para filtrar por ubicación';
 }

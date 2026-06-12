@@ -1790,6 +1790,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Tap to change photo'**
   String get tapToChangePhoto;
+
+  /// No description provided for @filterMyCity.
+  ///
+  /// In en, this message translates to:
+  /// **'My city'**
+  String get filterMyCity;
+
+  /// No description provided for @filterAllCities.
+  ///
+  /// In en, this message translates to:
+  /// **'All cities'**
+  String get filterAllCities;
+
+  /// No description provided for @cityFilterHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Showing players in {city}'**
+  String cityFilterHint(String city);
+
+  /// No description provided for @noCitySet.
+  ///
+  /// In en, this message translates to:
+  /// **'Set your city in your profile to filter by location'**
+  String get noCitySet;
 }
 
 class _AppLocalizationsDelegate

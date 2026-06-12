@@ -337,5 +337,10 @@
   "uploadingPhoto": "Subiendo foto...",
   "photoUpdated": "¡Foto de perfil actualizada!",
   "photoUploadError": "Error al subir la foto. Intenta de nuevo.",
-  "tapToChangePhoto": "Toca para cambiar la foto"
+  "tapToChangePhoto": "Toca para cambiar la foto",
+  "filterMyCity": "Mi ciudad",
+  "filterAllCities": "Todas las ciudades",
+  "cityFilterHint": "Mostrando jugadores en {city}",
+  "noCitySet": "Configura tu ciudad en tu perfil para filtrar por ubicación",
+  "@cityFilterHint": {"placeholders": {"city": {"type": "String"}}}
 }

@@ -337,5 +337,10 @@
   "uploadingPhoto": "Uploading photo...",
   "photoUpdated": "Profile photo updated!",
   "photoUploadError": "Failed to upload photo. Please try again.",
-  "tapToChangePhoto": "Tap to change photo"
+  "tapToChangePhoto": "Tap to change photo",
+  "filterMyCity": "My city",
+  "filterAllCities": "All cities",
+  "cityFilterHint": "Showing players in {city}",
+  "noCitySet": "Set your city in your profile to filter by location",
+  "@cityFilterHint": {"placeholders": {"city": {"type": "String"}}}
 }
