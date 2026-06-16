@@ -469,6 +469,12 @@ class _MatchHistoryScreenState extends State<MatchHistoryScreen> {
                   ),
                 ),
               ),
+              // Tap hint chevron
+              Positioned(
+                bottom: 8, right: 8,
+                child: Icon(Icons.chevron_right,
+                    size: 20, color: Colors.grey[400]),
+              ),
             ],
           ),
         ),
@@ -1141,6 +1147,14 @@ class _GuestMatchCard extends StatelessWidget {
                 ),
               ),
             ),
+          ),
+
+          // Tap hint chevron
+          Positioned(
+            bottom: 8,
+            right: 8,
+            child: Icon(Icons.chevron_right,
+                size: 20, color: Colors.grey[400]),
           ),
         ],
       ),

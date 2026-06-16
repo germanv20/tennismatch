@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:tennismatch/gen_l10n/app_localizations.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:country_picker/country_picker.dart';
@@ -316,6 +317,30 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
                               );
                             }).toList(),
                           ),
+
+                    const SizedBox(height: 32),
+
+                    // ── Privacy Policy link ──
+                    TextButton.icon(
+                      icon: Icon(Icons.privacy_tip_outlined,
+                          size: 16, color: Colors.grey[600]),
+                      label: Text(
+                        loc.privacyPolicyLink,
+                        style: TextStyle(
+                          color: Colors.grey[600],
+                          fontSize: 13,
+                          decoration: TextDecoration.underline,
+                        ),
+                      ),
+                      onPressed: () async {
+                        final uri = Uri.parse(
+                            'https://sites.google.com/view/tennismatch-privacy');
+                        if (await canLaunchUrl(uri)) {
+                          await launchUrl(uri,
+                              mode: LaunchMode.externalApplication);
+                        }
+                      },
+                    ),
                   ],
                 ),
               ),

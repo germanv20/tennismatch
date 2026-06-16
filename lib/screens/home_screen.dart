@@ -768,7 +768,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       aspectRatio: 1,
                       child: HomeCard(
                         title: loc.logMatchCard,
-                        icon: Icons.add_circle_outline,
+                        icon: Icons.person_outline,
                         onTap: () async {
                           final result = await Navigator.push(
                             context,

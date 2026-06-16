@@ -25,7 +25,7 @@ class _LogGuestMatchScreenState extends State<LogGuestMatchScreen> {
   final durationController = TextEditingController();
   final locationController = TextEditingController();
   final notesController = TextEditingController();
-  bool useOfficialScoring = true;
+  ScoringMode scoringMode = ScoringMode.official;
   DateTime? selectedMatchDate;
 
   // Player names (loaded from Firestore)
@@ -73,6 +73,46 @@ class _LogGuestMatchScreenState extends State<LogGuestMatchScreen> {
     });
   }
 
+  void _setScoringMode(ScoringMode mode) {
+    setState(() {
+      scoringMode = mode;
+      // Pro-set format is always a single set deciding the match —
+      // trim down to one set if more were added under another mode
+      if (mode == ScoringMode.proSet && _setKeys.length > 1) {
+        _setKeys.removeRange(1, _setKeys.length);
+      }
+    });
+  }
+
+  Widget _scoringModeChip({
+    required String label,
+    required ScoringMode mode,
+  }) {
+    final isSelected = scoringMode == mode;
+    return GestureDetector(
+      onTap: isSaving ? null : () => _setScoringMode(mode),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? Theme.of(context).primaryColor
+              : Colors.grey[200],
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Text(
+          label,
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+            color: isSelected ? Colors.white : Colors.grey[700],
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   void dispose() {
     opponentNameController.dispose();
@@ -100,6 +140,23 @@ class _LogGuestMatchScreenState extends State<LogGuestMatchScreen> {
   }
 
   bool isValidTiebreak(int tb1, int tb2) {
+    final maxScore = tb1 > tb2 ? tb1 : tb2;
+    final minScore = tb1 < tb2 ? tb1 : tb2;
+    return maxScore >= 7 && (maxScore - minScore) >= 2;
+  }
+
+  /// Pro-set: single set to 8 games, win by 2, tiebreak at 7-7 (won 9-7 in the
+  /// breaker, recorded as an 8-7 set score)
+  bool isValidProSet(int p1, int p2) {
+    if (p1 < 8 && p2 < 8) return false;
+    if ((p1 == 8 && p2 <= 6) || (p2 == 8 && p1 <= 6)) return true;
+    if ((p1 == 8 && p2 == 7) || (p2 == 8 && p1 == 7)) return true;
+    if ((p1 >= 9 || p2 >= 9) && (p1 - p2).abs() >= 2) return true;
+    return false;
+  }
+
+  /// Pro-set tiebreak: first to 7 (sudden death style breaker), win by 2
+  bool isValidProSetTiebreak(int tb1, int tb2) {
     final maxScore = tb1 > tb2 ? tb1 : tb2;
     final minScore = tb1 < tb2 ? tb1 : tb2;
     return maxScore >= 7 && (maxScore - minScore) >= 2;
@@ -238,8 +295,14 @@ class _LogGuestMatchScreenState extends State<LogGuestMatchScreen> {
         return;
       }
 
-      if (useOfficialScoring && !isValidTennisSet(p1, p2)) {
+      if (scoringMode == ScoringMode.official &&
+          !isValidTennisSet(p1, p2)) {
         showError(loc.invalidSetScore);
+        return;
+      }
+      if (scoringMode == ScoringMode.proSet &&
+          !isValidProSet(p1, p2)) {
+        showError(loc.invalidProSetScore);
         return;
       }
 
@@ -248,7 +311,13 @@ class _LogGuestMatchScreenState extends State<LogGuestMatchScreen> {
           showError(loc.enterTiebreakScore);
           return;
         }
-        if (useOfficialScoring && !isValidTiebreak(data.tb1!, data.tb2!)) {
+        if (scoringMode == ScoringMode.official &&
+            !isValidTiebreak(data.tb1!, data.tb2!)) {
+          showError(loc.invalidTiebreakScore);
+          return;
+        }
+        if (scoringMode == ScoringMode.proSet &&
+            !isValidProSetTiebreak(data.tb1!, data.tb2!)) {
           showError(loc.invalidTiebreakScore);
           return;
         }
@@ -333,6 +402,7 @@ class _LogGuestMatchScreenState extends State<LogGuestMatchScreen> {
         'location': location,
         'durationMinutes': duration,
         'matchDate': Timestamp.fromDate(selectedMatchDate!),
+        'scoringMode': scoringMode.name,
         if (notesController.text.trim().isNotEmpty)
           'notes': notesController.text.trim(),
       },
@@ -371,7 +441,12 @@ class _LogGuestMatchScreenState extends State<LogGuestMatchScreen> {
     final userRef =
         FirebaseFirestore.instance.collection('users').doc(uid);
 
-    if (currentUserWon) {
+    if (isTie) {
+      batch.update(userRef, {
+        'matchesPlayed': FieldValue.increment(1),
+        'totalDuration': FieldValue.increment(duration),
+      });
+    } else if (currentUserWon) {
       batch.update(userRef, {
         'matchesPlayed': FieldValue.increment(1),
         'totalDuration': FieldValue.increment(duration),
@@ -518,21 +593,48 @@ class _LogGuestMatchScreenState extends State<LogGuestMatchScreen> {
 
             const SizedBox(height: 4),
 
+            // ── Scoring mode selector ──
+            Text(
+              loc.scoringModeLabel,
+              style: const TextStyle(fontSize: 13, color: Colors.grey),
+            ),
+            const SizedBox(height: 6),
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Expanded(
-                  child: Text(
-                    loc.useOfficialScoring,
-                    style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
+                  child: _scoringModeChip(
+                    label: loc.officialScoring,
+                    mode: ScoringMode.official,
                   ),
                 ),
-                Switch(
-                  value: useOfficialScoring,
-                  onChanged: (v) => setState(() => useOfficialScoring = v),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: _scoringModeChip(
+                    label: loc.proSetScoring,
+                    mode: ScoringMode.proSet,
+                  ),
+                ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: _scoringModeChip(
+                    label: loc.openScoring,
+                    mode: ScoringMode.open,
+                  ),
                 ),
               ],
             ),
+            if (scoringMode == ScoringMode.proSet)
+              Padding(
+                padding: const EdgeInsets.only(top: 6),
+                child: Text(
+                  loc.proSetHint,
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: Colors.grey[600],
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ),
 
             const SizedBox(height: 8),
 
@@ -584,16 +686,18 @@ class _LogGuestMatchScreenState extends State<LogGuestMatchScreen> {
                     : opponentNameController.text,
                 canRemove: _setKeys.length > 1,
                 isSaving: isSaving,
+                scoringMode: scoringMode,
                 onRemove: () => removeSet(index),
                 onChanged: (_) {},
               );
             }),
 
-            TextButton.icon(
-              onPressed: isSaving ? null : addSet,
-              icon: const Icon(Icons.add),
-              label: Text(loc.addSet),
-            ),
+            if (scoringMode != ScoringMode.proSet)
+              TextButton.icon(
+                onPressed: isSaving ? null : addSet,
+                icon: const Icon(Icons.add),
+                label: Text(loc.addSet),
+              ),
 
             // ── Tie option ──
             Row(

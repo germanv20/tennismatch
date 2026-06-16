@@ -1814,6 +1814,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Set your city in your profile to filter by location'**
   String get noCitySet;
+
+  /// No description provided for @termsAcceptText.
+  ///
+  /// In en, this message translates to:
+  /// **'I have read and accept the '**
+  String get termsAcceptText;
+
+  /// No description provided for @privacyPolicyLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy Policy'**
+  String get privacyPolicyLink;
+
+  /// No description provided for @scoringModeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Scoring format'**
+  String get scoringModeLabel;
+
+  /// No description provided for @officialScoring.
+  ///
+  /// In en, this message translates to:
+  /// **'Official'**
+  String get officialScoring;
+
+  /// No description provided for @proSetScoring.
+  ///
+  /// In en, this message translates to:
+  /// **'Pro-set (8 games)'**
+  String get proSetScoring;
+
+  /// No description provided for @openScoring.
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get openScoring;
+
+  /// No description provided for @proSetHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Single set to 8 games, tiebreak at 7-7. Match ends after this one set.'**
+  String get proSetHint;
+
+  /// No description provided for @invalidProSetScore.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid pro-set score. Must reach 8 games (win by 2) or use a 7-7 tiebreak.'**
+  String get invalidProSetScore;
+
+  /// No description provided for @matchesPlayedCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{No matches played yet} =1{1 match played} other{{count} matches played}}'**
+  String matchesPlayedCount(int count);
+
+  /// No description provided for @completeRequiredFields.
+  ///
+  /// In en, this message translates to:
+  /// **'Please complete all required fields'**
+  String get completeRequiredFields;
 }
 
 class _AppLocalizationsDelegate

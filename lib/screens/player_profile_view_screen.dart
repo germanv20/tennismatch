@@ -30,7 +30,6 @@ String translateDay(String day, AppLocalizations loc) {
 
 class PlayerProfileViewScreen extends StatefulWidget {
   final Map<String, dynamic> userData;
-  // ✅ NEW
   final bool showActions;
   final DocumentReference? requestRef;
   final Future<void> Function()? onAccept;
@@ -46,42 +45,36 @@ class PlayerProfileViewScreen extends StatefulWidget {
     this.onAccept,
     this.onReject,
     this.onRequestMatch,
-    this.onCancel, 
+    this.onCancel,
   });
-  
 
-   @override
-    State<PlayerProfileViewScreen> createState() =>
-        _PlayerProfileViewScreenState();
+  @override
+  State<PlayerProfileViewScreen> createState() =>
+      _PlayerProfileViewScreenState();
 }
 
-  class _PlayerProfileViewScreenState extends State<PlayerProfileViewScreen> {
-    bool isLoading = false;
+class _PlayerProfileViewScreenState extends State<PlayerProfileViewScreen> {
+  bool isLoading = false;
 
-    String formatDate(DateTime date) {
-      return "${date.day}/${date.month}/${date.year}";
+  String getCountryFlag(String countryName) {
+    try {
+      final country = Country.tryParse(countryName);
+      return country?.flagEmoji ?? '';
+    } catch (_) {
+      return '';
     }
-
-    String getCountryFlag(String countryName) {
-      try {
-        final country = Country.tryParse(countryName);
-        return country?.flagEmoji ?? '';
-      } catch (_) {
-        return '';
-      }
-    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context)!;
     final userData = widget.userData;
-    final String name = userData['name'] ?? loc.unknown; // 'Unknown'
+    final String name = userData['name'] ?? loc.unknown;
     final rawLevel = userData['tennisLevel'] ?? '';
-    final String level = rawLevel.isEmpty
-        ? loc.notSet
-        : translateLevel(rawLevel, loc); // 'Not set'
+    final String level =
+        rawLevel.isEmpty ? loc.notSet : translateLevel(rawLevel, loc);
     final currentUid = FirebaseAuth.instance.currentUser!.uid;
-    final viewedUid = userData['uid'];
+    final viewedUid = (userData['uid'] as String?) ?? '';
     final List availabilityRaw = userData['availability'] ?? [];
 
     final List<String> sortedAvailability = List<String>.from(availabilityRaw)
@@ -89,18 +82,14 @@ class PlayerProfileViewScreen extends StatefulWidget {
 
     final String availabilityText = sortedAvailability.isEmpty
         ? loc.noAvailability
-        : sortedAvailability
-            .map((day) => translateDay(day, loc))
-            .join(', ');
+        : sortedAvailability.map((day) => translateDay(day, loc)).join(', ');
 
-    final Timestamp? birthTimestamp = userData['birthDate'];
-    final int? age = userData['age'];
     final String city = userData['city'] ?? loc.notSet;
     final String country = userData['country'] ?? loc.notSet;
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(loc.playerProfile), // "Player Profile"
+        title: Text(loc.playerProfile),
       ),
       body: SafeArea(
         child: Center(
@@ -134,15 +123,45 @@ class PlayerProfileViewScreen extends StatefulWidget {
                     ),
                   ),
 
-                  const SizedBox(height: 16),
-
-                  if (age != null)
-                    Text(
-                      "🎂 ${loc.age}: $age",
-                      style: const TextStyle(fontSize: 15),
-                    ),
-
                   const SizedBox(height: 8),
+
+                  // ── Match count badge — builds trust/confidence ──
+                  // Uses the matchesPlayed counter already stored on the
+                  // user document (incremented when matches are logged),
+                  // avoiding any extra Firestore reads or permission issues.
+                  Builder(
+                    builder: (context) {
+                      final count =
+                          (userData['matchesPlayed'] as int?) ?? 0;
+                      return Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: Colors.green.shade50,
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: Colors.green.shade200),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.sports_tennis,
+                                size: 16, color: Colors.green.shade700),
+                            const SizedBox(width: 6),
+                            Text(
+                              loc.matchesPlayedCount(count),
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.green.shade800,
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+
+                  const SizedBox(height: 16),
 
                   Text(
                     "📍 ${loc.city}: $city",
@@ -168,13 +187,9 @@ class PlayerProfileViewScreen extends StatefulWidget {
 
                   const SizedBox(height: 8),
 
-                  if (birthTimestamp != null)
-                    Text(
-                      "📅 ${loc.birthDate}: ${formatDate(birthTimestamp.toDate())}",
-                      style: const TextStyle(fontSize: 15),
-                    ),
-
-                  const SizedBox(height: 8),
+                  // Note: birth date intentionally NOT shown here for
+                  // privacy/security — only the user sees their own
+                  // birth date in My Profile / Edit Profile.
 
                   Text(
                     "🎾 ${loc.level}: $level",
@@ -182,16 +197,14 @@ class PlayerProfileViewScreen extends StatefulWidget {
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
                     ),
-                  ), // Level
+                  ),
 
                   const SizedBox(height: 8),
 
                   Text(
                     "📅 ${loc.availability}: $availabilityText",
-                    style: const TextStyle(
-                      fontSize: 15,
-                    ),
-                  ), // Availability
+                    style: const TextStyle(fontSize: 15),
+                  ),
 
                   const SizedBox(height: 24),
 
@@ -205,7 +218,6 @@ class PlayerProfileViewScreen extends StatefulWidget {
                           .where('status', isEqualTo: 'pending')
                           .snapshots(),
                       builder: (context, snapshot) {
-
                         final hasRequest =
                             snapshot.hasData && snapshot.data!.docs.isNotEmpty;
 
@@ -214,45 +226,38 @@ class PlayerProfileViewScreen extends StatefulWidget {
                               ? null
                               : () async {
                                   final navigator = Navigator.of(context);
-
                                   setState(() => isLoading = true);
-
                                   if (widget.onRequestMatch != null) {
                                     await widget.onRequestMatch!();
                                   }
-
                                   if (!mounted) return;
-
                                   navigator.pop();
                                 },
                           child: isLoading
                               ? const SizedBox(
                                   width: 16,
                                   height: 16,
-                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                  child:
+                                      CircularProgressIndicator(strokeWidth: 2),
                                 )
-                              : Text(hasRequest ? loc.requested : loc.requestMatch),
+                              : Text(
+                                  hasRequest ? loc.requested : loc.requestMatch),
                         );
                       },
                     ),
-                  
+
                   if (widget.onCancel != null) ...[
                     const SizedBox(height: 20),
-
                     ElevatedButton.icon(
                       onPressed: isLoading
                           ? null
                           : () async {
                               final navigator = Navigator.of(context);
-
                               setState(() => isLoading = true);
-
                               if (widget.onCancel != null) {
                                 await widget.onCancel!();
                               }
-
                               if (!mounted) return;
-
                               navigator.pop();
                             },
                       icon: isLoading
@@ -271,7 +276,6 @@ class PlayerProfileViewScreen extends StatefulWidget {
 
                   if (widget.showActions) ...[
                     const SizedBox(height: 20),
-
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -280,20 +284,18 @@ class PlayerProfileViewScreen extends StatefulWidget {
                               ? null
                               : () async {
                                   setState(() => isLoading = true);
-
                                   if (widget.onAccept != null) {
                                     await widget.onAccept!();
                                   }
-
                                   if (!mounted) return;
-
-                                  Navigator.pop(context, 'accepted'); // 🔥 RETURN VALUE
+                                  Navigator.pop(context, 'accepted');
                                 },
                           icon: isLoading
                               ? const SizedBox(
                                   width: 16,
                                   height: 16,
-                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                  child:
+                                      CircularProgressIndicator(strokeWidth: 2),
                                 )
                               : const Icon(Icons.check),
                           label: Text(isLoading ? loc.processing : loc.accept),
@@ -301,28 +303,24 @@ class PlayerProfileViewScreen extends StatefulWidget {
                             backgroundColor: Colors.green,
                           ),
                         ),
-
                         const SizedBox(width: 16),
-
                         ElevatedButton.icon(
                           onPressed: isLoading
                               ? null
                               : () async {
                                   setState(() => isLoading = true);
-
                                   if (widget.onReject != null) {
                                     await widget.onReject!();
                                   }
-
                                   if (!mounted) return;
-
-                                  Navigator.pop(context, 'rejected'); // 🔥 RETURN VALUE
+                                  Navigator.pop(context, 'rejected');
                                 },
                           icon: isLoading
                               ? const SizedBox(
                                   width: 16,
                                   height: 16,
-                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                  child:
+                                      CircularProgressIndicator(strokeWidth: 2),
                                 )
                               : const Icon(Icons.close),
                           label: Text(isLoading ? loc.processing : loc.reject),
@@ -336,7 +334,7 @@ class PlayerProfileViewScreen extends StatefulWidget {
                 ],
               ),
             ),
-          )
+          ),
         ),
       ),
     );

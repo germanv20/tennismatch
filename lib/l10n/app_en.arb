@@ -342,5 +342,16 @@
   "filterAllCities": "All cities",
   "cityFilterHint": "Showing players in {city}",
   "noCitySet": "Set your city in your profile to filter by location",
-  "@cityFilterHint": {"placeholders": {"city": {"type": "String"}}}
+  "@cityFilterHint": {"placeholders": {"city": {"type": "String"}}},
+  "termsAcceptText": "I have read and accept the ",
+  "privacyPolicyLink": "Privacy Policy",
+  "scoringModeLabel": "Scoring format",
+  "officialScoring": "Official",
+  "proSetScoring": "Pro-set (8 games)",
+  "openScoring": "Open",
+  "proSetHint": "Single set to 8 games, tiebreak at 7-7. Match ends after this one set.",
+  "invalidProSetScore": "Invalid pro-set score. Must reach 8 games (win by 2) or use a 7-7 tiebreak.",
+  "matchesPlayedCount": "{count, plural, =0{No matches played yet} =1{1 match played} other{{count} matches played}}",
+  "@matchesPlayedCount": {"placeholders": {"count": {"type": "int"}}},
+  "completeRequiredFields": "Please complete all required fields"
 }

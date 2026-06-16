@@ -905,4 +905,45 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get noCitySet => 'Set your city in your profile to filter by location';
+
+  @override
+  String get termsAcceptText => 'I have read and accept the ';
+
+  @override
+  String get privacyPolicyLink => 'Privacy Policy';
+
+  @override
+  String get scoringModeLabel => 'Scoring format';
+
+  @override
+  String get officialScoring => 'Official';
+
+  @override
+  String get proSetScoring => 'Pro-set (8 games)';
+
+  @override
+  String get openScoring => 'Open';
+
+  @override
+  String get proSetHint =>
+      'Single set to 8 games, tiebreak at 7-7. Match ends after this one set.';
+
+  @override
+  String get invalidProSetScore =>
+      'Invalid pro-set score. Must reach 8 games (win by 2) or use a 7-7 tiebreak.';
+
+  @override
+  String matchesPlayedCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count matches played',
+      one: '1 match played',
+      zero: 'No matches played yet',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get completeRequiredFields => 'Please complete all required fields';
 }

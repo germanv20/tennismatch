@@ -288,6 +288,17 @@ class MatchCard extends StatelessWidget {
                 ),
               ),
 
+            // Tap hint chevron — signals the card is tappable
+            Positioned(
+              bottom: 8,
+              right: 8,
+              child: Icon(
+                Icons.chevron_right,
+                size: 20,
+                color: Colors.grey[400],
+              ),
+            ),
+
           ],
         ),
       ),

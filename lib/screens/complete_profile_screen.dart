@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:country_picker/country_picker.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../gen_l10n/app_localizations.dart';
 import '../main.dart' show rootScaffoldMessengerKey;
 
@@ -28,6 +29,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
   String? phoneNumber;
 
   bool isSaving = false;
+  bool termsAccepted = false;
 
   final List<String> levels = ['Beginner', 'Intermediate', 'Advanced'];
   final List<String> days = [
@@ -62,6 +64,16 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
     if (!cleaned.startsWith('+')) return null;
     if (cleaned.length < 8) return null;
     return cleaned;
+  }
+
+  static const _privacyPolicyUrl =
+      'https://sites.google.com/view/tennismatch-privacy';
+
+  Future<void> _openPrivacyPolicy() async {
+    final uri = Uri.parse(_privacyPolicyUrl);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
   }
 
   Future<void> saveProfile() async {
@@ -502,8 +514,53 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
 
               const SizedBox(height: 24),
 
+              // ── Terms & Privacy Policy ──
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Checkbox(
+                    value: termsAccepted,
+                    onChanged: (v) =>
+                        setState(() => termsAccepted = v ?? false),
+                  ),
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () =>
+                          setState(() => termsAccepted = !termsAccepted),
+                      child: Padding(
+                        padding: const EdgeInsets.only(top: 12),
+                        child: Wrap(
+                          children: [
+                            Text(
+                              loc.termsAcceptText,
+                              style: const TextStyle(fontSize: 13),
+                            ),
+                            GestureDetector(
+                              onTap: _openPrivacyPolicy,
+                              child: Text(
+                                loc.privacyPolicyLink,
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: Theme.of(context).primaryColor,
+                                  decoration: TextDecoration.underline,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 16),
+
               ElevatedButton(
-                onPressed: isSaving ? null : saveProfile,
+                onPressed: (isSaving || !termsAccepted)
+                    ? null
+                    : saveProfile,
                 child: isSaving
                     ? const SizedBox(
                         height: 20,

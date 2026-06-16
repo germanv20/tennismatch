@@ -15,12 +15,17 @@ class EditProfileScreen extends StatefulWidget {
 
 class _EditProfileScreenState extends State<EditProfileScreen> {
   final _formKey = GlobalKey<FormState>();
+  final TextEditingController _cityController = TextEditingController();
 
   DateTime? birthdate;
   String? city;
   String? country;
   String? tennisLevel;
   List<String> availability = [];
+
+  // Track whether the user attempted to save, so date/country
+  // validation messages only show after a failed submit attempt
+  bool _attemptedSave = false;
 
   final List<String> levels = ['Beginner', 'Intermediate', 'Advanced'];
   final List<String> days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -58,6 +63,13 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     country = data['country'];
     tennisLevel = data['tennisLevel'];
     availability = List<String>.from(data['availability'] ?? []);
+    _cityController.text = city ?? '';
+  }
+
+  @override
+  void dispose() {
+    _cityController.dispose();
+    super.dispose();
   }
 
   bool isSaving = false;
@@ -65,15 +77,21 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   Future<void> saveProfile() async {
     final loc = AppLocalizations.of(context)!;
 
-    if (!_formKey.currentState!.validate() ||
-        birthdate == null ||
-        tennisLevel == null) {
-      return;
-    }
+    setState(() => _attemptedSave = true);
 
-    if (country == null) {
+    // Run all field validations together so the user sees every
+    // problem at once instead of one snackbar at a time
+    final isFormValid = _formKey.currentState!.validate();
+    final isDateValid = birthdate != null;
+    final isCountryValid = country != null && country!.isNotEmpty;
+    final isLevelValid = tennisLevel != null;
+
+    if (!isFormValid ||
+        !isDateValid ||
+        !isCountryValid ||
+        !isLevelValid) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(loc.requiredField)),
+        SnackBar(content: Text(loc.completeRequiredFields)),
       );
       return;
     }
@@ -88,12 +106,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         'country': country,
         'tennisLevel': tennisLevel,
         'availability': availability,
+        'birthDate': Timestamp.fromDate(birthdate!),
+        'age': getAge(birthdate!),
       };
-
-      if (birthdate != null) {
-        updateData['birthDate'] = Timestamp.fromDate(birthdate!);
-        updateData['age'] = getAge(birthdate!);
-      }
 
       await FirebaseFirestore.instance
           .collection('users')
@@ -108,6 +123,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
       Navigator.pop(context);
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Error: $e")),
       );
@@ -119,7 +135,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   Future<void> pickBirthdate() async {
     final picked = await showDatePicker(
       context: context,
-      initialDate: birthdate ?? DateTime.now().subtract(const Duration(days: 365 * 25)),
+      initialDate:
+          birthdate ?? DateTime.now().subtract(const Duration(days: 365 * 25)),
       firstDate: DateTime(1940),
       lastDate: DateTime.now(),
     );
@@ -133,6 +150,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context)!;
 
+    final showDateError = _attemptedSave && birthdate == null;
+    final showCountryError =
+        _attemptedSave && (country == null || country!.isEmpty);
+
     return Scaffold(
       appBar: AppBar(title: Text(loc.editProfile)),
       body: Padding(
@@ -141,26 +162,59 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           key: _formKey,
           child: ListView(
             children: [
+
+              // ── Birth date — required ──
               ListTile(
                 title: Text(
                   birthdate == null
                       ? loc.selectBirthdate
                       : "${birthdate!.day}/${birthdate!.month}/${birthdate!.year}",
+                  style: TextStyle(
+                    color: showDateError ? Colors.red : null,
+                  ),
                 ),
-                trailing: const Icon(Icons.calendar_today),
+                trailing: Icon(
+                  Icons.calendar_today,
+                  color: showDateError ? Colors.red : null,
+                ),
+                shape: showDateError
+                    ? RoundedRectangleBorder(
+                        side: const BorderSide(color: Colors.red),
+                        borderRadius: BorderRadius.circular(4),
+                      )
+                    : null,
                 onTap: pickBirthdate,
               ),
+              if (showDateError)
+                Padding(
+                  padding: const EdgeInsets.only(top: 4, left: 12),
+                  child: Text(
+                    loc.requiredField,
+                    style: const TextStyle(color: Colors.red, fontSize: 12),
+                  ),
+                ),
 
               const SizedBox(height: 12),
 
+              // ── City — required ──
               TextFormField(
-                initialValue: city,
-                decoration: InputDecoration(labelText: loc.city),
+                controller: _cityController,
+                decoration: InputDecoration(
+                  labelText: loc.city,
+                  border: const OutlineInputBorder(),
+                ),
                 onChanged: (value) => city = value,
+                validator: (value) {
+                  if (value == null || value.trim().isEmpty) {
+                    return loc.requiredField;
+                  }
+                  return null;
+                },
               ),
 
               const SizedBox(height: 12),
 
+              // ── Country — required ──
               ListTile(
                 contentPadding: EdgeInsets.zero,
                 title: Row(
@@ -175,13 +229,24 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     Text(
                       country ?? loc.selectCountry,
                       style: TextStyle(
-                        color: country == null ? Colors.grey : Colors.black,
+                        color: showCountryError
+                            ? Colors.red
+                            : (country == null ? Colors.grey : Colors.black),
                         fontSize: 16,
                       ),
                     ),
                   ],
                 ),
-                trailing: const Icon(Icons.arrow_drop_down),
+                trailing: Icon(
+                  Icons.arrow_drop_down,
+                  color: showCountryError ? Colors.red : null,
+                ),
+                shape: showCountryError
+                    ? RoundedRectangleBorder(
+                        side: const BorderSide(color: Colors.red),
+                        borderRadius: BorderRadius.circular(4),
+                      )
+                    : null,
                 onTap: () {
                   showCountryPicker(
                     context: context,
@@ -194,19 +259,32 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   );
                 },
               ),
+              if (showCountryError)
+                Padding(
+                  padding: const EdgeInsets.only(top: 4, left: 12),
+                  child: Text(
+                    loc.requiredField,
+                    style: const TextStyle(color: Colors.red, fontSize: 12),
+                  ),
+                ),
 
               const SizedBox(height: 12),
 
               DropdownButtonFormField<String>(
                 initialValue: tennisLevel,
-                decoration: InputDecoration(labelText: loc.level),
+                decoration: InputDecoration(
+                  labelText: loc.level,
+                  border: const OutlineInputBorder(),
+                ),
                 items: levels.map((level) {
                   return DropdownMenuItem(
                     value: level,
                     child: Text(level),
                   );
                 }).toList(),
-                onChanged: (value) => tennisLevel = value,
+                onChanged: (value) => setState(() => tennisLevel = value),
+                validator: (value) =>
+                    value == null ? loc.requiredField : null,
               ),
 
               const SizedBox(height: 16),

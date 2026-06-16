@@ -919,4 +919,46 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get noCitySet =>
       'Configura tu ciudad en tu perfil para filtrar por ubicación';
+
+  @override
+  String get termsAcceptText => 'He leído y acepto la ';
+
+  @override
+  String get privacyPolicyLink => 'Política de Privacidad';
+
+  @override
+  String get scoringModeLabel => 'Formato de puntuación';
+
+  @override
+  String get officialScoring => 'Oficial';
+
+  @override
+  String get proSetScoring => 'Pro-set (8 juegos)';
+
+  @override
+  String get openScoring => 'Libre';
+
+  @override
+  String get proSetHint =>
+      'Set único a 8 juegos, tiebreak en 7-7. El partido termina después de este set.';
+
+  @override
+  String get invalidProSetScore =>
+      'Puntuación de pro-set inválida. Debe llegar a 8 juegos (con 2 de diferencia) o usar tiebreak en 7-7.';
+
+  @override
+  String matchesPlayedCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count partidos jugados',
+      one: '1 partido jugado',
+      zero: 'Sin partidos registrados',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get completeRequiredFields =>
+      'Por favor completa todos los campos obligatorios';
 }

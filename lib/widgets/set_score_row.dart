@@ -8,12 +8,20 @@ import 'package:tennismatch/gen_l10n/app_localizations.dart';
 ///
 /// The [onChanged] callback fires whenever any score value changes,
 /// passing a [SetScoreData] with the current values.
+/// Scoring mode determines at what score a tiebreak is triggered and shown.
+enum ScoringMode {
+  official,  // best of 6 games, tiebreak at 6-6 (score 7-6)
+  proSet,    // single set to 8 games, tiebreak at 7-7 (score 8-7)
+  open,      // no validation, no automatic tiebreak detection
+}
+
 class SetScoreRow extends StatefulWidget {
   final int index;
   final String player1Name;
   final String player2Name;
   final bool canRemove;
   final bool isSaving;
+  final ScoringMode scoringMode;
   final VoidCallback onRemove;
   final ValueChanged<SetScoreData> onChanged;
 
@@ -26,6 +34,7 @@ class SetScoreRow extends StatefulWidget {
     required this.isSaving,
     required this.onRemove,
     required this.onChanged,
+    this.scoringMode = ScoringMode.official,
   });
 
   @override
@@ -58,12 +67,35 @@ class SetScoreRowState extends State<SetScoreRow> {
     super.dispose();
   }
 
+  @override
+  void didUpdateWidget(SetScoreRow oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.scoringMode != widget.scoringMode) {
+      // Re-evaluate tiebreak visibility under the new scoring mode
+      _onScoreChanged();
+    }
+  }
+
   void _onScoreChanged() {
     final p1 = int.tryParse(p1Controller.text);
     final p2 = int.tryParse(p2Controller.text);
 
-    // Detect tiebreak: set score is exactly 7-6 or 6-7
-    final isTiebreak = (p1 == 7 && p2 == 6) || (p1 == 6 && p2 == 7);
+    // Detect tiebreak based on scoring mode:
+    // - official: set score 7-6 or 6-7 (tiebreak at 6-6)
+    // - proSet: set score 8-7 or 7-8 (tiebreak at 7-7)
+    // - open: never auto-detect — user enters whatever they want
+    bool isTiebreak;
+    switch (widget.scoringMode) {
+      case ScoringMode.official:
+        isTiebreak = (p1 == 7 && p2 == 6) || (p1 == 6 && p2 == 7);
+        break;
+      case ScoringMode.proSet:
+        isTiebreak = (p1 == 8 && p2 == 7) || (p1 == 7 && p2 == 8);
+        break;
+      case ScoringMode.open:
+        isTiebreak = false;
+        break;
+    }
 
     if (isTiebreak != _showTiebreak) {
       setState(() {
