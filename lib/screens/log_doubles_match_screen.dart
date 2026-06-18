@@ -319,15 +319,9 @@ class _LogDoublesMatchScreenState extends State<LogDoublesMatchScreen> {
         .collection('matches')
         .add(matchData);
 
-    // Update creator's matchesPlayed/totalDuration so it stays accurate
-    // for the trust-signal badge on their profile
-    await FirebaseFirestore.instance
-        .collection('users')
-        .doc(uid)
-        .update({
-      'matchesPlayed': FieldValue.increment(1),
-      'totalDuration': FieldValue.increment(duration),
-    });
+    // NOTE: matchesPlayed/wins/losses/totalDuration are now updated
+    // server-side by the onMatchCompleted Cloud Function, which triggers
+    // when this match document is created with status 'completed'.
 
     if (!mounted) return;
     Navigator.pop(context, true);

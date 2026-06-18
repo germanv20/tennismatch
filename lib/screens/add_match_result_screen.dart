@@ -273,26 +273,12 @@ class _AddMatchResultScreenState extends State<AddMatchResultScreen> {
       },
     });
 
-    final userRef = FirebaseFirestore.instance.collection('users').doc(currentUid);
-    // Ties count matchesPlayed and duration but no win or loss
-    if (p1Wins == p2Wins) {
-      batch.update(userRef, {
-        'matchesPlayed': FieldValue.increment(1),
-        'totalDuration': FieldValue.increment(duration),
-      });
-    } else if (winnerUid == currentUid) {
-      batch.update(userRef, {
-        'matchesPlayed': FieldValue.increment(1),
-        'totalDuration': FieldValue.increment(duration),
-        'wins': FieldValue.increment(1),
-      });
-    } else {
-      batch.update(userRef, {
-        'matchesPlayed': FieldValue.increment(1),
-        'totalDuration': FieldValue.increment(duration),
-        'losses': FieldValue.increment(1),
-      });
-    }
+    // NOTE: matchesPlayed/wins/losses/totalDuration for BOTH players are
+    // now updated server-side by the onMatchCompleted Cloud Function,
+    // which triggers when this match's status becomes 'completed'.
+    // This avoids client-side permission issues (a player can't write to
+    // their opponent's stats fields directly) and keeps both players'
+    // stats symmetric and reliable.
 
     await batch.commit();
 

@@ -871,6 +871,35 @@ class _MatchHistoryScreenState extends State<MatchHistoryScreen> {
     );
   }
 
+  /// Builds a tab label like "Singles (12)" with a live count of completed
+  /// matches for that tab's type(s), so the user doesn't need to scroll
+  /// to know how many matches they have logged.
+  Widget _tabLabelWithCount(
+    BuildContext context,
+    String label,
+    String currentUid,
+    List<String> types,
+  ) {
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('matches')
+          .where('players', arrayContains: currentUid)
+          .where('status', isEqualTo: 'completed')
+          .snapshots(),
+      builder: (context, snapshot) {
+        int count = 0;
+        if (snapshot.hasData) {
+          count = snapshot.data!.docs.where((doc) {
+            final match = doc.data() as Map<String, dynamic>;
+            final type = match['type'] as String? ?? 'regular';
+            return types.contains(type);
+          }).length;
+        }
+        return Text('$label ($count)');
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context)!;
@@ -921,8 +950,10 @@ class _MatchHistoryScreenState extends State<MatchHistoryScreen> {
             indicatorColor: Colors.white,
             onTap: (_) => setState(() {}), // refresh badge on tab change
             tabs: [
-              Tab(text: loc.singles),
-              Tab(text: loc.doubles),
+              Tab(child: _tabLabelWithCount(
+                  context, loc.singles, currentUid, ['regular', 'guest'])),
+              Tab(child: _tabLabelWithCount(
+                  context, loc.doubles, currentUid, ['doubles_guest'])),
             ],
           ),
         ),

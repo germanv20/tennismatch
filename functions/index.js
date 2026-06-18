@@ -485,3 +485,97 @@ exports.onMatchRequestExpiry = onSchedule("every 24 hours", async () => {
     console.log(`✅ Expired request ${doc.id} (from ${fromUid} to ${toUid})`);
   }
 });
+
+// ─────────────────────────────────────────────────────
+// 6. MATCH COMPLETION STATS UPDATE
+//    Updates matchesPlayed/wins/losses/totalDuration for BOTH players
+//    symmetrically whenever a match becomes completed. Runs server-side
+//    via the Admin SDK so it bypasses client security rules safely —
+//    no client ever writes to another user's stats fields directly.
+// ─────────────────────────────────────────────────────
+
+/**
+ * Applies stats updates for a completed match to both relevant players.
+ * Shared logic used by both the onCreate and onUpdate triggers below.
+ * @param {object} match The match document data.
+ * @return {Promise<void>}
+ */
+async function applyMatchStats(match) {
+  const type = match.type || "regular";
+  const duration = match.result?.durationMinutes || 0;
+  const isTie = match.isTie === true;
+
+  if (type === "doubles_guest") {
+    // Only the creator is a registered account in doubles matches —
+    // partner/opponents are plain name strings, not linked UIDs.
+    const creatorUid = match.createdBy;
+    if (!creatorUid) return;
+
+    const winnerTeam = match.winnerTeam;
+    // Creator is always team1 in the doubles logging flow
+    const creatorWon = !isTie && winnerTeam === 1;
+    const creatorLost = !isTie && winnerTeam === 2;
+
+    const update = {
+      matchesPlayed: admin.firestore.FieldValue.increment(1),
+      totalDuration: admin.firestore.FieldValue.increment(duration),
+    };
+    if (creatorWon) update.wins = admin.firestore.FieldValue.increment(1);
+    if (creatorLost) update.losses = admin.firestore.FieldValue.increment(1);
+
+    await db.collection("users").doc(creatorUid).update(update);
+    return;
+  }
+
+  // Regular and guest matches: players array holds 1 (guest) or 2
+  // (regular) registered UIDs. winnerUid is null for ties.
+  const players = match.players || [];
+  const winnerUid = match.winnerUid;
+
+  for (const uid of players) {
+    if (!uid || uid === "guest") continue; // skip placeholder guest entries
+
+    const update = {
+      matchesPlayed: admin.firestore.FieldValue.increment(1),
+      totalDuration: admin.firestore.FieldValue.increment(duration),
+    };
+
+    if (!isTie) {
+      if (winnerUid === uid) {
+        update.wins = admin.firestore.FieldValue.increment(1);
+      } else {
+        update.losses = admin.firestore.FieldValue.increment(1);
+      }
+    }
+
+    await db.collection("users").doc(uid).update(update);
+  }
+}
+
+// Case A: match created already completed (guest matches, doubles matches)
+exports.onMatchCreatedCompleted = onDocumentCreated(
+    "matches/{matchId}",
+    async (event) => {
+      const match = event.data.data();
+      if (match.status !== "completed") return;
+
+      console.log(`Match ${event.params.matchId} created as completed — applying stats.`);
+      await applyMatchStats(match);
+    },
+);
+
+// Case B: match updated to completed (regular matches via Add Match Result)
+exports.onMatchUpdatedCompleted = onDocumentUpdated(
+    "matches/{matchId}",
+    async (event) => {
+      const before = event.data.before.data();
+      const after = event.data.after.data();
+
+      // Only fire on the transition into 'completed'
+      if (before.status === "completed") return;
+      if (after.status !== "completed") return;
+
+      console.log(`Match ${event.params.matchId} updated to completed — applying stats.`);
+      await applyMatchStats(after);
+    },
+);
