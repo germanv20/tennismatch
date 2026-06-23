@@ -946,4 +946,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get completeRequiredFields => 'Please complete all required fields';
+
+  @override
+  String get matchScheduledWithReminders =>
+      'Match scheduled! 🎾 Reminders will be sent 24h and 1h before the match.';
+
+  @override
+  String get remindersWillBeSent =>
+      '🔔 Reminders will be sent 24h and 1h before the match';
+
+  @override
+  String get safetyTipMessage =>
+      '🎾 Safety tip: If this is your first time meeting this player, arrange to meet at the tennis court — a public, well-known location.';
 }

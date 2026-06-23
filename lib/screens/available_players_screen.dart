@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:country_picker/country_picker.dart';
 import 'package:tennismatch/gen_l10n/app_localizations.dart';
 import 'player_profile_view_screen.dart';
 import '../widgets/empty_state.dart';
@@ -46,6 +47,19 @@ class _AvailablePlayersScreenState extends State<AvailablePlayersScreen> {
   // true = show only my city, false = show all cities
   bool _filterByCity = true;
 
+  /// Normalizes a city name by stripping accents and lowercasing so that
+  /// "Popayán" and "Popayan" are treated as the same city.
+  static String _normalizeCity(String input) {
+    const accents = 'áàäâãåéèëêíìïîóòöôõúùüûñçÁÀÄÂÃÅÉÈËÊÍÌÏÎÓÒÖÔÕÚÙÜÛÑÇ';
+    const normal  = 'aaaaaaeeeeiiiiooooouuuuncAAAAAAEEEEIIIIOOOOOUUUUNC';
+    final buffer = StringBuffer();
+    for (final ch in input.split('')) {
+      final idx = accents.indexOf(ch);
+      buffer.write(idx >= 0 ? normal[idx] : ch);
+    }
+    return buffer.toString().toLowerCase().trim();
+  }
+
   Future<void> requestMatch(BuildContext context, String toUid) async {
     final loc = AppLocalizations.of(context)!;
     final fromUid = FirebaseAuth.instance.currentUser!.uid;
@@ -88,6 +102,62 @@ class _AvailablePlayersScreenState extends State<AvailablePlayersScreen> {
         .where('fromUid', isEqualTo: uid)
         .where('status', isEqualTo: 'pending')
         .snapshots();
+  }
+
+  /// Returns the flag emoji + localized country name.
+  /// Works for both new profiles (have countryCode) and old ones
+  /// (only have the English country name) by looking up the ISO code
+  /// from the stored English name when countryCode is missing.
+  static String _localizedCountryWithFlag(
+    BuildContext context,
+    String? countryCode,
+    String fallbackName,
+  ) {
+    if (fallbackName.isEmpty) return '';
+
+    // Resolve ISO code — either from the stored field (new profiles)
+    // or by looking up the English name in the package's country list
+    String? resolvedCode = countryCode;
+    if (resolvedCode == null || resolvedCode.isEmpty) {
+      // Try to find the country by its stored English name
+      try {
+        final allCountries = CountryService().getAll();
+        final match = allCountries.firstWhere(
+          (c) => c.name.toLowerCase() == fallbackName.toLowerCase(),
+          orElse: () => allCountries.first,
+        );
+        if (match.name.toLowerCase() == fallbackName.toLowerCase()) {
+          resolvedCode = match.countryCode;
+        }
+      } catch (_) {}
+    }
+
+    if (resolvedCode == null || resolvedCode.isEmpty) {
+      return fallbackName;
+    }
+
+    // Get flag emoji from the resolved code
+    String flagEmoji = '';
+    try {
+      final country = CountryService()
+          .getAll()
+          .firstWhere((c) => c.countryCode == resolvedCode);
+      flagEmoji = country.flagEmoji;
+    } catch (_) {}
+
+    // Get localized name
+    String localizedName = fallbackName;
+    try {
+      final raw = CountryLocalizations.of(context)
+          ?.countryName(countryCode: resolvedCode);
+      if (raw != null && raw.isNotEmpty) {
+        localizedName = raw[0].toUpperCase() + raw.substring(1);
+      }
+    } catch (_) {}
+
+    return flagEmoji.isNotEmpty
+        ? '$localizedName $flagEmoji'
+        : localizedName;
   }
 
   @override
@@ -165,14 +235,17 @@ class _AvailablePlayersScreenState extends State<AvailablePlayersScreen> {
                       .any((day) => availability.contains(day));
                 }).toList();
 
-                // Apply city filter if enabled and user has a city set
+                // Apply city filter if enabled and user has a city set.
+                // Both sides normalized (accents stripped + lowercased) so
+                // "Popayán" and "Popayan" are treated as the same city
+                // regardless of how each user typed it in their profile.
                 final matches = (_filterByCity && userCity.isNotEmpty)
                     ? availableByDay.where((doc) {
                         final data = doc.data() as Map<String, dynamic>;
                         final otherCity =
                             (data['city'] as String? ?? '').trim();
-                        return otherCity.toLowerCase() ==
-                            userCity.toLowerCase();
+                        return _normalizeCity(otherCity) ==
+                            _normalizeCity(userCity);
                       }).toList()
                     : availableByDay;
 
@@ -195,138 +268,253 @@ class _AvailablePlayersScreenState extends State<AvailablePlayersScreen> {
                                       child: CircularProgressIndicator());
                                 }
 
-                                final requestedUserIds = requestSnapshot
+                                // UIDs with a pending outgoing request
+                                final pendingUids = requestSnapshot
                                     .data!.docs
                                     .map((doc) => doc['toUid'] as String)
                                     .toSet();
 
-                                return ListView(
-                                  children: matches.map((doc) {
-                                    final data = doc.data()
-                                        as Map<String, dynamic>;
-                                    final List availabilityRaw =
-                                        data['availability'] ?? [];
-                                    final List<String> sortedAvailability =
-                                        List<String>.from(availabilityRaw)
-                                          ..sort((a, b) => weekOrder
-                                              .indexOf(a)
-                                              .compareTo(
-                                                  weekOrder.indexOf(b)));
-                                    final String availabilityText =
-                                        sortedAvailability.isEmpty
-                                            ? loc.noAvailability
-                                            : sortedAvailability
-                                                .map((day) =>
-                                                    translateDay(day, loc))
-                                                .join(', ');
+                                // Also block players with whom there's
+                                // already a confirmed (unplayed) match —
+                                // they need to complete or cancel it first
+                                return StreamBuilder<QuerySnapshot>(
+                                  stream: FirebaseFirestore.instance
+                                      .collection('matches')
+                                      .where('players',
+                                          arrayContains: user.uid)
+                                      .where('status', isEqualTo: 'confirmed')
+                                      .snapshots(),
+                                  builder: (context, matchSnapshot) {
+                                    if (!matchSnapshot.hasData) {
+                                      return const Center(
+                                          child: CircularProgressIndicator());
+                                    }
 
-                                    final playerUid =
-                                        (data['uid'] as String?)
-                                                    ?.isNotEmpty ==
-                                                true
-                                            ? data['uid'] as String
-                                            : doc.id;
-                                    final isAlreadyRequested =
-                                        requestedUserIds.contains(playerUid);
-                                    final playerCity =
-                                        (data['city'] as String? ?? '')
-                                            .trim();
+                                    // Extract the opponent's UID from each
+                                    // confirmed match's players array
+                                    final confirmedOpponentUids =
+                                        matchSnapshot.data!.docs
+                                            .expand((doc) {
+                                              final match = doc.data()
+                                                  as Map<String, dynamic>;
+                                              final players = List<String>.from(
+                                                  match['players'] ?? []);
+                                              return players.where(
+                                                  (uid) => uid != user.uid);
+                                            })
+                                            .toSet();
 
-                                    return GestureDetector(
-                                      onTap: isAlreadyRequested
-                                          ? null
-                                          : () {
-                                              Navigator.push(
-                                                context,
-                                                MaterialPageRoute(
-                                                  builder: (_) =>
-                                                      PlayerProfileViewScreen(
-                                                    userData: data,
-                                                    onRequestMatch: () async {
-                                                      await requestMatch(
-                                                          context, doc.id);
-                                                      if (!context.mounted) {
-                                                        return;
-                                                      }
-                                                      Navigator.pop(context);
-                                                    },
-                                                  ),
-                                                ),
-                                              );
-                                            },
-                                      child: Padding(
-                                        padding: const EdgeInsets.symmetric(
-                                            horizontal: 12, vertical: 6),
-                                        child: Card(
-                                          color: isAlreadyRequested
-                                              ? Colors.grey[300]
-                                              : null,
-                                          child: ListTile(
-                                            leading: CircleAvatar(
-                                              backgroundImage: (data[
-                                                              'photoUrl'] !=
-                                                          null &&
-                                                      data['photoUrl']
-                                                          .toString()
-                                                          .isNotEmpty)
-                                                  ? NetworkImage(
-                                                      data['photoUrl'])
-                                                  : null,
-                                              child: data['photoUrl'] == null
-                                                  ? const Icon(Icons.person)
-                                                  : null,
-                                            ),
-                                            title: Text(
-                                              data['name'] ?? loc.unknown,
-                                              style: const TextStyle(
+                                    // Merge: blocked if pending request
+                                    // OR confirmed unplayed match exists
+                                    final blockedUserIds = {
+                                      ...pendingUids,
+                                      ...confirmedOpponentUids,
+                                    };
+
+                                // Sort: by city then name when showing all
+                                // cities (groups nearby players together);
+                                // just by name within "My city" since
+                                // everyone's already in the same place.
+                                final sortedMatches =
+                                    List<QueryDocumentSnapshot>.from(matches);
+                                sortedMatches.sort((a, b) {
+                                  final aData =
+                                      a.data() as Map<String, dynamic>;
+                                  final bData =
+                                      b.data() as Map<String, dynamic>;
+                                  if (!_filterByCity) {
+                                    final aCity = _normalizeCity(
+                                        aData['city'] as String? ?? '');
+                                    final bCity = _normalizeCity(
+                                        bData['city'] as String? ?? '');
+                                    final cityCompare =
+                                        aCity.compareTo(bCity);
+                                    if (cityCompare != 0) return cityCompare;
+                                  }
+                                  final aName =
+                                      (aData['name'] as String? ?? '')
+                                          .toLowerCase();
+                                  final bName =
+                                      (bData['name'] as String? ?? '')
+                                          .toLowerCase();
+                                  return aName.compareTo(bName);
+                                });
+
+                                // Build a flat list of widgets, inserting a
+                                // city header each time the city changes
+                                // (only when "All cities" is active)
+                                final listItems = <Widget>[];
+                                String? lastCityHeader;
+
+                                for (final doc in sortedMatches) {
+                                  final data =
+                                      doc.data() as Map<String, dynamic>;
+                                  final playerCityRaw =
+                                      (data['city'] as String? ?? '').trim();
+
+                                  if (!_filterByCity &&
+                                      playerCityRaw.isNotEmpty) {
+                                    final normalizedCity =
+                                        _normalizeCity(playerCityRaw);
+                                    if (normalizedCity != lastCityHeader) {
+                                      lastCityHeader = normalizedCity;
+                                      final countryDisplay =
+                                          _countrySuffix(context, data);
+                                      final headerText =
+                                          countryDisplay.isNotEmpty
+                                              ? '$playerCityRaw${countryDisplay}'
+                                              : playerCityRaw;
+                                      listItems.add(
+                                        Padding(
+                                          padding: const EdgeInsets.fromLTRB(
+                                              16, 16, 16, 6),
+                                          child: Row(
+                                            children: [
+                                              Icon(Icons.location_on,
+                                                  size: 14,
+                                                  color:
+                                                      Theme.of(context)
+                                                          .primaryColor),
+                                              const SizedBox(width: 4),
+                                              Text(
+                                                headerText,
+                                                style: TextStyle(
+                                                  fontSize: 13,
                                                   fontWeight:
-                                                      FontWeight.bold),
-                                            ),
-                                            subtitle: Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              children: [
-                                                Text(
-                                                  '${loc.availableLabel}: $availabilityText',
-                                                  style: const TextStyle(
-                                                      color: Colors.grey),
+                                                      FontWeight.bold,
+                                                  color: Theme.of(context)
+                                                      .primaryColor,
+                                                  letterSpacing: 0.3,
                                                 ),
-                                                // Always show city+country
-                                                if (playerCity.isNotEmpty)
-                                                  Text(
-                                                    '📍 $playerCity${(data['country'] as String?)?.isNotEmpty == true ? ', ${data['country']}' : ''}',
-                                                    style: const TextStyle(
-                                                      color: Colors.grey,
-                                                      fontSize: 12,
-                                                    ),
-                                                  ),
-                                              ],
-                                            ),
-                                            trailing: isAlreadyRequested
-                                                ? Text(
-                                                    loc.requested,
-                                                    style: const TextStyle(
-                                                      color: Colors.grey,
-                                                      fontWeight:
-                                                          FontWeight.bold,
-                                                    ),
-                                                  )
-                                                : const Icon(
-                                                    Icons.sports_tennis),
+                                              ),
+                                            ],
                                           ),
                                         ),
-                                      ),
-                                    );
-                                  }).toList(),
-                                );
+                                      );
+                                    }
+                                  }
+
+                                  listItems.add(
+                                    _buildPlayerCard(
+                                      context, loc, doc, data,
+                                      blockedUserIds,
+                                    ),
+                                  );
+                                }
+
+                                return ListView(children: listItems);
                               },
-                            ),
+                            ); // inner StreamBuilder (confirmed matches)
+                              },
+                            ), // outer StreamBuilder (pending requests)
                     ),
                   ],
                 );
               },
             );
           },
+        ),
+      ),
+    );
+  }
+
+  /// Returns ", 🇨🇭 Switzerland" (localized) or empty string if no country.
+  String _countrySuffix(BuildContext context, Map<String, dynamic> data) {
+    final fallbackName = (data['country'] as String? ?? '').trim();
+    if (fallbackName.isEmpty) return '';
+    final countryCode = data['countryCode'] as String?;
+    final display = _localizedCountryWithFlag(
+        context, countryCode, fallbackName);
+    return ', $display';
+  }
+
+  /// Builds a single player card for the Available Players list.
+  Widget _buildPlayerCard(
+    BuildContext context,
+    AppLocalizations loc,
+    QueryDocumentSnapshot doc,
+    Map<String, dynamic> data,
+    Set<String> blockedUserIds,
+  ) {
+    final List availabilityRaw = data['availability'] ?? [];
+    final List<String> sortedAvailability =
+        List<String>.from(availabilityRaw)
+          ..sort((a, b) =>
+              weekOrder.indexOf(a).compareTo(weekOrder.indexOf(b)));
+    final String availabilityText = sortedAvailability.isEmpty
+        ? loc.noAvailability
+        : sortedAvailability.map((day) => translateDay(day, loc)).join(', ');
+
+    final playerUid = (data['uid'] as String?)?.isNotEmpty == true
+        ? data['uid'] as String
+        : doc.id;
+    final isAlreadyRequested = blockedUserIds.contains(playerUid);
+    final playerCity = (data['city'] as String? ?? '').trim();
+
+    return GestureDetector(
+      onTap: isAlreadyRequested
+          ? null
+          : () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => PlayerProfileViewScreen(
+                    userData: data,
+                    onRequestMatch: () async {
+                      await requestMatch(context, doc.id);
+                      if (!context.mounted) return;
+                      Navigator.pop(context);
+                    },
+                  ),
+                ),
+              );
+            },
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        child: Card(
+          color: isAlreadyRequested ? Colors.grey[300] : null,
+          child: ListTile(
+            leading: CircleAvatar(
+              backgroundImage: (data['photoUrl'] != null &&
+                      data['photoUrl'].toString().isNotEmpty)
+                  ? NetworkImage(data['photoUrl'])
+                  : null,
+              child: data['photoUrl'] == null
+                  ? const Icon(Icons.person)
+                  : null,
+            ),
+            title: Text(
+              data['name'] ?? loc.unknown,
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+            subtitle: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '${loc.availableLabel}: $availabilityText',
+                  style: const TextStyle(color: Colors.grey),
+                ),
+                // Always show city + localized country name with flag
+                if (playerCity.isNotEmpty)
+                  Text(
+                    '📍 $playerCity${_countrySuffix(context, data)}',
+                    style: const TextStyle(
+                      color: Colors.grey,
+                      fontSize: 12,
+                    ),
+                  ),
+              ],
+            ),
+            trailing: isAlreadyRequested
+                ? Text(
+                    loc.requested,
+                    style: const TextStyle(
+                      color: Colors.grey,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  )
+                : const Icon(Icons.sports_tennis),
+          ),
         ),
       ),
     );

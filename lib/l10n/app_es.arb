@@ -353,5 +353,8 @@
   "invalidProSetScore": "Puntuación de pro-set inválida. Debe llegar a 8 juegos (con 2 de diferencia) o usar tiebreak en 7-7.",
   "matchesPlayedCount": "{count, plural, =0{Sin partidos registrados} =1{1 partido jugado} other{{count} partidos jugados}}",
   "@matchesPlayedCount": {"placeholders": {"count": {"type": "int"}}},
-  "completeRequiredFields": "Por favor completa todos los campos obligatorios"
+  "completeRequiredFields": "Por favor completa todos los campos obligatorios",
+  "matchScheduledWithReminders": "¡Partido programado! 🎾 Se enviarán recordatorios 24h y 1h antes del partido.",
+  "remindersWillBeSent": "🔔 Se enviarán recordatorios 24h y 1h antes del partido",
+  "safetyTipMessage": "🎾 Consejo de seguridad: Si es la primera vez que te encuentras con este jugador, acuerda reunirte en la cancha de tenis — un lugar público y conocido."
 }

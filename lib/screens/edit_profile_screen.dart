@@ -20,6 +20,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   DateTime? birthdate;
   String? city;
   String? country;
+  String? countryCode;
   String? tennisLevel;
   List<String> availability = [];
 
@@ -61,6 +62,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
     city = data['city'];
     country = data['country'];
+    countryCode = data['countryCode'];
     tennisLevel = data['tennisLevel'];
     availability = List<String>.from(data['availability'] ?? []);
     _cityController.text = city ?? '';
@@ -73,6 +75,21 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   }
 
   bool isSaving = false;
+
+
+  /// Normalizes a city name for consistent Firestore storage and comparison:
+  /// strips accents (é→e, á→a, ñ→n, etc.) and lowercases so that
+  /// "Popayán" and "Popayan" are treated as the same city.
+  static String _normalizeCity(String input) {
+    const accents = 'áàäâãåéèëêíìïîóòöôõúùüûñçÁÀÄÂÃÅÉÈËÊÍÌÏÎÓÒÖÔÕÚÙÜÛÑÇ';
+    const normal  = 'aaaaaaeeeeiiiiooooouuuuncAAAAAAEEEEIIIIOOOOOUUUUNC';
+    final buffer = StringBuffer();
+    for (final ch in input.split('')) {
+      final idx = accents.indexOf(ch);
+      buffer.write(idx >= 0 ? normal[idx] : ch);
+    }
+    return buffer.toString().toLowerCase().trim();
+  }
 
   Future<void> saveProfile() async {
     final loc = AppLocalizations.of(context)!;
@@ -102,8 +119,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       final uid = FirebaseAuth.instance.currentUser!.uid;
 
       final updateData = {
-        'city': city,
+        'city': _normalizeCity(city ?? ''),
         'country': country,
+        'countryCode': countryCode,
         'tennisLevel': tennisLevel,
         'availability': availability,
         'birthDate': Timestamp.fromDate(birthdate!),
@@ -254,6 +272,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     onSelect: (Country selectedCountry) {
                       setState(() {
                         country = selectedCountry.name;
+                        countryCode = selectedCountry.countryCode;
                       });
                     },
                   );

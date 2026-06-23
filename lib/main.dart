@@ -9,6 +9,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'firebase_options.dart';
 import 'package:provider/provider.dart';
+import 'package:country_picker/country_picker.dart';
 import 'screens/match_chat_screen.dart';
 import 'screens/incoming_requests_screen.dart';
 import 'services/theme_service.dart';
@@ -68,6 +69,7 @@ class MyApp extends StatelessWidget {
 
       localizationsDelegates: const [
         AppLocalizations.delegate,
+        CountryLocalizations.delegate,
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,

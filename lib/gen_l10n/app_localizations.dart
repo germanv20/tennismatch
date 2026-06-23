@@ -1874,6 +1874,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Please complete all required fields'**
   String get completeRequiredFields;
+
+  /// No description provided for @matchScheduledWithReminders.
+  ///
+  /// In en, this message translates to:
+  /// **'Match scheduled! 🎾 Reminders will be sent 24h and 1h before the match.'**
+  String get matchScheduledWithReminders;
+
+  /// No description provided for @remindersWillBeSent.
+  ///
+  /// In en, this message translates to:
+  /// **'🔔 Reminders will be sent 24h and 1h before the match'**
+  String get remindersWillBeSent;
+
+  /// No description provided for @safetyTipMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'🎾 Safety tip: If this is your first time meeting this player, arrange to meet at the tennis court — a public, well-known location.'**
+  String get safetyTipMessage;
 }
 
 class _AppLocalizationsDelegate

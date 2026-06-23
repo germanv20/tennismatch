@@ -353,5 +353,8 @@
   "invalidProSetScore": "Invalid pro-set score. Must reach 8 games (win by 2) or use a 7-7 tiebreak.",
   "matchesPlayedCount": "{count, plural, =0{No matches played yet} =1{1 match played} other{{count} matches played}}",
   "@matchesPlayedCount": {"placeholders": {"count": {"type": "int"}}},
-  "completeRequiredFields": "Please complete all required fields"
+  "completeRequiredFields": "Please complete all required fields",
+  "matchScheduledWithReminders": "Match scheduled! 🎾 Reminders will be sent 24h and 1h before the match.",
+  "remindersWillBeSent": "🔔 Reminders will be sent 24h and 1h before the match",
+  "safetyTipMessage": "🎾 Safety tip: If this is your first time meeting this player, arrange to meet at the tennis court — a public, well-known location."
 }

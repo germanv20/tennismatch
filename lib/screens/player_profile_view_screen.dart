@@ -58,11 +58,50 @@ class _PlayerProfileViewScreenState extends State<PlayerProfileViewScreen> {
 
   String getCountryFlag(String countryName) {
     try {
-      final country = Country.tryParse(countryName);
-      return country?.flagEmoji ?? '';
-    } catch (_) {
-      return '';
+      final match = CountryService().getAll().firstWhere(
+            (c) => c.name.toLowerCase() == countryName.toLowerCase(),
+            orElse: () => CountryService().getAll().first,
+          );
+      if (match.name.toLowerCase() == countryName.toLowerCase()) {
+        return match.flagEmoji;
+      }
+    } catch (_) {}
+    return '';
+  }
+
+  /// Returns the localized country name, falling back to English if the
+  /// device locale isn't supported or countryCode is missing.
+  String getLocalizedCountryName(
+    BuildContext context,
+    String? countryCode,
+    String fallbackName,
+  ) {
+    if (fallbackName.isEmpty) return '';
+
+    String? resolvedCode = countryCode;
+    if (resolvedCode == null || resolvedCode.isEmpty) {
+      try {
+        final match = CountryService().getAll().firstWhere(
+              (c) => c.name.toLowerCase() == fallbackName.toLowerCase(),
+              orElse: () => CountryService().getAll().first,
+            );
+        if (match.name.toLowerCase() == fallbackName.toLowerCase()) {
+          resolvedCode = match.countryCode;
+        }
+      } catch (_) {}
     }
+
+    if (resolvedCode == null || resolvedCode.isEmpty) return fallbackName;
+
+    try {
+      final raw = CountryLocalizations.of(context)
+          ?.countryName(countryCode: resolvedCode);
+      if (raw != null && raw.isNotEmpty) {
+        return raw[0].toUpperCase() + raw.substring(1);
+      }
+    } catch (_) {}
+
+    return fallbackName;
   }
 
   @override
@@ -174,7 +213,7 @@ class _PlayerProfileViewScreenState extends State<PlayerProfileViewScreen> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        "🌍 ${loc.country}: $country",
+                        "🌍 ${loc.country}: ${getLocalizedCountryName(context, userData['countryCode'] as String?, country)}",
                         style: const TextStyle(fontSize: 15),
                       ),
                       const SizedBox(width: 6),

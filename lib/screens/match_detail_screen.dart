@@ -5,8 +5,9 @@ import 'package:tennismatch/gen_l10n/app_localizations.dart';
 import 'match_chat_screen.dart';
 import 'add_match_result_screen.dart';
 import 'package:tennismatch/services/h2h_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-class MatchDetailScreen extends StatelessWidget {
+class MatchDetailScreen extends StatefulWidget {
   final DocumentSnapshot matchDoc;
   final Map<String, dynamic> opponentData;
 
@@ -15,6 +16,39 @@ class MatchDetailScreen extends StatelessWidget {
     required this.matchDoc,
     required this.opponentData,
   });
+
+  @override
+  State<MatchDetailScreen> createState() => _MatchDetailScreenState();
+}
+
+class _MatchDetailScreenState extends State<MatchDetailScreen> {
+  bool _showSafetyTip = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkSafetyTip();
+  }
+
+  Future<void> _checkSafetyTip() async {
+    final prefs = await SharedPreferences.getInstance();
+    final key = 'safety_tip_dismissed_${widget.matchDoc.id}';
+    final dismissed = prefs.getBool(key) ?? false;
+    if (!dismissed && mounted) {
+      setState(() => _showSafetyTip = true);
+    }
+  }
+
+  Future<void> _dismissSafetyTip() async {
+    final prefs = await SharedPreferences.getInstance();
+    final key = 'safety_tip_dismissed_${widget.matchDoc.id}';
+    await prefs.setBool(key, true);
+    if (mounted) setState(() => _showSafetyTip = false);
+  }
+
+  // Forward widget fields for convenience
+  DocumentSnapshot get matchDoc => widget.matchDoc;
+  Map<String, dynamic> get opponentData => widget.opponentData;
 
   String translateStatus(String status, AppLocalizations loc) {
     switch (status) {
@@ -89,8 +123,9 @@ class MatchDetailScreen extends StatelessWidget {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(loc.matchScheduledConfirm),
+            content: Text(loc.matchScheduledWithReminders),
             backgroundColor: Colors.green,
+            duration: const Duration(seconds: 4),
           ),
         );
         // Replace current screen with fresh data
@@ -213,6 +248,44 @@ class MatchDetailScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+
+                // ── Safety tip banner — shown once per match, dismissed
+                // permanently via SharedPreferences ──
+                if (_showSafetyTip) ...[
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: Colors.amber.shade50,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: Colors.amber.shade300),
+                    ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Icon(Icons.security_outlined,
+                            color: Colors.amber.shade800, size: 20),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            loc.safetyTipMessage,
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: Colors.amber.shade900,
+                            ),
+                          ),
+                        ),
+                        GestureDetector(
+                          onTap: _dismissSafetyTip,
+                          child: Icon(Icons.close,
+                              size: 18, color: Colors.amber.shade700),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                ],
 
                 // ── Opponent header ──
                 Row(
@@ -363,6 +436,30 @@ class MatchDetailScreen extends StatelessWidget {
                               fontWeight: FontWeight.bold,
                             ),
                           ),
+
+                          const SizedBox(height: 8),
+
+                          // Static reminder info — always visible so both
+                          // players know reminders are coming automatically
+                          Row(
+                            children: [
+                              Icon(Icons.notifications_outlined,
+                                  size: 14,
+                                  color: Colors.green.shade600),
+                              const SizedBox(width: 4),
+                              Expanded(
+                                child: Text(
+                                  loc.remindersWillBeSent,
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.green.shade700,
+                                    fontStyle: FontStyle.italic,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+
                           const SizedBox(height: 10),
                           Row(
                             children: [

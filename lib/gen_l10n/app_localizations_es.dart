@@ -961,4 +961,16 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get completeRequiredFields =>
       'Por favor completa todos los campos obligatorios';
+
+  @override
+  String get matchScheduledWithReminders =>
+      '¡Partido programado! 🎾 Se enviarán recordatorios 24h y 1h antes del partido.';
+
+  @override
+  String get remindersWillBeSent =>
+      '🔔 Se enviarán recordatorios 24h y 1h antes del partido';
+
+  @override
+  String get safetyTipMessage =>
+      '🎾 Consejo de seguridad: Si es la primera vez que te encuentras con este jugador, acuerda reunirte en la cancha de tenis — un lugar público y conocido.';
 }
