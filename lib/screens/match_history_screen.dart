@@ -232,11 +232,15 @@ class _MatchHistoryScreenState extends State<MatchHistoryScreen> {
 
     final winnerUid = match['winnerUid'] ?? '';
     final bool isTie = match['isTie'] == true;
-    // winnerUid stores the creator's UID when they won.
-    // For a claimed match viewed by the claimant, flip the win/loss perspective.
-    final bool currentUserWon = !isTie && (userIsCreator
-        ? winnerUid == currentUid
-        : winnerUid != currentUid);
+    // winnerUid stores the creator's UID when the creator won, and some
+    // non-creator placeholder (e.g. empty) when the guest opponent won —
+    // that placeholder is set at creation time, before the guest has a
+    // real UID, so it can never equal the claimant's UID once they sign
+    // up. Always compare against createdBy (stable), never currentUid
+    // (whose meaning flips depending on who's viewing).
+    final bool creatorWon = winnerUid == createdBy;
+    final bool currentUserWon =
+        !isTie && (userIsCreator ? creatorWon : !creatorWon);
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -733,8 +737,26 @@ class _MatchHistoryScreenState extends State<MatchHistoryScreen> {
               (isTie || !currentUserWon)) return false;
           if (filterResult == 'loss' &&
               (isTie || currentUserWon)) return false;
+        } else if (type == 'guest') {
+          // Guest match: winnerUid stores the creator's UID when they
+          // won. For the claimant viewing their own history, flip the
+          // perspective by comparing against createdBy, not currentUid
+          // directly (currentUid never equals the creator's UID from
+          // the claimant's side, which would otherwise look like a win).
+          final winnerUid = match['winnerUid'] as String? ?? '';
+          final createdByUid = match['createdBy'] as String? ?? '';
+          final userIsCreator = createdByUid == currentUid;
+          final creatorWon = winnerUid == createdByUid;
+          final currentUserWon = userIsCreator ? creatorWon : !creatorWon;
+
+          if (filterResult == 'tie' && !isTie) return false;
+          if (filterResult == 'win' &&
+              (isTie || !currentUserWon)) return false;
+          if (filterResult == 'loss' &&
+              (isTie || currentUserWon)) return false;
         } else {
-          // Singles / guest: use winnerUid
+          // Regular match: both players are real users from the start,
+          // so winnerUid is directly comparable to currentUid.
           final winnerUid = match['winnerUid'] as String? ?? '';
           if (filterResult == 'tie' && !isTie) return false;
           if (filterResult == 'win' &&

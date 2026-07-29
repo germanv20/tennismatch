@@ -1,29 +1,22 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-
     function isAuthenticated() {
       return request.auth != null;
     }
-
     function isOwner(userId) {
       return request.auth.uid == userId;
     }
-
     function isParticipant(players) {
       return request.auth.uid in players;
     }
-
     // -------------------------
     // USERS
     // -------------------------
     match /users/{userId} {
-
       allow read: if isAuthenticated();
-
       allow create: if isAuthenticated() &&
                     isOwner(userId);
-
       allow update: if isAuthenticated() &&
         isOwner(userId) &&
         (
@@ -37,14 +30,18 @@ service cloud.firestore {
               'age',
               'city',
               'country',
+              'countryCode',
               'photoUrl',
               'phoneNumber',
-              'fcmTokens'
+              'fcmTokens',
+              'locale',
+              'uid',
+              'email',
+              'createdAt',
+              'lastActive'
             ])
-
           ||
-
-          // Case B: stats fields
+          // Case B: stats fields (wins/losses optional for tie matches)
           request.resource.data.diff(resource.data).affectedKeys()
             .hasOnly([
               'matchesPlayed',
@@ -53,47 +50,68 @@ service cloud.firestore {
               'losses'
             ])
         );
-
       allow delete: if false;
-
       match /headToHead/{opponentId} {
         allow read: if isAuthenticated() && isOwner(userId);
         allow write: if isAuthenticated() && isOwner(userId);
       }
     }
-
     // -------------------------
     // MATCH REQUESTS
     // -------------------------
     match /match_requests/{requestId} {
-
       allow read: if isAuthenticated() &&
         (request.auth.uid == resource.data.fromUid ||
          request.auth.uid == resource.data.toUid);
-
       allow create: if isAuthenticated() &&
         request.auth.uid == request.resource.data.fromUid &&
         request.resource.data.toUid is string &&
         request.resource.data.status == "pending";
-
       allow update: if isAuthenticated() && (
         (request.auth.uid == resource.data.toUid &&
          request.resource.data.status in ["accepted", "rejected"]) ||
         (request.auth.uid == resource.data.fromUid &&
-         request.resource.data.status == "cancelled")
+         request.resource.data.status == "cancelled") ||
+        // Cloud Function sets expired — allow via admin SDK (no auth)
+        // For client-side safety, also allow fromUid to read their expired requests
+        request.resource.data.status == "expired"
       );
-
       allow delete: if false;
     }
-
+    // -------------------------
+    // PHONE INDEX
+    // Used by the guest match claim mechanic.
+    // Any authenticated user can read — the phone number itself
+    // is not sensitive in this context (it's used as a lookup key).
+    // Only the match creator can write their own index entries.
+    // -------------------------
+    match /phoneIndex/{phone}/matches/{matchId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() &&
+        request.resource.data.createdBy == request.auth.uid;
+      allow delete: if isAuthenticated() &&
+        resource.data.createdBy == request.auth.uid;
+      allow update: if false;
+    }
     // -------------------------
     // MATCHES
     // -------------------------
     match /matches/{matchId} {
-
       allow read: if isAuthenticated() &&
-        isParticipant(resource.data.players);
-
+        (
+          isParticipant(resource.data.players)
+          ||
+          // Any authenticated user can read guest/doubles match documents.
+          // The Dart code filters by phone/claimedBy client-side.
+          resource.data.type == 'guest' ||
+          resource.data.type == 'doubles_guest' ||
+          // Allow claimant to read matches during the claim process
+          // before their uid is added to players[]
+          (
+            resource.data.get('type', '') == 'guest' &&
+            resource.data.get('guestOpponent', {}).get('claimedBy', null) == null
+          )
+        );
       // Case A: Regular match create
       allow create: if isAuthenticated() &&
         isParticipant(request.resource.data.players) &&
@@ -104,27 +122,36 @@ service cloud.firestore {
           request.resource.data.player1Uid != request.resource.data.player2Uid
         ) &&
         request.resource.data.status in ["pending", "confirmed"];
-
-      // Case B: Guest match create
+      // Case B: Guest match create (singles)
       allow create: if isAuthenticated() &&
         request.resource.data.type == 'guest' &&
         request.resource.data.createdBy == request.auth.uid &&
         request.auth.uid in request.resource.data.players &&
         request.resource.data.players.size() == 1 &&
         request.resource.data.status == 'completed';
-
+      // Case C: Doubles guest match create
+      allow create: if isAuthenticated() &&
+        request.resource.data.type == 'doubles_guest' &&
+        request.resource.data.createdBy == request.auth.uid &&
+        request.auth.uid in request.resource.data.players &&
+        request.resource.data.players.size() == 1 &&
+        request.resource.data.status == 'completed';
       allow update: if isAuthenticated() &&
         isParticipant(resource.data.players) &&
         (
           (
             resource.data.status == "confirmed" &&
             request.resource.data.status == "completed" &&
-            request.resource.data.winnerUid in resource.data.players &&
+            // Allow either a winner (winnerUid in players) or a tie (winnerUid is null)
+            (
+              request.resource.data.winnerUid in resource.data.players ||
+              request.resource.data.winnerUid == null
+            ) &&
             request.resource.data.diff(resource.data).affectedKeys()
               .hasOnly([
                 'status','completedAt','winnerUid',
                 'player1Uid','player2Uid','playerNames',
-                'result','summary'
+                'result','summary','isTie'
               ])
           )
           ||
@@ -136,7 +163,7 @@ service cloud.firestore {
           request.resource.data.diff(resource.data).affectedKeys()
             .hasOnly([
               'lastMessage','lastMessageTime','lastSenderUid',
-              'notifiedPlayers','typing','activeChatUsers'
+              'notifiedPlayers','typing','activeChatUsers','scheduledDate'
             ])
           ||
           (
@@ -162,34 +189,33 @@ service cloud.firestore {
               (!('deletionRequest' in request.resource.data))
             )
           )
-          ||
-          (
-            resource.data.type == 'guest' &&
-            resource.data.guestOpponent.claimedBy == null &&
-            request.resource.data.diff(resource.data).affectedKeys()
-              .hasOnly(['guestOpponent', 'players', 'claimantResult'])
-          )
         );
-
-      // Regular match delete
+      // ── Guest match claim: separate rule because the claimant is not
+      // yet in players[] when this runs — they are being added by this update
+      allow update: if isAuthenticated() &&
+        resource.data.get('type', '') == 'guest' &&
+        resource.data.get('guestOpponent', {}).get('claimedBy', null) == null &&
+        request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['guestOpponent', 'players', 'claimantResult']);
+      // Regular match delete (type field may not exist on older matches)
       allow delete: if isAuthenticated() &&
         isParticipant(resource.data.players) &&
-        resource.data.type != 'guest' &&
+        !('type' in resource.data) &&
         resource.data.deletionRequest.status == 'accepted' &&
         request.auth.uid == resource.data.deletionRequest.requestedBy;
-
-      // Guest match delete
+      // Guest match delete (singles)
       allow delete: if isAuthenticated() &&
         resource.data.type == 'guest' &&
         resource.data.createdBy == request.auth.uid;
-
+      // Doubles guest match delete
+      allow delete: if isAuthenticated() &&
+        resource.data.type == 'doubles_guest' &&
+        resource.data.createdBy == request.auth.uid;
       match /messages/{messageId} {
-
         allow read: if isAuthenticated() &&
           isParticipant(
             get(/databases/$(database)/documents/matches/$(matchId)).data.players
           );
-
         allow create: if isAuthenticated() &&
           request.auth.uid == request.resource.data.senderUid &&
           request.resource.data.keys().hasOnly(['text', 'senderUid', 'createdAt', 'readBy']) &&
@@ -198,14 +224,12 @@ service cloud.firestore {
           isParticipant(
             get(/databases/$(database)/documents/matches/$(matchId)).data.players
           );
-
         allow update: if isAuthenticated() &&
           isParticipant(
             get(/databases/$(database)/documents/matches/$(matchId)).data.players
           ) &&
           request.resource.data.diff(resource.data).affectedKeys()
             .hasOnly(['readBy']);
-
         allow delete: if false;
       }
     }

@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:tennismatch/gen_l10n/app_localizations.dart';
 import 'package:country_picker/country_picker.dart';
+import '../utils/city_utils.dart';
 
 const weekOrder = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
@@ -123,7 +124,9 @@ class _PlayerProfileViewScreenState extends State<PlayerProfileViewScreen> {
         ? loc.noAvailability
         : sortedAvailability.map((day) => translateDay(day, loc)).join(', ');
 
-    final String city = userData['city'] ?? loc.notSet;
+    final String rawCity = (userData['city'] as String? ?? '');
+    final String city =
+        rawCity.isNotEmpty ? formatCityDisplay(rawCity) : loc.notSet;
     final String country = userData['country'] ?? loc.notSet;
 
     return Scaffold(

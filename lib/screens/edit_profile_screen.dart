@@ -31,6 +31,19 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   final List<String> levels = ['Beginner', 'Intermediate', 'Advanced'];
   final List<String> days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
+  String _translateDay(String day, AppLocalizations loc) {
+    switch (day) {
+      case 'Mon': return loc.monFull;
+      case 'Tue': return loc.tueFull;
+      case 'Wed': return loc.wedFull;
+      case 'Thu': return loc.thuFull;
+      case 'Fri': return loc.friFull;
+      case 'Sat': return loc.satFull;
+      case 'Sun': return loc.sunFull;
+      default: return day;
+    }
+  }
+
   String getFlagEmoji(String countryName) {
     try {
       final countryObj = Country.tryParse(countryName);
@@ -77,18 +90,15 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   bool isSaving = false;
 
 
-  /// Normalizes a city name for consistent Firestore storage and comparison:
-  /// strips accents (é→e, á→a, ñ→n, etc.) and lowercases so that
-  /// "Popayán" and "Popayan" are treated as the same city.
-  static String _normalizeCity(String input) {
-    const accents = 'áàäâãåéèëêíìïîóòöôõúùüûñçÁÀÄÂÃÅÉÈËÊÍÌÏÎÓÒÖÔÕÚÙÜÛÑÇ';
-    const normal  = 'aaaaaaeeeeiiiiooooouuuuncAAAAAAEEEEIIIIOOOOOUUUUNC';
-    final buffer = StringBuffer();
-    for (final ch in input.split('')) {
-      final idx = accents.indexOf(ch);
-      buffer.write(idx >= 0 ? normal[idx] : ch);
-    }
-    return buffer.toString().toLowerCase().trim();
+  /// Formats a city name for storage: trims whitespace and capitalizes
+  /// only the first letter, preserving accents and the rest of the text
+  /// exactly as the user typed it (e.g. "popayán" -> "Popayán").
+  /// Matching/grouping by city (e.g. in AvailablePlayersScreen) normalizes
+  /// accents/case separately at comparison time, so this stays display-safe.
+  static String _formatCity(String input) {
+    final trimmed = input.trim();
+    if (trimmed.isEmpty) return trimmed;
+    return trimmed[0].toUpperCase() + trimmed.substring(1);
   }
 
   Future<void> saveProfile() async {
@@ -119,7 +129,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       final uid = FirebaseAuth.instance.currentUser!.uid;
 
       final updateData = {
-        'city': _normalizeCity(city ?? ''),
+        'city': _formatCity(city ?? ''),
         'country': country,
         'countryCode': countryCode,
         'tennisLevel': tennisLevel,
@@ -296,9 +306,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   border: const OutlineInputBorder(),
                 ),
                 items: levels.map((level) {
+                  final localizedLevel = level == 'Beginner'
+                      ? loc.levelBeginner
+                      : level == 'Intermediate'
+                          ? loc.levelIntermediate
+                          : loc.levelAdvanced;
                   return DropdownMenuItem(
                     value: level,
-                    child: Text(level),
+                    child: Text(localizedLevel),
                   );
                 }).toList(),
                 onChanged: (value) => setState(() => tennisLevel = value),
@@ -314,8 +329,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 spacing: 8,
                 children: days.map((day) {
                   final isSelected = availability.contains(day);
+                  final localizedDay = _translateDay(day, loc);
                   return FilterChip(
-                    label: Text(day),
+                    label: Text(localizedDay),
                     selected: isSelected,
                     onSelected: (_) {
                       setState(() {

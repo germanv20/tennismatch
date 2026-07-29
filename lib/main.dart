@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ui' show PlatformDispatcher;
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -5,6 +6,7 @@ import 'package:tennismatch/gen_l10n/app_localizations.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'firebase_options.dart';
@@ -29,6 +31,10 @@ void main() async {
 
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
+  );
+
+  await FirebaseAppCheck.instance.activate(
+    androidProvider: AndroidProvider.debug,
   );
 
   // 🔔 Request notification permission (Android 13+)
@@ -220,22 +226,33 @@ class AuthTest extends StatefulWidget {
   State<AuthTest> createState() => _AuthTestState();
 }
 
-class _AuthTestState extends State<AuthTest> {
+class _AuthTestState extends State<AuthTest> with WidgetsBindingObserver {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   bool _fcmInitialized = false;
+
+  // ── Presence heartbeat ──
+  // Keeps users/{uid}.lastActive fresh while the app is in the foreground
+  // so other screens (e.g. Available Players) can derive an "online" dot
+  // from `now - lastActive < 2 minutes` with no extra listener/service.
+  static const _presenceInterval = Duration(seconds: 45);
+  Timer? _presenceTimer;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
 
     FirebaseAuth.instance.authStateChanges().listen((user) {
       if (user != null && !_fcmInitialized) {
         _fcmInitialized = true;
         setupFCM();
       }
-      // Reset flag on sign-out so fresh token is fetched on next login
-      if (user == null) {
+      if (user != null) {
+        _startPresenceHeartbeat();
+      } else {
+        // Reset flag on sign-out so fresh token is fetched on next login
         _fcmInitialized = false;
+        _stopPresenceHeartbeat();
       }
     });
 
@@ -257,9 +274,61 @@ class _AuthTestState extends State<AuthTest> {
     });
   }
 
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _presenceTimer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (_auth.currentUser == null) return;
+
+    if (state == AppLifecycleState.resumed) {
+      _startPresenceHeartbeat();
+    } else if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.detached) {
+      // Stop writing lastActive while backgrounded — the "online" dot
+      // self-expires 2 minutes after the last write anyway.
+      _stopPresenceHeartbeat();
+    }
+  }
+
+  void _startPresenceHeartbeat() {
+    _updateLastActive();
+    _presenceTimer?.cancel();
+    _presenceTimer = Timer.periodic(
+      _presenceInterval,
+      (_) => _updateLastActive(),
+    );
+  }
+
+  void _stopPresenceHeartbeat() {
+    _presenceTimer?.cancel();
+    _presenceTimer = null;
+  }
+
+  Future<void> _updateLastActive() async {
+    final user = _auth.currentUser;
+    if (user == null) return;
+
+    await FirebaseFirestore.instance.collection('users').doc(user.uid).set(
+      {'lastActive': FieldValue.serverTimestamp()},
+      SetOptions(merge: true),
+    );
+  }
+
   Future<void> signInWithGoogle() async {
     try {
-      final GoogleSignIn googleSignIn = GoogleSignIn();
+      // The serverClientId (web client ID) is required for Firebase Auth
+      // to correctly identify the OAuth client when using Google Sign-In
+      const webClientId =
+          '619706153138-vbhd2pmm4desced8n8n63trhq3s1glfg.apps.googleusercontent.com';
+
+      final GoogleSignIn googleSignIn = GoogleSignIn(
+        serverClientId: webClientId,
+      );
 
       // Force account picker every time
       await googleSignIn.signOut();

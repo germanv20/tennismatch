@@ -5,6 +5,7 @@ import 'package:country_picker/country_picker.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../gen_l10n/app_localizations.dart';
 import '../main.dart' show rootScaffoldMessengerKey;
+import '../services/h2h_service.dart';
 
 class CompleteProfileScreen extends StatefulWidget {
   const CompleteProfileScreen({super.key});
@@ -78,18 +79,15 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
   }
 
 
-  /// Normalizes a city name for consistent Firestore storage and comparison:
-  /// strips accents (é→e, á→a, ñ→n, etc.) and lowercases so that
-  /// "Popayán" and "Popayan" are treated as the same city.
-  static String _normalizeCity(String input) {
-    const accents = 'áàäâãåéèëêíìïîóòöôõúùüûñçÁÀÄÂÃÅÉÈËÊÍÌÏÎÓÒÖÔÕÚÙÜÛÑÇ';
-    const normal  = 'aaaaaaeeeeiiiiooooouuuuncAAAAAAEEEEIIIIOOOOOUUUUNC';
-    final buffer = StringBuffer();
-    for (final ch in input.split('')) {
-      final idx = accents.indexOf(ch);
-      buffer.write(idx >= 0 ? normal[idx] : ch);
-    }
-    return buffer.toString().toLowerCase().trim();
+  /// Formats a city name for storage: trims whitespace and capitalizes
+  /// only the first letter, preserving accents and the rest of the text
+  /// exactly as the user typed it (e.g. "popayán" -> "Popayán").
+  /// Matching/grouping by city (e.g. in AvailablePlayersScreen) normalizes
+  /// accents/case separately at comparison time, so this stays display-safe.
+  static String _formatCity(String input) {
+    final trimmed = input.trim();
+    if (trimmed.isEmpty) return trimmed;
+    return trimmed[0].toUpperCase() + trimmed.substring(1);
   }
 
   Future<void> saveProfile() async {
@@ -126,7 +124,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
       final Map<String, dynamic> updateData = {
         'birthDate': Timestamp.fromDate(birthdate!),
         'age': getAge(birthdate!),
-        'city': _normalizeCity(city ?? ''),
+        'city': _formatCity(city ?? ''),
         'country': country,
         'countryCode': countryCode,
         'tennisLevel': tennisLevel,
@@ -204,9 +202,18 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
       int claimedWins = 0;
       int claimedLosses = 0;
       int claimedDuration = 0;
+      // Distinct match creators among the claimed matches, so we can
+      // refresh head-to-head with each of them right away instead of
+      // waiting for a future match to trigger it.
+      final Set<String> claimedCreatorUids = {};
 
       for (final doc in matchDocs) {
         final data = doc.data() as Map<String, dynamic>? ?? {};
+
+        final creatorUid = data['createdBy'] as String?;
+        if (creatorUid != null && creatorUid.isNotEmpty) {
+          claimedCreatorUids.add(creatorUid);
+        }
 
         // The original logger was player1 (p1 = them, p2 = guest/us)
         // For the new owner: their perspective is p2, so we flip
@@ -267,6 +274,20 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
 
 
       await batch.commit();
+
+      // Refresh head-to-head against each creator whose match we just
+      // claimed, so it reflects these historical matches immediately
+      // instead of waiting for a future match between the two of them.
+      for (final creatorUid in claimedCreatorUids) {
+        try {
+          await H2HService.recalculateHeadToHead(
+            userA: uid,
+            userB: creatorUid,
+          );
+        } catch (e) {
+          debugPrint('⚠️ Could not refresh H2H after claim: $e');
+        }
+      }
 
       // Use rootScaffoldMessengerKey — this screen may already be gone
       // by the time the claim completes because main.dart's StreamBuilder

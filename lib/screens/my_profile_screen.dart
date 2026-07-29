@@ -8,6 +8,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:country_picker/country_picker.dart';
 import 'dart:io';
 import '../utils/day_utils.dart';
+import '../utils/city_utils.dart';
 import 'edit_profile_screen.dart';
 
 class MyProfileScreen extends StatefulWidget {
@@ -164,7 +165,9 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
           final String? photoUrl = userData['photoUrl'];
           final Timestamp? birthTimestamp = userData['birthDate'];
           final int? age = userData['age'];
-          final String city = userData['city'] ?? loc.notSet;
+          final String rawCity = (userData['city'] as String? ?? '');
+          final String city =
+              rawCity.isNotEmpty ? formatCityDisplay(rawCity) : loc.notSet;
           final String country = userData['country'] ?? loc.notSet;
 
           return SafeArea(

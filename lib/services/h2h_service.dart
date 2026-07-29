@@ -28,8 +28,20 @@ class H2HService {
       matches++;
 
       final winnerUid = data['winnerUid'];
+      final type = data['type'] as String? ?? 'regular';
 
-      if (winnerUid == userA) {
+      if (type == 'guest' && winnerUid == 'guest') {
+        // Guest match where the non-creator won: 'guest' is a placeholder
+        // stored at creation time (the opponent had no UID yet), so it
+        // never equals either real UID directly. Attribute the win to
+        // whichever of userA/userB is NOT the creator.
+        final createdBy = data['createdBy'] as String?;
+        if (createdBy == userA) {
+          winsB++;
+        } else if (createdBy == userB) {
+          winsA++;
+        }
+      } else if (winnerUid == userA) {
         winsA++;
       } else if (winnerUid == userB) {
         winsB++;

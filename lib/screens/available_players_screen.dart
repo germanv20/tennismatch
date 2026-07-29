@@ -6,6 +6,7 @@ import 'package:tennismatch/gen_l10n/app_localizations.dart';
 import 'player_profile_view_screen.dart';
 import '../widgets/empty_state.dart';
 import '../widgets/error_state.dart';
+import '../utils/city_utils.dart';
 
 const weekOrder = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
@@ -200,8 +201,8 @@ class _AvailablePlayersScreenState extends State<AvailablePlayersScreen> {
             final userData = rawData as Map<String, dynamic>;
             final List<String> availability =
                 normalizeDays(userData['availability'] ?? []);
-            final String userCity =
-                (userData['city'] as String? ?? '').trim();
+            final String userCity = formatCityDisplay(
+                (userData['city'] as String? ?? '').trim());
 
             if (availability.isEmpty) {
               return EmptyState(
@@ -360,10 +361,12 @@ class _AvailablePlayersScreenState extends State<AvailablePlayersScreen> {
                                       lastCityHeader = normalizedCity;
                                       final countryDisplay =
                                           _countrySuffix(context, data);
+                                      final displayCity =
+                                          formatCityDisplay(playerCityRaw);
                                       final headerText =
                                           countryDisplay.isNotEmpty
-                                              ? '$playerCityRaw${countryDisplay}'
-                                              : playerCityRaw;
+                                              ? '$displayCity${countryDisplay}'
+                                              : displayCity;
                                       listItems.add(
                                         Padding(
                                           padding: const EdgeInsets.fromLTRB(
@@ -449,7 +452,15 @@ class _AvailablePlayersScreenState extends State<AvailablePlayersScreen> {
         ? data['uid'] as String
         : doc.id;
     final isAlreadyRequested = blockedUserIds.contains(playerUid);
-    final playerCity = (data['city'] as String? ?? '').trim();
+    final playerCity =
+        formatCityDisplay((data['city'] as String? ?? '').trim());
+
+    // Online if their presence heartbeat (lib/main.dart) wrote lastActive
+    // within the last 2 minutes — no boolean flag needed, self-expires.
+    final lastActive = data['lastActive'] as Timestamp?;
+    final isOnline = lastActive != null &&
+        DateTime.now().difference(lastActive.toDate()) <
+            const Duration(minutes: 2);
 
     return GestureDetector(
       onTap: isAlreadyRequested
@@ -474,14 +485,33 @@ class _AvailablePlayersScreenState extends State<AvailablePlayersScreen> {
         child: Card(
           color: isAlreadyRequested ? Colors.grey[300] : null,
           child: ListTile(
-            leading: CircleAvatar(
-              backgroundImage: (data['photoUrl'] != null &&
-                      data['photoUrl'].toString().isNotEmpty)
-                  ? NetworkImage(data['photoUrl'])
-                  : null,
-              child: data['photoUrl'] == null
-                  ? const Icon(Icons.person)
-                  : null,
+            leading: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                CircleAvatar(
+                  backgroundImage: (data['photoUrl'] != null &&
+                          data['photoUrl'].toString().isNotEmpty)
+                      ? NetworkImage(data['photoUrl'])
+                      : null,
+                  child: data['photoUrl'] == null
+                      ? const Icon(Icons.person)
+                      : null,
+                ),
+                if (isOnline)
+                  Positioned(
+                    bottom: -1,
+                    right: -1,
+                    child: Container(
+                      width: 13,
+                      height: 13,
+                      decoration: BoxDecoration(
+                        color: Colors.green,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.white, width: 2),
+                      ),
+                    ),
+                  ),
+              ],
             ),
             title: Text(
               data['name'] ?? loc.unknown,
