@@ -62,6 +62,8 @@ class _StatsTabState extends State<_StatsTab>
   int losses = 0;
   int setsWon = 0;
   int setsLost = 0;
+  int tiebreaksWon = 0;
+  int tiebreaksLost = 0;
   double winRate = 0;
   int averageDuration = 0;
 
@@ -92,6 +94,8 @@ class _StatsTabState extends State<_StatsTab>
       losses = 0;
       setsWon = 0;
       setsLost = 0;
+      tiebreaksWon = 0;
+      tiebreaksLost = 0;
 
       for (var doc in snapshot.docs) {
         final match = doc.data() as Map<String, dynamic>?;
@@ -104,11 +108,31 @@ class _StatsTabState extends State<_StatsTab>
 
         matchesPlayed++;
 
-        if (widget.isDoubles) {
-          final winnerTeam = match['winnerTeam'] as int? ?? 0;
-          if (winnerTeam == 1) { wins++; } else { losses++; }
-        } else {
-          if (match['winnerUid'] == uid) { wins++; } else { losses++; }
+        final bool isTie = match['isTie'] == true;
+
+        if (!isTie) {
+          if (widget.isDoubles) {
+            // doubles_guest only ever has the creator as a real
+            // account, so no claimant-perspective issue here.
+            final winnerTeam = match['winnerTeam'] as int? ?? 0;
+            if (winnerTeam == 1) { wins++; } else { losses++; }
+          } else if (type == 'guest') {
+            // winnerUid is the creator's real UID when they won, or
+            // the literal 'guest' placeholder when the (then
+            // unregistered) opponent won — that placeholder is set at
+            // creation time and never updated, so it can never equal
+            // the claimant's UID once they sign up. Compare against
+            // createdBy (stable) rather than uid (whose meaning flips
+            // depending on who's viewing), same fix as
+            // match_history_screen.dart / h2h_service.dart.
+            final createdBy = match['createdBy'] as String? ?? '';
+            final bool creatorWon = match['winnerUid'] == createdBy;
+            final bool userIsCreator = createdBy == uid;
+            final bool userWon = userIsCreator ? creatorWon : !creatorWon;
+            if (userWon) { wins++; } else { losses++; }
+          } else {
+            if (match['winnerUid'] == uid) { wins++; } else { losses++; }
+          }
         }
 
         final result = match['result'] as Map<String, dynamic>? ?? {};
@@ -126,6 +150,18 @@ class _StatsTabState extends State<_StatsTab>
           final int myScore = userIsP1 ? p1 : p2;
           final int opponentScore = userIsP1 ? p2 : p1;
           if (myScore > opponentScore) { setsWon++; } else { setsLost++; }
+
+          // A tiebreak (tb1/tb2 present) decides its set, so whoever
+          // won the set also won that tiebreak.
+          final bool hadTiebreak =
+              setMap['tb1'] != null && setMap['tb2'] != null;
+          if (hadTiebreak) {
+            if (myScore > opponentScore) {
+              tiebreaksWon++;
+            } else {
+              tiebreaksLost++;
+            }
+          }
         }
       }
 
@@ -203,6 +239,18 @@ class _StatsTabState extends State<_StatsTab>
               StatTile(
                 widget.isDoubles ? loc.doublesSetsLost : loc.totalSetsLost,
                 setsLost.toString(),
+              ),
+              StatTile(
+                widget.isDoubles
+                    ? loc.doublesTiebreaksWon
+                    : loc.totalTiebreaksWon,
+                tiebreaksWon.toString(),
+              ),
+              StatTile(
+                widget.isDoubles
+                    ? loc.doublesTiebreaksLost
+                    : loc.totalTiebreaksLost,
+                tiebreaksLost.toString(),
               ),
               StatTile(
                 widget.isDoubles ? loc.doublesAvgDuration : loc.averageMatchDuration,

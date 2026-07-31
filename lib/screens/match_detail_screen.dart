@@ -6,6 +6,7 @@ import 'match_chat_screen.dart';
 import 'add_match_result_screen.dart';
 import 'package:tennismatch/services/h2h_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../widgets/rate_opponent_dialog.dart';
 
 class MatchDetailScreen extends StatefulWidget {
   final DocumentSnapshot matchDoc;
@@ -556,6 +557,18 @@ class _MatchDetailScreenState extends State<MatchDetailScreen> {
                     '${loc.locationLabel}: ${data['result']['location']}'),
                   Text(
                     '${loc.durationLabel}: ${data['result']['durationMinutes']} min'),
+                ],
+
+                // ── Rate opponent — Phase 1, regular matches only ──
+                if (data['status'] == 'completed' &&
+                    (data['type'] == null || data['type'] == 'regular') &&
+                    otherPlayerUid.isNotEmpty) ...[
+                  const SizedBox(height: 20),
+                  RateOpponentSection(
+                    matchId: matchDoc.id,
+                    ratedUid: otherPlayerUid,
+                    raterUid: currentUid,
+                  ),
                 ],
 
               ],

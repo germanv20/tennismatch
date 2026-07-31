@@ -974,6 +974,18 @@ abstract class AppLocalizations {
   /// **'Total Sets Lost'**
   String get totalSetsLost;
 
+  /// No description provided for @totalTiebreaksWon.
+  ///
+  /// In en, this message translates to:
+  /// **'Tiebreaks Won'**
+  String get totalTiebreaksWon;
+
+  /// No description provided for @totalTiebreaksLost.
+  ///
+  /// In en, this message translates to:
+  /// **'Tiebreaks Lost'**
+  String get totalTiebreaksLost;
+
   /// No description provided for @averageMatchDuration.
   ///
   /// In en, this message translates to:
@@ -1515,6 +1527,18 @@ abstract class AppLocalizations {
   /// **'Sets Lost'**
   String get doublesSetsLost;
 
+  /// No description provided for @doublesTiebreaksWon.
+  ///
+  /// In en, this message translates to:
+  /// **'Tiebreaks Won'**
+  String get doublesTiebreaksWon;
+
+  /// No description provided for @doublesTiebreaksLost.
+  ///
+  /// In en, this message translates to:
+  /// **'Tiebreaks Lost'**
+  String get doublesTiebreaksLost;
+
   /// No description provided for @doublesAvgDuration.
   ///
   /// In en, this message translates to:
@@ -1892,6 +1916,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'🎾 Safety tip: If this is your first time meeting this player, arrange to meet at the tennis court — a public, well-known location.'**
   String get safetyTipMessage;
+
+  /// No description provided for @rateOpponentButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Rate opponent'**
+  String get rateOpponentButton;
+
+  /// No description provided for @rateOpponentDialogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Rate this match'**
+  String get rateOpponentDialogTitle;
+
+  /// No description provided for @opponentNoShowLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'This player didn\'t show up'**
+  String get opponentNoShowLabel;
+
+  /// No description provided for @ratingSubmittedStars.
+  ///
+  /// In en, this message translates to:
+  /// **'You rated this match {stars}/5 ⭐'**
+  String ratingSubmittedStars(Object stars);
+
+  /// No description provided for @ratingSubmittedNoShow.
+  ///
+  /// In en, this message translates to:
+  /// **'You reported a no-show for this match'**
+  String get ratingSubmittedNoShow;
+
+  /// No description provided for @ratingsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 rating} other{{count} ratings}}'**
+  String ratingsCount(int count);
+
+  /// No description provided for @noShowsReported.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 no-show reported} other{{count} no-shows reported}}'**
+  String noShowsReported(int count);
 }
 
 class _AppLocalizationsDelegate

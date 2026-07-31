@@ -18,6 +18,7 @@ import 'services/theme_service.dart';
 import 'screens/match_detail_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/complete_profile_screen.dart';
+import 'widgets/rate_opponent_dialog.dart';
 
 
 final GlobalKey<NavigatorState> navigatorKey =
@@ -213,10 +214,49 @@ Future<void> handleNotificationTap(Map<String, dynamic> data) async {
       MaterialPageRoute(builder: (_) => const IncomingRequestsScreen()),
       (route) => route.isFirst,
     );
+  } else if (type == 'rate_opponent' && matchId != null) {
+    await openRateOpponentDialog(matchId);
   } else if (matchId != null) {
     // chat_message, match_accepted → open chat
     await navigateToChat(matchId);
   }
+}
+
+/// Opens the shared rate-opponent dialog directly on top of whatever
+/// screen is currently showing, without navigating anywhere first —
+/// tapping the "match complete, rate now" push notification should be
+/// as low-friction as the in-app prompt right after submitting a result.
+Future<void> openRateOpponentDialog(String matchId) async {
+  final context = navigatorKey.currentContext;
+  if (context == null) return;
+
+  final currentUid = FirebaseAuth.instance.currentUser?.uid;
+  if (currentUid == null) return;
+
+  final matchDoc = await FirebaseFirestore.instance
+      .collection('matches')
+      .doc(matchId)
+      .get();
+  if (!matchDoc.exists) return;
+
+  final data = matchDoc.data() as Map<String, dynamic>? ?? {};
+  final players = List<String>.from(data['players'] ?? []);
+  final opponentUid = players.firstWhere(
+    (uid) => uid != currentUid,
+    orElse: () => '',
+  );
+  if (opponentUid.isEmpty) return;
+
+  if (!context.mounted) return;
+  final loc = AppLocalizations.of(context)!;
+
+  await showRateOpponentDialog(
+    context,
+    loc,
+    matchId: matchId,
+    ratedUid: opponentUid,
+    raterUid: currentUid,
+  );
 }
 
 class AuthTest extends StatefulWidget {

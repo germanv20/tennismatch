@@ -31,6 +31,8 @@ const strings = {
     requestExpiredTitle: "🎾 Solicitud de partido expirada",
     requestExpiredBody: (name) =>
       `Tu solicitud de partido a ${name} expiró después de 2 días`,
+    rateOpponentTitle: "🎾 ¡Partido finalizado!",
+    rateOpponentBody: "Califica a tu rival antes de que se te olvide",
   },
   en: {
     matchRequestTitle: "🎾 New Match Request",
@@ -47,6 +49,8 @@ const strings = {
     requestExpiredTitle: "🎾 Match Request Expired",
     requestExpiredBody: (name) =>
       `Your match request to ${name} has expired after 2 days`,
+    rateOpponentTitle: "🎾 Match complete!",
+    rateOpponentBody: "Rate your opponent before you forget",
   },
 };
 
@@ -577,5 +581,79 @@ exports.onMatchUpdatedCompleted = onDocumentUpdated(
 
       console.log(`Match ${event.params.matchId} updated to completed — applying stats.`);
       await applyMatchStats(after);
+      await notifyPlayersToRate(event.params.matchId, after);
+    },
+);
+
+/**
+ * Notifies both players of a just-completed regular match that they can
+ * now rate their opponent. Sent to both regardless of who submitted the
+ * result — the submitter already gets an in-app rating prompt immediately
+ * after submitting, so this also acts as a safety net for them in case
+ * they dismissed it without rating, not just a nudge for the other player.
+ * @param {string} matchId
+ * @param {object} match
+ * @return {Promise<void>}
+ */
+async function notifyPlayersToRate(matchId, match) {
+  const players = match.players || [];
+  if (players.length !== 2) return;
+
+  for (const uid of players) {
+    const userSnap = await db.collection("users").doc(uid).get();
+    if (!userSnap.exists) continue;
+
+    const locale = userSnap.data().locale || "en";
+    const t = getStrings(locale);
+
+    await sendPushToUser(uid, {
+      notification: {
+        title: t.rateOpponentTitle,
+        body: t.rateOpponentBody,
+      },
+      android: {
+        notification: {
+          channelId: "default",
+        },
+      },
+      data: {
+        type: "rate_opponent",
+        matchId: matchId,
+      },
+    });
+  }
+}
+
+// ─────────────────────────────────────────────────────
+// OPPONENT RATINGS (Phase 1, regular matches only)
+// ─────────────────────────────────────────────────────
+
+// Rating docs are written client-side (matches/{matchId}/ratings/{raterUid},
+// enforced by firestore.rules), but the rolled-up aggregate fields on
+// users/{uid} are only ever written here via the Admin SDK — same pattern
+// as applyMatchStats for matchesPlayed/wins/losses. A no-show report and
+// a star rating are tracked separately so a no-show never drags down the
+// sportsmanship average; it's its own distinct signal.
+exports.onOpponentRatingCreated = onDocumentCreated(
+    "matches/{matchId}/ratings/{raterUid}",
+    async (event) => {
+      const rating = event.data.data();
+      const ratedUid = rating.ratedUid;
+      if (!ratedUid) return;
+
+      const update = {};
+
+      if (rating.noShow === true) {
+        update.noShowCount = admin.firestore.FieldValue.increment(1);
+      } else if (typeof rating.stars === "number" && rating.stars > 0) {
+        update.reputationRatingCount = admin.firestore.FieldValue.increment(1);
+        update.reputationRatingSum =
+            admin.firestore.FieldValue.increment(rating.stars);
+      }
+
+      if (Object.keys(update).length === 0) return;
+
+      console.log(`Rating for match ${event.params.matchId} rolled up onto user ${ratedUid}.`);
+      await db.collection("users").doc(ratedUid).update(update);
     },
 );

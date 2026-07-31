@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:tennismatch/gen_l10n/app_localizations.dart';
 import 'package:tennismatch/services/h2h_service.dart';
 import '../widgets/set_score_row.dart';
+import '../widgets/rate_opponent_dialog.dart';
 
 class AddMatchResultScreen extends StatefulWidget {
   final String matchId;
@@ -285,6 +286,19 @@ class _AddMatchResultScreenState extends State<AddMatchResultScreen> {
     await H2HService.recalculateHeadToHead(
       userA: currentUid,
       userB: opponentUid,
+    );
+
+    if (!mounted) return;
+
+    // ── Rate opponent right away, Uber/InDrive-style — the moment is
+    // freshest right when the result is submitted. Still skippable via
+    // Cancel; not a forced/blocking step. ──
+    await showRateOpponentDialog(
+      context,
+      loc,
+      matchId: widget.matchId,
+      ratedUid: opponentUid,
+      raterUid: currentUid,
     );
 
     if (!mounted) return;

@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:tennismatch/gen_l10n/app_localizations.dart';
 import 'package:tennismatch/services/h2h_service.dart';
+import '../widgets/rate_opponent_dialog.dart';
 
 class MatchDetailsScreen extends StatefulWidget {
 
@@ -472,6 +473,17 @@ class _MatchDetailsScreenState extends State<MatchDetailsScreen> {
                         ],
                       ),
                     ],
+
+                    // ── Rate opponent — Phase 1, regular matches only.
+                    // This screen (MatchDetailsScreen, plural) is only ever
+                    // opened from match_history_screen.dart for completed
+                    // regular matches, so no type guard needed here.
+                    const SizedBox(height: 20),
+                    RateOpponentSection(
+                      matchId: widget.matchId,
+                      ratedUid: widget.opponentUid,
+                      raterUid: currentUid,
+                    ),
 
                     const SizedBox(height: 30),
 

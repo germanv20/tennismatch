@@ -458,6 +458,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get totalSetsLost => 'Total Sets Lost';
 
   @override
+  String get totalTiebreaksWon => 'Tiebreaks Won';
+
+  @override
+  String get totalTiebreaksLost => 'Tiebreaks Lost';
+
+  @override
   String get averageMatchDuration => 'Average Match Duration';
 
   @override
@@ -747,6 +753,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get doublesSetsLost => 'Sets Lost';
 
   @override
+  String get doublesTiebreaksWon => 'Tiebreaks Won';
+
+  @override
+  String get doublesTiebreaksLost => 'Tiebreaks Lost';
+
+  @override
   String get doublesAvgDuration => 'Average Duration';
 
   @override
@@ -958,4 +970,43 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get safetyTipMessage =>
       '🎾 Safety tip: If this is your first time meeting this player, arrange to meet at the tennis court — a public, well-known location.';
+
+  @override
+  String get rateOpponentButton => 'Rate opponent';
+
+  @override
+  String get rateOpponentDialogTitle => 'Rate this match';
+
+  @override
+  String get opponentNoShowLabel => 'This player didn\'t show up';
+
+  @override
+  String ratingSubmittedStars(Object stars) {
+    return 'You rated this match $stars/5 ⭐';
+  }
+
+  @override
+  String get ratingSubmittedNoShow => 'You reported a no-show for this match';
+
+  @override
+  String ratingsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count ratings',
+      one: '1 rating',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String noShowsReported(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count no-shows reported',
+      one: '1 no-show reported',
+    );
+    return '$_temp0';
+  }
 }

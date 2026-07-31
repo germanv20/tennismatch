@@ -203,6 +203,98 @@ class _PlayerProfileViewScreenState extends State<PlayerProfileViewScreen> {
                     },
                   ),
 
+                  // ── Reputation badges — from opponent ratings ──
+                  // reputationRatingSum/Count and noShowCount are only
+                  // ever written by the Cloud Function that rolls up
+                  // matches/{id}/ratings/{raterUid} docs (Phase 1,
+                  // regular matches only). Hidden entirely for players
+                  // with no ratings yet, to keep new profiles clean.
+                  Builder(
+                    builder: (context) {
+                      final ratingCount =
+                          (userData['reputationRatingCount'] as int?) ?? 0;
+                      final ratingSum =
+                          (userData['reputationRatingSum'] as int?) ?? 0;
+                      final noShowCount =
+                          (userData['noShowCount'] as int?) ?? 0;
+
+                      if (ratingCount == 0 && noShowCount == 0) {
+                        return const SizedBox.shrink();
+                      }
+
+                      final double average =
+                          ratingCount > 0 ? ratingSum / ratingCount : 0;
+
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: Wrap(
+                          alignment: WrapAlignment.center,
+                          spacing: 8,
+                          runSpacing: 6,
+                          children: [
+                            if (ratingCount > 0)
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 12, vertical: 6),
+                                decoration: BoxDecoration(
+                                  color: Colors.amber.shade50,
+                                  borderRadius: BorderRadius.circular(20),
+                                  border: Border.all(
+                                      color: Colors.amber.shade200),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(Icons.star,
+                                        size: 16,
+                                        color: Colors.amber.shade800),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      '${average.toStringAsFixed(1)} '
+                                      '(${loc.ratingsCount(ratingCount)})',
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.amber.shade900,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            if (noShowCount > 0)
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 12, vertical: 6),
+                                decoration: BoxDecoration(
+                                  color: Colors.red.shade50,
+                                  borderRadius: BorderRadius.circular(20),
+                                  border:
+                                      Border.all(color: Colors.red.shade200),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(Icons.warning_amber_rounded,
+                                        size: 16,
+                                        color: Colors.red.shade700),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      loc.noShowsReported(noShowCount),
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.red.shade800,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+
                   const SizedBox(height: 16),
 
                   Text(

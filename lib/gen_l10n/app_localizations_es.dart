@@ -253,7 +253,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get outgoingRequestsSubtitle =>
-      'Las solicitudes que envíe apareceran aquí';
+      'Las solicitudes que envíe aparecerán aquí';
 
   @override
   String get setYourLevel => 'Configura tu nivel de tenis';
@@ -458,6 +458,12 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get totalSetsLost => 'Sets perdidos';
+
+  @override
+  String get totalTiebreaksWon => 'Tiebreaks ganados';
+
+  @override
+  String get totalTiebreaksLost => 'Tiebreaks perdidos';
 
   @override
   String get averageMatchDuration => 'Duración promedio';
@@ -758,6 +764,12 @@ class AppLocalizationsEs extends AppLocalizations {
   String get doublesSetsLost => 'Sets perdidos';
 
   @override
+  String get doublesTiebreaksWon => 'Tiebreaks ganados';
+
+  @override
+  String get doublesTiebreaksLost => 'Tiebreaks perdidos';
+
+  @override
   String get doublesAvgDuration => 'Duración promedio';
 
   @override
@@ -973,4 +985,44 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get safetyTipMessage =>
       '🎾 Consejo de seguridad: Si es la primera vez que te encuentras con este jugador, acuerda reunirte en la cancha de tenis — un lugar público y conocido.';
+
+  @override
+  String get rateOpponentButton => 'Calificar rival';
+
+  @override
+  String get rateOpponentDialogTitle => 'Califica este partido';
+
+  @override
+  String get opponentNoShowLabel => 'Este jugador no se presentó';
+
+  @override
+  String ratingSubmittedStars(Object stars) {
+    return 'Calificaste este partido con $stars/5 ⭐';
+  }
+
+  @override
+  String get ratingSubmittedNoShow =>
+      'Reportaste una inasistencia en este partido';
+
+  @override
+  String ratingsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count calificaciones',
+      one: '1 calificación',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String noShowsReported(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count inasistencias reportadas',
+      one: '1 inasistencia reportada',
+    );
+    return '$_temp0';
+  }
 }
