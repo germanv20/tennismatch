@@ -370,5 +370,18 @@
   "ratingsCount": "{count, plural, =1{1 rating} other{{count} ratings}}",
   "@ratingsCount": {"placeholders": {"count": {"type": "int"}}},
   "noShowsReported": "{count, plural, =1{1 no-show reported} other{{count} no-shows reported}}",
-  "@noShowsReported": {"placeholders": {"count": {"type": "int"}}}
+  "@noShowsReported": {"placeholders": {"count": {"type": "int"}}},
+  "eloRatingLabel": "ELO Rating",
+  "you": "You",
+  "rankingTitle": "Ranking",
+  "rankingCityHeader": "Ranking in {city}",
+  "@rankingCityHeader": {"placeholders": {"city": {"type": "String"}}},
+  "rankingNoCityTitle": "No city set",
+  "rankingNoCitySubtitle": "Set your city in your profile to see your local ranking.",
+  "rankingMatchesNeeded": "{count, plural, =1{Play 1 more rated match to appear on this ranking} other{Play {count} more rated matches to appear on this ranking}}",
+  "@rankingMatchesNeeded": {"placeholders": {"count": {"type": "int"}}},
+  "rankingEmptyTitle": "No ranking yet",
+  "rankingEmptySubtitle": "No one in this city has played enough rated matches yet. Be the first!",
+  "rankingPositionLabel": "#{position} in {city}",
+  "@rankingPositionLabel": {"placeholders": {"position": {"type": "int"}, "city": {"type": "String"}}}
 }

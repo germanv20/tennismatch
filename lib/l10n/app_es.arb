@@ -370,5 +370,18 @@
   "ratingsCount": "{count, plural, =1{1 calificación} other{{count} calificaciones}}",
   "@ratingsCount": {"placeholders": {"count": {"type": "int"}}},
   "noShowsReported": "{count, plural, =1{1 inasistencia reportada} other{{count} inasistencias reportadas}}",
-  "@noShowsReported": {"placeholders": {"count": {"type": "int"}}}
+  "@noShowsReported": {"placeholders": {"count": {"type": "int"}}},
+  "eloRatingLabel": "Puntuación ELO",
+  "you": "Tú",
+  "rankingTitle": "Clasificación",
+  "rankingCityHeader": "Clasificación en {city}",
+  "@rankingCityHeader": {"placeholders": {"city": {"type": "String"}}},
+  "rankingNoCityTitle": "Ninguna ciudad configurada",
+  "rankingNoCitySubtitle": "Configura tu ciudad en tu perfil para ver tu clasificación local.",
+  "rankingMatchesNeeded": "{count, plural, =1{Juega 1 partido calificado más para aparecer en esta clasificación} other{Juega {count} partidos calificados más para aparecer en esta clasificación}}",
+  "@rankingMatchesNeeded": {"placeholders": {"count": {"type": "int"}}},
+  "rankingEmptyTitle": "Todavía no hay clasificación",
+  "rankingEmptySubtitle": "Nadie en esta ciudad ha jugado suficientes partidos calificados todavía. ¡Sé el primero!",
+  "rankingPositionLabel": "N.º{position} en {city}",
+  "@rankingPositionLabel": {"placeholders": {"position": {"type": "int"}, "city": {"type": "String"}}}
 }

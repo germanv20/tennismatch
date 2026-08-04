@@ -565,6 +565,7 @@ exports.onMatchCreatedCompleted = onDocumentCreated(
 
       console.log(`Match ${event.params.matchId} created as completed — applying stats.`);
       await applyMatchStats(match);
+      await applyEloRatings(match);
     },
 );
 
@@ -581,9 +582,109 @@ exports.onMatchUpdatedCompleted = onDocumentUpdated(
 
       console.log(`Match ${event.params.matchId} updated to completed — applying stats.`);
       await applyMatchStats(after);
+      await applyEloRatings(after);
       await notifyPlayersToRate(event.params.matchId, after);
     },
 );
+
+// ─────────────────────────────────────────────────────
+// DYNAMIC SKILL RATING (Phase 2, Elo-style)
+//    Regular 1v1 matches only — guest opponents aren't full
+//    accounts yet and doubles outcomes depend on a partner's
+//    skill too, so neither feeds the rating. Runs alongside
+//    applyMatchStats via the Admin SDK; eloRating/eloMatchesPlayed
+//    are never written by the client, so no rules changes needed
+//    (same pattern as the reputation rating aggregates).
+// ─────────────────────────────────────────────────────
+
+const ELO_STARTING_RATING = 1200;
+const ELO_K_FACTOR_PROVISIONAL = 32; // first ELO_PROVISIONAL_MATCH_COUNT
+const ELO_K_FACTOR_ESTABLISHED = 16; // matches, then it settles down
+const ELO_PROVISIONAL_MATCH_COUNT = 20;
+
+/**
+ * Returns the K-factor (how much a single result moves the rating) for
+ * a player based on how many Elo-rated matches they've played so far —
+ * larger while their rating is still settling, smaller once established.
+ * Mirrors the provisional/established split used by chess federations.
+ * @param {number} eloMatchesPlayed
+ * @return {number}
+ */
+function eloKFactor(eloMatchesPlayed) {
+  return eloMatchesPlayed < ELO_PROVISIONAL_MATCH_COUNT ?
+      ELO_K_FACTOR_PROVISIONAL :
+      ELO_K_FACTOR_ESTABLISHED;
+}
+
+/**
+ * Applies a standard Elo rating update to both players of a completed
+ * regular (non-guest, non-doubles) 1v1 match. Runs inside a transaction
+ * so two matches completing for the same player around the same time
+ * never read a stale rating for them.
+ * @param {object} match The match document data.
+ * @return {Promise<void>}
+ */
+async function applyEloRatings(match) {
+  const type = match.type || "regular";
+  if (type !== "regular") return;
+
+  const players = (match.players || [])
+      .filter((uid) => uid && uid !== "guest");
+  if (players.length !== 2) return;
+
+  const [uidA, uidB] = players;
+  const isTie = match.isTie === true;
+  const winnerUid = match.winnerUid;
+
+  let scoreA;
+  if (isTie) {
+    scoreA = 0.5;
+  } else if (winnerUid === uidA) {
+    scoreA = 1;
+  } else if (winnerUid === uidB) {
+    scoreA = 0;
+  } else {
+    console.log("⚠️ Skipping Elo update — winnerUid didn't match either " +
+        "player for match with players", players);
+    return;
+  }
+  const scoreB = 1 - scoreA;
+
+  await db.runTransaction(async (tx) => {
+    const refA = db.collection("users").doc(uidA);
+    const refB = db.collection("users").doc(uidB);
+    const [snapA, snapB] = await Promise.all([tx.get(refA), tx.get(refB)]);
+
+    if (!snapA.exists || !snapB.exists) return;
+
+    const ratingA = snapA.data().eloRating ?? ELO_STARTING_RATING;
+    const ratingB = snapB.data().eloRating ?? ELO_STARTING_RATING;
+    const matchesA = snapA.data().eloMatchesPlayed ?? 0;
+    const matchesB = snapB.data().eloMatchesPlayed ?? 0;
+
+    const expectedA = 1 / (1 + Math.pow(10, (ratingB - ratingA) / 400));
+    const expectedB = 1 - expectedA;
+
+    const newRatingA =
+        Math.round(ratingA + eloKFactor(matchesA) * (scoreA - expectedA));
+    const newRatingB =
+        Math.round(ratingB + eloKFactor(matchesB) * (scoreB - expectedB));
+
+    tx.update(refA, {
+      eloRating: newRatingA,
+      eloMatchesPlayed: admin.firestore.FieldValue.increment(1),
+    });
+    tx.update(refB, {
+      eloRating: newRatingB,
+      eloMatchesPlayed: admin.firestore.FieldValue.increment(1),
+    });
+
+    console.log(
+        `✅ Elo updated: ${uidA} ${ratingA}→${newRatingA}, ` +
+        `${uidB} ${ratingB}→${newRatingB}`,
+    );
+  });
+}
 
 /**
  * Notifies both players of a just-completed regular match that they can

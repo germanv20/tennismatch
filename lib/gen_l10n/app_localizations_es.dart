@@ -1025,4 +1025,49 @@ class AppLocalizationsEs extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get eloRatingLabel => 'Puntuación ELO';
+
+  @override
+  String get you => 'Tú';
+
+  @override
+  String get rankingTitle => 'Clasificación';
+
+  @override
+  String rankingCityHeader(String city) {
+    return 'Clasificación en $city';
+  }
+
+  @override
+  String get rankingNoCityTitle => 'Ninguna ciudad configurada';
+
+  @override
+  String get rankingNoCitySubtitle =>
+      'Configura tu ciudad en tu perfil para ver tu clasificación local.';
+
+  @override
+  String rankingMatchesNeeded(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          'Juega $count partidos calificados más para aparecer en esta clasificación',
+      one: 'Juega 1 partido calificado más para aparecer en esta clasificación',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get rankingEmptyTitle => 'Todavía no hay clasificación';
+
+  @override
+  String get rankingEmptySubtitle =>
+      'Nadie en esta ciudad ha jugado suficientes partidos calificados todavía. ¡Sé el primero!';
+
+  @override
+  String rankingPositionLabel(int position, String city) {
+    return 'N.º$position en $city';
+  }
 }

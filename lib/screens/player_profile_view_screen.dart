@@ -203,6 +203,53 @@ class _PlayerProfileViewScreenState extends State<PlayerProfileViewScreen> {
                     },
                   ),
 
+                  // ── Elo rating badge — Phase 2, regular matches only ──
+                  // eloRating/eloMatchesPlayed are only ever written by
+                  // applyEloRatings() in functions/index.js (Admin SDK),
+                  // never by the client. Hidden until the player has at
+                  // least one rated regular match, so nobody sees a
+                  // meaningless flat 1200 before they've actually played.
+                  Builder(
+                    builder: (context) {
+                      final eloMatchesPlayed =
+                          (userData['eloMatchesPlayed'] as int?) ?? 0;
+                      if (eloMatchesPlayed == 0) {
+                        return const SizedBox.shrink();
+                      }
+                      final eloRating =
+                          (userData['eloRating'] as int?) ?? 1200;
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: Colors.indigo.shade50,
+                            borderRadius: BorderRadius.circular(20),
+                            border:
+                                Border.all(color: Colors.indigo.shade200),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.trending_up,
+                                  size: 16, color: Colors.indigo.shade700),
+                              const SizedBox(width: 6),
+                              Text(
+                                '${loc.eloRatingLabel}: $eloRating',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.indigo.shade900,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+
                   // ── Reputation badges — from opponent ratings ──
                   // reputationRatingSum/Count and noShowCount are only
                   // ever written by the Cloud Function that rolls up

@@ -12,3 +12,20 @@ String formatCityDisplay(String input) {
   if (trimmed.isEmpty) return trimmed;
   return trimmed[0].toUpperCase() + trimmed.substring(1);
 }
+
+/// Normalizes a city name for equality comparisons by stripping accents
+/// and lowercasing, so that "Popayán" and "Popayan" (or "popayán") are
+/// treated as the same city. Comparison-only — never used for display or
+/// storage, since it destroys casing/accents (use [formatCityDisplay] for
+/// that). Shared by the available-players city filter/grouping and the
+/// city-scoped ranking, so the accent table only lives in one place.
+String normalizeCityForComparison(String input) {
+  const accents = 'áàäâãåéèëêíìïîóòöôõúùüûñçÁÀÄÂÃÅÉÈËÊÍÌÏÎÓÒÖÔÕÚÙÜÛÑÇ';
+  const normal  = 'aaaaaaeeeeiiiiooooouuuuncAAAAAAEEEEIIIIOOOOOUUUUNC';
+  final buffer = StringBuffer();
+  for (final ch in input.split('')) {
+    final idx = accents.indexOf(ch);
+    buffer.write(idx >= 0 ? normal[idx] : ch);
+  }
+  return buffer.toString().toLowerCase().trim();
+}

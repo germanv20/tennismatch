@@ -1958,6 +1958,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count, plural, =1{1 no-show reported} other{{count} no-shows reported}}'**
   String noShowsReported(int count);
+
+  /// No description provided for @eloRatingLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'ELO Rating'**
+  String get eloRatingLabel;
+
+  /// No description provided for @you.
+  ///
+  /// In en, this message translates to:
+  /// **'You'**
+  String get you;
+
+  /// No description provided for @rankingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Ranking'**
+  String get rankingTitle;
+
+  /// No description provided for @rankingCityHeader.
+  ///
+  /// In en, this message translates to:
+  /// **'Ranking in {city}'**
+  String rankingCityHeader(String city);
+
+  /// No description provided for @rankingNoCityTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No city set'**
+  String get rankingNoCityTitle;
+
+  /// No description provided for @rankingNoCitySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Set your city in your profile to see your local ranking.'**
+  String get rankingNoCitySubtitle;
+
+  /// No description provided for @rankingMatchesNeeded.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Play 1 more rated match to appear on this ranking} other{Play {count} more rated matches to appear on this ranking}}'**
+  String rankingMatchesNeeded(int count);
+
+  /// No description provided for @rankingEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No ranking yet'**
+  String get rankingEmptyTitle;
+
+  /// No description provided for @rankingEmptySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No one in this city has played enough rated matches yet. Be the first!'**
+  String get rankingEmptySubtitle;
+
+  /// No description provided for @rankingPositionLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'#{position} in {city}'**
+  String rankingPositionLabel(int position, String city);
 }
 
 class _AppLocalizationsDelegate

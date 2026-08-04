@@ -9,6 +9,7 @@ import 'package:country_picker/country_picker.dart';
 import 'dart:io';
 import '../utils/day_utils.dart';
 import '../utils/city_utils.dart';
+import '../utils/ranking_utils.dart';
 import 'edit_profile_screen.dart';
 
 class MyProfileScreen extends StatefulWidget {
@@ -306,6 +307,92 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
+                    const SizedBox(height: 12),
+
+                    // ── Elo rating badge — Phase 2, regular matches only.
+                    // eloRating/eloMatchesPlayed are only ever written by
+                    // applyEloRatings() in functions/index.js (Admin SDK),
+                    // never by the client. Hidden until this user has at
+                    // least one rated regular match, so a brand-new
+                    // player doesn't see a meaningless flat 1200.
+                    Builder(
+                      builder: (context) {
+                        final eloMatchesPlayed =
+                            (userData['eloMatchesPlayed'] as int?) ?? 0;
+                        if (eloMatchesPlayed == 0) {
+                          return const SizedBox.shrink();
+                        }
+                        final eloRating =
+                            (userData['eloRating'] as int?) ?? 1200;
+                        return Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: Colors.indigo.shade50,
+                            borderRadius: BorderRadius.circular(20),
+                            border:
+                                Border.all(color: Colors.indigo.shade200),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.trending_up,
+                                  size: 16, color: Colors.indigo.shade700),
+                              const SizedBox(width: 6),
+                              Text(
+                                '${loc.eloRatingLabel}: $eloRating',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.indigo.shade900,
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+
+                    // ── Ranking position — Phase 3. Only meaningful once
+                    // this user has cleared the same eloRankingMinMatches
+                    // threshold the Ranking screen itself uses, and only
+                    // once they have a city set. Computed client-side via
+                    // the same buildCityRanking() helper the full Ranking
+                    // screen uses, over a fresh users snapshot, so the two
+                    // screens can never disagree about someone's position.
+                    if ((userData['eloMatchesPlayed'] as int? ?? 0) >=
+                            eloRankingMinMatches &&
+                        rawCity.isNotEmpty)
+                      StreamBuilder<QuerySnapshot>(
+                        stream: FirebaseFirestore.instance
+                            .collection('users')
+                            .snapshots(),
+                        builder: (context, snapshot) {
+                          if (!snapshot.hasData) {
+                            return const SizedBox.shrink();
+                          }
+                          final ranking = buildCityRanking(
+                              snapshot.data!.docs, rawCity);
+                          final myIndex = ranking.indexWhere(
+                              (doc) => doc.id == FirebaseAuth.instance
+                                  .currentUser?.uid);
+                          if (myIndex == -1) return const SizedBox.shrink();
+
+                          return Padding(
+                            padding: const EdgeInsets.only(top: 6),
+                            child: Text(
+                              loc.rankingPositionLabel(
+                                  myIndex + 1, city),
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.grey.shade700,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+
                     const SizedBox(height: 24),
 
                     availability.isEmpty

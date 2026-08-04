@@ -48,19 +48,6 @@ class _AvailablePlayersScreenState extends State<AvailablePlayersScreen> {
   // true = show only my city, false = show all cities
   bool _filterByCity = true;
 
-  /// Normalizes a city name by stripping accents and lowercasing so that
-  /// "Popayán" and "Popayan" are treated as the same city.
-  static String _normalizeCity(String input) {
-    const accents = 'áàäâãåéèëêíìïîóòöôõúùüûñçÁÀÄÂÃÅÉÈËÊÍÌÏÎÓÒÖÔÕÚÙÜÛÑÇ';
-    const normal  = 'aaaaaaeeeeiiiiooooouuuuncAAAAAAEEEEIIIIOOOOOUUUUNC';
-    final buffer = StringBuffer();
-    for (final ch in input.split('')) {
-      final idx = accents.indexOf(ch);
-      buffer.write(idx >= 0 ? normal[idx] : ch);
-    }
-    return buffer.toString().toLowerCase().trim();
-  }
-
   Future<void> requestMatch(BuildContext context, String toUid) async {
     final loc = AppLocalizations.of(context)!;
     final fromUid = FirebaseAuth.instance.currentUser!.uid;
@@ -245,8 +232,8 @@ class _AvailablePlayersScreenState extends State<AvailablePlayersScreen> {
                         final data = doc.data() as Map<String, dynamic>;
                         final otherCity =
                             (data['city'] as String? ?? '').trim();
-                        return _normalizeCity(otherCity) ==
-                            _normalizeCity(userCity);
+                        return normalizeCityForComparison(otherCity) ==
+                            normalizeCityForComparison(userCity);
                       }).toList()
                     : availableByDay;
 
@@ -324,9 +311,9 @@ class _AvailablePlayersScreenState extends State<AvailablePlayersScreen> {
                                   final bData =
                                       b.data() as Map<String, dynamic>;
                                   if (!_filterByCity) {
-                                    final aCity = _normalizeCity(
+                                    final aCity = normalizeCityForComparison(
                                         aData['city'] as String? ?? '');
-                                    final bCity = _normalizeCity(
+                                    final bCity = normalizeCityForComparison(
                                         bData['city'] as String? ?? '');
                                     final cityCompare =
                                         aCity.compareTo(bCity);
@@ -356,7 +343,8 @@ class _AvailablePlayersScreenState extends State<AvailablePlayersScreen> {
                                   if (!_filterByCity &&
                                       playerCityRaw.isNotEmpty) {
                                     final normalizedCity =
-                                        _normalizeCity(playerCityRaw);
+                                        normalizeCityForComparison(
+                                            playerCityRaw);
                                     if (normalizedCity != lastCityHeader) {
                                       lastCityHeader = normalizedCity;
                                       final countryDisplay =
