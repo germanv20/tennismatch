@@ -1070,4 +1070,56 @@ class AppLocalizationsEs extends AppLocalizations {
   String rankingPositionLabel(int position, String city) {
     return 'N.º$position en $city';
   }
+
+  @override
+  String get doublesShareMatchTitle => '¿Compartir el resultado con el grupo?';
+
+  @override
+  String get doublesShareMatchSubtitle =>
+      'Envía este resultado por WhatsApp e invita a tus compañeros de dobles a unirse a TennisMatch';
+
+  @override
+  String doublesWhatsappMessageTemplate(
+    Object team1Player1,
+    Object team1Player2,
+    Object team2Player1,
+    Object team2Player2,
+    Object score,
+    Object location,
+    Object date,
+    Object appLink,
+  ) {
+    return '¡Hola! 🎾 Acabamos de jugar un partido de dobles y registramos el resultado en TennisMatch:\n\n$team1Player1 y $team1Player2\nvs\n$team2Player1 y $team2Player2\n\nMarcador: $score\nLugar: $location\nFecha: $date\n\n¡Descarga TennisMatch para guardar tus estadísticas y llevar el registro de tus partidos!\n$appLink\n\n¡Nos vemos en la cancha! 🎾';
+  }
+
+  @override
+  String get dangerZoneTitle => 'Zona de peligro';
+
+  @override
+  String get deleteAccountButton => 'Eliminar mi cuenta';
+
+  @override
+  String get deleteAccountDialogTitle => '¿Eliminar tu cuenta?';
+
+  @override
+  String get deleteAccountWarning =>
+      'Esto elimina tu perfil y estadísticas de forma permanente, y cerrará tu sesión — esta acción no se puede deshacer. Los partidos que ya jugaste seguirán visibles en el historial de los demás jugadores, ya que esa información también les pertenece a ellos, pero no podrás recuperar tu propia cuenta ni tus datos. Si vuelves a usar TennisMatch más adelante, empezarás desde cero.';
+
+  @override
+  String get deleteAccountConfirmWord => 'ELIMINAR';
+
+  @override
+  String deleteAccountConfirmHint(String word) {
+    return 'Escribe $word para confirmar';
+  }
+
+  @override
+  String get deleteAccountInProgress => 'Eliminando tu cuenta…';
+
+  @override
+  String get deleteAccountSuccess => 'Tu cuenta ha sido eliminada.';
+
+  @override
+  String get deleteAccountError =>
+      'Ocurrió un error al eliminar tu cuenta. Inténtalo de nuevo.';
 }

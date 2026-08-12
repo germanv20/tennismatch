@@ -383,5 +383,30 @@
   "rankingEmptyTitle": "Todavía no hay clasificación",
   "rankingEmptySubtitle": "Nadie en esta ciudad ha jugado suficientes partidos calificados todavía. ¡Sé el primero!",
   "rankingPositionLabel": "N.º{position} en {city}",
-  "@rankingPositionLabel": {"placeholders": {"position": {"type": "int"}, "city": {"type": "String"}}}
+  "@rankingPositionLabel": {"placeholders": {"position": {"type": "int"}, "city": {"type": "String"}}},
+  "doublesShareMatchTitle": "¿Compartir el resultado con el grupo?",
+  "doublesShareMatchSubtitle": "Envía este resultado por WhatsApp e invita a tus compañeros de dobles a unirse a TennisMatch",
+  "doublesWhatsappMessageTemplate": "¡Hola! 🎾 Acabamos de jugar un partido de dobles y registramos el resultado en TennisMatch:\n\n{team1Player1} y {team1Player2}\nvs\n{team2Player1} y {team2Player2}\n\nMarcador: {score}\nLugar: {location}\nFecha: {date}\n\n¡Descarga TennisMatch para guardar tus estadísticas y llevar el registro de tus partidos!\n{appLink}\n\n¡Nos vemos en la cancha! 🎾",
+  "@doublesWhatsappMessageTemplate": {
+    "placeholders": {
+      "team1Player1": {},
+      "team1Player2": {},
+      "team2Player1": {},
+      "team2Player2": {},
+      "score": {},
+      "location": {},
+      "date": {},
+      "appLink": {}
+    }
+  },
+  "dangerZoneTitle": "Zona de peligro",
+  "deleteAccountButton": "Eliminar mi cuenta",
+  "deleteAccountDialogTitle": "¿Eliminar tu cuenta?",
+  "deleteAccountWarning": "Esto elimina tu perfil y estadísticas de forma permanente, y cerrará tu sesión — esta acción no se puede deshacer. Los partidos que ya jugaste seguirán visibles en el historial de los demás jugadores, ya que esa información también les pertenece a ellos, pero no podrás recuperar tu propia cuenta ni tus datos. Si vuelves a usar TennisMatch más adelante, empezarás desde cero.",
+  "deleteAccountConfirmWord": "ELIMINAR",
+  "deleteAccountConfirmHint": "Escribe {word} para confirmar",
+  "@deleteAccountConfirmHint": {"placeholders": {"word": {"type": "String"}}},
+  "deleteAccountInProgress": "Eliminando tu cuenta…",
+  "deleteAccountSuccess": "Tu cuenta ha sido eliminada.",
+  "deleteAccountError": "Ocurrió un error al eliminar tu cuenta. Inténtalo de nuevo."
 }

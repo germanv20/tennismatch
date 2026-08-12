@@ -383,5 +383,30 @@
   "rankingEmptyTitle": "No ranking yet",
   "rankingEmptySubtitle": "No one in this city has played enough rated matches yet. Be the first!",
   "rankingPositionLabel": "#{position} in {city}",
-  "@rankingPositionLabel": {"placeholders": {"position": {"type": "int"}, "city": {"type": "String"}}}
+  "@rankingPositionLabel": {"placeholders": {"position": {"type": "int"}, "city": {"type": "String"}}},
+  "doublesShareMatchTitle": "Share result with the group?",
+  "doublesShareMatchSubtitle": "Send this result via WhatsApp and invite your doubles partners to join TennisMatch",
+  "doublesWhatsappMessageTemplate": "Hi! 🎾 We just played a doubles tennis match and recorded the result on TennisMatch:\n\n{team1Player1} & {team1Player2}\nvs\n{team2Player1} & {team2Player2}\n\nScore: {score}\nLocation: {location}\nDate: {date}\n\nDownload TennisMatch to save your stats and track your matches too!\n{appLink}\n\nSee you on the court! 🎾",
+  "@doublesWhatsappMessageTemplate": {
+    "placeholders": {
+      "team1Player1": {},
+      "team1Player2": {},
+      "team2Player1": {},
+      "team2Player2": {},
+      "score": {},
+      "location": {},
+      "date": {},
+      "appLink": {}
+    }
+  },
+  "dangerZoneTitle": "Danger Zone",
+  "deleteAccountButton": "Delete my account",
+  "deleteAccountDialogTitle": "Delete your account?",
+  "deleteAccountWarning": "This permanently deletes your profile, stats, and sign you out — this cannot be undone. Matches you've already played will remain visible in other players' history, since that information belongs to them too, but you won't be able to recover your own account or data. If you use TennisMatch again later, you'll start from zero.",
+  "deleteAccountConfirmWord": "DELETE",
+  "deleteAccountConfirmHint": "Type {word} to confirm",
+  "@deleteAccountConfirmHint": {"placeholders": {"word": {"type": "String"}}},
+  "deleteAccountInProgress": "Deleting your account…",
+  "deleteAccountSuccess": "Your account has been deleted.",
+  "deleteAccountError": "Something went wrong deleting your account. Please try again."
 }

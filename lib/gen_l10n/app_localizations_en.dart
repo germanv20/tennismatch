@@ -1053,4 +1053,56 @@ class AppLocalizationsEn extends AppLocalizations {
   String rankingPositionLabel(int position, String city) {
     return '#$position in $city';
   }
+
+  @override
+  String get doublesShareMatchTitle => 'Share result with the group?';
+
+  @override
+  String get doublesShareMatchSubtitle =>
+      'Send this result via WhatsApp and invite your doubles partners to join TennisMatch';
+
+  @override
+  String doublesWhatsappMessageTemplate(
+    Object team1Player1,
+    Object team1Player2,
+    Object team2Player1,
+    Object team2Player2,
+    Object score,
+    Object location,
+    Object date,
+    Object appLink,
+  ) {
+    return 'Hi! 🎾 We just played a doubles tennis match and recorded the result on TennisMatch:\n\n$team1Player1 & $team1Player2\nvs\n$team2Player1 & $team2Player2\n\nScore: $score\nLocation: $location\nDate: $date\n\nDownload TennisMatch to save your stats and track your matches too!\n$appLink\n\nSee you on the court! 🎾';
+  }
+
+  @override
+  String get dangerZoneTitle => 'Danger Zone';
+
+  @override
+  String get deleteAccountButton => 'Delete my account';
+
+  @override
+  String get deleteAccountDialogTitle => 'Delete your account?';
+
+  @override
+  String get deleteAccountWarning =>
+      'This permanently deletes your profile, stats, and sign you out — this cannot be undone. Matches you\'ve already played will remain visible in other players\' history, since that information belongs to them too, but you won\'t be able to recover your own account or data. If you use TennisMatch again later, you\'ll start from zero.';
+
+  @override
+  String get deleteAccountConfirmWord => 'DELETE';
+
+  @override
+  String deleteAccountConfirmHint(String word) {
+    return 'Type $word to confirm';
+  }
+
+  @override
+  String get deleteAccountInProgress => 'Deleting your account…';
+
+  @override
+  String get deleteAccountSuccess => 'Your account has been deleted.';
+
+  @override
+  String get deleteAccountError =>
+      'Something went wrong deleting your account. Please try again.';
 }

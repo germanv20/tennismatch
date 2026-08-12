@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:tennismatch/gen_l10n/app_localizations.dart';
+import '../main.dart' show navigatorKey;
 import '../widgets/set_score_row.dart';
 
 class LogDoublesMatchScreen extends StatefulWidget {
@@ -164,6 +166,138 @@ class _LogDoublesMatchScreenState extends State<LogDoublesMatchScreen> {
     if (picked != null) setState(() => selectedMatchDate = picked);
   }
 
+  /// Formats sets into a readable score string e.g. "6-4, 7-5"
+  String _formatScore(List<Map<String, dynamic>> formattedSets) {
+    return formattedSets
+        .map((s) => '${s['p1']}-${s['p2']}')
+        .join(', ');
+  }
+
+  /// Builds the WhatsApp share message for a doubles match, in the
+  /// current app locale. Unlike the singles guest-match template, this
+  /// reads as a group announcement rather than a message addressed to
+  /// one person — there are up to three other people on the match
+  /// (partner + two opponents) and none of them have a phone number on
+  /// file, since doubles never collects one (see _shareViaWhatsApp).
+  String _buildDoublesWhatsAppMessage(
+    AppLocalizations loc, {
+    required String team1Player1,
+    required String team1Player2,
+    required String team2Player1,
+    required String team2Player2,
+    required String score,
+    required String location,
+    required String date,
+  }) {
+    return loc.doublesWhatsappMessageTemplate(
+      team1Player1,
+      team1Player2,
+      team2Player1,
+      team2Player2,
+      score,
+      location,
+      date,
+      'https://tennismatch.app', // placeholder — replace with real link
+    );
+  }
+
+  /// Opens WhatsApp with the match result pre-filled. Doubles matches
+  /// never collect a phone number for the partner or opponents (they're
+  /// plain name fields, and there's no claim-into-history mechanic to
+  /// support here), so this always opens WhatsApp's own contact/group
+  /// picker (`wa.me/?text=...`) rather than targeting one fixed number —
+  /// letting the sender pick a group chat with all three other players
+  /// at once if they want to.
+  Future<void> _shareDoublesViaWhatsApp({
+    required AppLocalizations loc,
+    required String team1Player1,
+    required String team1Player2,
+    required String team2Player1,
+    required String team2Player2,
+    required List<Map<String, dynamic>> formattedSets,
+    required String location,
+    required DateTime matchDate,
+  }) async {
+    final score = _formatScore(formattedSets);
+    final date = '${matchDate.day}/${matchDate.month}/${matchDate.year}';
+
+    final message = _buildDoublesWhatsAppMessage(
+      loc,
+      team1Player1: team1Player1,
+      team1Player2: team1Player2,
+      team2Player1: team2Player1,
+      team2Player2: team2Player2,
+      score: score,
+      location: location,
+      date: date,
+    );
+
+    // Capture the not-installed message before any await
+    final notInstalledMsg = loc.whatsappNotInstalled;
+
+    final encodedMessage = Uri.encodeComponent(message);
+    final Uri whatsappUri = Uri.parse('https://wa.me/?text=$encodedMessage');
+
+    if (await canLaunchUrl(whatsappUri)) {
+      await launchUrl(whatsappUri, mode: LaunchMode.externalApplication);
+    } else {
+      // Use root context — this screen may already be popped at this point
+      final rootContext = navigatorKey.currentContext;
+      if (rootContext == null) return;
+      ScaffoldMessenger.of(rootContext).showSnackBar(
+        SnackBar(content: Text(notInstalledMsg)),
+      );
+    }
+  }
+
+  /// Shows the share dialog using the root navigator key so it works
+  /// even after this screen has been popped from the stack
+  Future<void> _showDoublesShareDialogOnRoot({
+    required AppLocalizations loc,
+    required String team1Player1,
+    required String team1Player2,
+    required String team2Player1,
+    required String team2Player2,
+    required List<Map<String, dynamic>> formattedSets,
+    required String location,
+    required DateTime matchDate,
+  }) async {
+    final ctx = navigatorKey.currentContext;
+    if (ctx == null) return;
+
+    await showDialog(
+      context: ctx,
+      barrierDismissible: false,
+      builder: (dialogCtx) => AlertDialog(
+        title: Text(loc.doublesShareMatchTitle),
+        content: Text(loc.doublesShareMatchSubtitle),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogCtx),
+            child: Text(loc.skipSharing),
+          ),
+          ElevatedButton.icon(
+            icon: const Icon(Icons.send),
+            label: Text(loc.shareViaWhatsApp),
+            onPressed: () async {
+              Navigator.pop(dialogCtx);
+              await _shareDoublesViaWhatsApp(
+                loc: loc,
+                team1Player1: team1Player1,
+                team1Player2: team1Player2,
+                team2Player1: team2Player1,
+                team2Player2: team2Player2,
+                formattedSets: formattedSets,
+                location: location,
+                matchDate: matchDate,
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _handleSave() async {
     if (isSaving) return;
     setState(() => isSaving = true);
@@ -324,7 +458,33 @@ class _LogDoublesMatchScreenState extends State<LogDoublesMatchScreen> {
     // when this match document is created with status 'completed'.
 
     if (!mounted) return;
+
+    // ── Pop first so we return to HomeScreen ──
+    // Store what we need before popping (context will be gone after)
+    final myNameCopy = myName;
+    final partnerNameCopy = partnerName;
+    final opponent1Copy = opponent1;
+    final opponent2Copy = opponent2;
+    final formattedSetsCopy = List<Map<String, dynamic>>.from(formattedSets);
+    final locationCopy = location;
+    final matchDateCopy = selectedMatchDate!;
+
     Navigator.pop(context, true);
+
+    // ── Show WhatsApp share dialog on HomeScreen after returning ──
+    // Small delay lets the home screen finish its transition first
+    await Future.delayed(const Duration(milliseconds: 400));
+
+    await _showDoublesShareDialogOnRoot(
+      loc: loc,
+      team1Player1: myNameCopy,
+      team1Player2: partnerNameCopy,
+      team2Player1: opponent1Copy,
+      team2Player2: opponent2Copy,
+      formattedSets: formattedSetsCopy,
+      location: locationCopy,
+      matchDate: matchDateCopy,
+    );
   }
 
   @override

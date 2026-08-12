@@ -2018,6 +2018,87 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'#{position} in {city}'**
   String rankingPositionLabel(int position, String city);
+
+  /// No description provided for @doublesShareMatchTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Share result with the group?'**
+  String get doublesShareMatchTitle;
+
+  /// No description provided for @doublesShareMatchSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Send this result via WhatsApp and invite your doubles partners to join TennisMatch'**
+  String get doublesShareMatchSubtitle;
+
+  /// No description provided for @doublesWhatsappMessageTemplate.
+  ///
+  /// In en, this message translates to:
+  /// **'Hi! 🎾 We just played a doubles tennis match and recorded the result on TennisMatch:\n\n{team1Player1} & {team1Player2}\nvs\n{team2Player1} & {team2Player2}\n\nScore: {score}\nLocation: {location}\nDate: {date}\n\nDownload TennisMatch to save your stats and track your matches too!\n{appLink}\n\nSee you on the court! 🎾'**
+  String doublesWhatsappMessageTemplate(
+    Object team1Player1,
+    Object team1Player2,
+    Object team2Player1,
+    Object team2Player2,
+    Object score,
+    Object location,
+    Object date,
+    Object appLink,
+  );
+
+  /// No description provided for @dangerZoneTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Danger Zone'**
+  String get dangerZoneTitle;
+
+  /// No description provided for @deleteAccountButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete my account'**
+  String get deleteAccountButton;
+
+  /// No description provided for @deleteAccountDialogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete your account?'**
+  String get deleteAccountDialogTitle;
+
+  /// No description provided for @deleteAccountWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'This permanently deletes your profile, stats, and sign you out — this cannot be undone. Matches you've already played will remain visible in other players' history, since that information belongs to them too, but you won't be able to recover your own account or data. If you use TennisMatch again later, you'll start from zero.'**
+  String get deleteAccountWarning;
+
+  /// No description provided for @deleteAccountConfirmWord.
+  ///
+  /// In en, this message translates to:
+  /// **'DELETE'**
+  String get deleteAccountConfirmWord;
+
+  /// No description provided for @deleteAccountConfirmHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Type {word} to confirm'**
+  String deleteAccountConfirmHint(String word);
+
+  /// No description provided for @deleteAccountInProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Deleting your account…'**
+  String get deleteAccountInProgress;
+
+  /// No description provided for @deleteAccountSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Your account has been deleted.'**
+  String get deleteAccountSuccess;
+
+  /// No description provided for @deleteAccountError.
+  ///
+  /// In en, this message translates to:
+  /// **'Something went wrong deleting your account. Please try again.'**
+  String get deleteAccountError;
 }
 
 class _AppLocalizationsDelegate
