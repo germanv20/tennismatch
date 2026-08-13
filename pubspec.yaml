@@ -21,8 +21,10 @@ dependencies:
   firebase_auth: ^6.4.0
   google_sign_in: ^6.2.1
   cloud_firestore: ^6.3.0
+  cloud_functions: ^6.0.6
   firebase_messaging: ^16.2.0
   firebase_storage: ^13.3.0
+  firebase_app_check: ^0.4.3
   image_picker: ^1.1.2
   url_launcher: ^6.2.5
   shared_preferences: ^2.3.0

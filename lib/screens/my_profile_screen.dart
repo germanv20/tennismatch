@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:tennismatch/gen_l10n/app_localizations.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -114,6 +115,140 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
     }
   }
 
+  /// Shows the type-to-confirm delete dialog and, on confirmation, calls
+  /// the deleteMyAccount Cloud Function — which does all Firestore/
+  /// Storage cleanup and the actual Firebase Auth deletion server-side
+  /// (see functions/index.js for why this is a callable function rather
+  /// than an auth onDelete trigger, and why it doesn't need the client
+  /// to re-authenticate first). All state (typed confirmation text,
+  /// in-progress spinner, error message) lives inside this dialog's own
+  /// StatefulBuilder rather than the screen's State, since a dialog
+  /// route doesn't rebuild automatically when the screen behind it
+  /// calls setState. On success it signs out locally (so main.dart's
+  /// auth listener routes back to the sign-in screen immediately rather
+  /// than waiting on a stale token) and closes the dialog; the app-level
+  /// screen switch that follows is the confirmation the user sees, so no
+  /// separate success snackbar is needed here. On failure the dialog
+  /// stays open with an inline error and the account is left untouched,
+  /// so the user can simply retry.
+  Future<void> _confirmDeleteAccount(AppLocalizations loc) async {
+    final confirmController = TextEditingController();
+    final requiredWord = loc.deleteAccountConfirmWord;
+
+    await showDialog<void>(
+      context: context,
+      builder: (dialogCtx) {
+        bool isDeleting = false;
+        String? errorMessage;
+
+        return StatefulBuilder(
+          builder: (dialogCtx, setDialogState) {
+            final canConfirm = confirmController.text.trim().toUpperCase() ==
+                requiredWord.toUpperCase();
+
+            Future<void> handleConfirm() async {
+              setDialogState(() {
+                isDeleting = true;
+                errorMessage = null;
+              });
+              try {
+                await FirebaseFunctions.instance
+                    .httpsCallable('deleteMyAccount')
+                    .call();
+                await FirebaseAuth.instance.signOut();
+                // My Profile (and this dialog) were reached via
+                // Navigator.push on top of the app's root screen, which
+                // silently swaps to the sign-in landing screen underneath
+                // as soon as we sign out — but a plain Navigator.pop()
+                // here would only close the dialog, leaving My Profile's
+                // now-permission-denied screen stuck on top of it. Pop
+                // the whole stack back to the root in one go so that
+                // already-updated sign-in screen is actually revealed.
+                if (dialogCtx.mounted) {
+                  Navigator.of(dialogCtx)
+                      .popUntil((route) => route.isFirst);
+                }
+              } catch (e) {
+                debugPrint('❌ Account deletion error: $e');
+                setDialogState(() {
+                  isDeleting = false;
+                  errorMessage = loc.deleteAccountError;
+                });
+              }
+            }
+
+            return AlertDialog(
+              title: Row(
+                children: [
+                  const Icon(Icons.warning_amber_rounded,
+                      color: Colors.red),
+                  const SizedBox(width: 8),
+                  Expanded(child: Text(loc.deleteAccountDialogTitle)),
+                ],
+              ),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(loc.deleteAccountWarning),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: confirmController,
+                    autocorrect: false,
+                    enabled: !isDeleting,
+                    textCapitalization: TextCapitalization.characters,
+                    onChanged: (_) => setDialogState(() {}),
+                    decoration: InputDecoration(
+                      border: const OutlineInputBorder(),
+                      hintText: loc.deleteAccountConfirmHint(requiredWord),
+                    ),
+                  ),
+                  if (isDeleting) ...[
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                        const SizedBox(width: 12),
+                        Text(loc.deleteAccountInProgress),
+                      ],
+                    ),
+                  ],
+                  if (errorMessage != null) ...[
+                    const SizedBox(height: 16),
+                    Text(errorMessage!,
+                        style: const TextStyle(color: Colors.red)),
+                  ],
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed:
+                      isDeleting ? null : () => Navigator.pop(dialogCtx),
+                  child: Text(loc.cancel),
+                ),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red,
+                    foregroundColor: Colors.white,
+                  ),
+                  onPressed:
+                      (canConfirm && !isDeleting) ? handleConfirm : null,
+                  child: Text(loc.deleteAccountButton),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+
+    confirmController.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context)!;
@@ -152,8 +287,19 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
             return const Center(child: CircularProgressIndicator());
           }
 
-          final userData =
-              snapshot.data!.data() as Map<String, dynamic>;
+          // The account can disappear mid-stream if it's just been
+          // deleted via the Danger Zone below — deleteMyAccount()
+          // removes this document server-side before the client's own
+          // sign-out/navigation-away has necessarily happened yet, so
+          // this listener can briefly see "document no longer exists"
+          // while that transition is still in flight. Show a spinner
+          // rather than crashing on a null cast; the screen is about to
+          // be torn down by the auth-state change anyway.
+          final rawData = snapshot.data!.data();
+          if (rawData == null) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          final userData = rawData as Map<String, dynamic>;
 
           final String name = userData['name'] ?? loc.unknown;
           final String email = userData['email'] ?? '';
@@ -430,6 +576,36 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
                               mode: LaunchMode.externalApplication);
                         }
                       },
+                    ),
+
+                    const SizedBox(height: 32),
+                    const Divider(),
+                    const SizedBox(height: 8),
+
+                    // ── Danger Zone — permanent account deletion ──
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        loc.dangerZoneTitle,
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.red.shade700,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: Colors.red,
+                          side: BorderSide(color: Colors.red.shade200),
+                        ),
+                        icon: const Icon(Icons.delete_forever, size: 18),
+                        label: Text(loc.deleteAccountButton),
+                        onPressed: () => _confirmDeleteAccount(loc),
+                      ),
                     ),
                   ],
                 ),

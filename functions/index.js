@@ -3,8 +3,10 @@ const {
   onDocumentUpdated,
 } = require("firebase-functions/v2/firestore");
 const {onSchedule} = require("firebase-functions/v2/scheduler");
+const {onCall, HttpsError} = require("firebase-functions/v2/https");
 const {getFirestore} = require("firebase-admin/firestore");
 const {getMessaging} = require("firebase-admin/messaging");
+const {getStorage} = require("firebase-admin/storage");
 const admin = require("firebase-admin");
 
 admin.initializeApp();
@@ -758,3 +760,100 @@ exports.onOpponentRatingCreated = onDocumentCreated(
       await db.collection("users").doc(ratedUid).update(update);
     },
 );
+
+// ─────────────────────────────────────────────────────
+// ACCOUNT DELETION
+//    A callable function the client invokes directly, rather than a
+//    Firebase Auth onDelete trigger — auth onDelete triggers have
+//    known reliability gaps (they don't fire for batch deletions, and
+//    behave inconsistently for SDK-initiated deletes in some cases),
+//    so relying on one here would risk silently leaving orphaned data
+//    behind. A callable function is one atomic, authoritative flow:
+//    everything below runs to completion (or throws) as part of the
+//    same request the client is awaiting.
+//
+//    Deletion order matters: Firestore/Storage cleanup happens FIRST,
+//    and the Firebase Auth account is only deleted LAST. If any
+//    cleanup step throws, the user's account still exists and they
+//    can retry — we never want to destroy their ability to sign back
+//    in while cleanup is only partially done.
+//
+//    Using the Admin SDK for the final auth.deleteUser() call also
+//    sidesteps Firebase's "requires recent login" restriction — that
+//    restriction only applies to the client SDK's self-service
+//    currentUser.delete(), not to a privileged server-side deletion,
+//    so the client never needs to re-authenticate before calling this.
+// ─────────────────────────────────────────────────────
+exports.deleteMyAccount = onCall(async (request) => {
+  if (!request.auth) {
+    throw new HttpsError("unauthenticated", "You must be signed in.");
+  }
+  const uid = request.auth.uid;
+
+  console.log(`🗑️ Starting account deletion for ${uid}`);
+
+  // ── 1. Cancel any match requests involving this user, in either
+  // direction. Both Incoming and Outgoing Requests screens do a LIVE
+  // lookup of the other participant's profile (unlike matches, which
+  // snapshot names at completion time) — leaving a pending request
+  // pointing at a deleted profile would break that screen for the
+  // other person.
+  const [fromReqs, toReqs] = await Promise.all([
+    db.collection("match_requests").where("fromUid", "==", uid).get(),
+    db.collection("match_requests").where("toUid", "==", uid).get(),
+  ]);
+  if (!fromReqs.empty || !toReqs.empty) {
+    const reqBatch = db.batch();
+    fromReqs.docs.forEach((doc) => reqBatch.delete(doc.ref));
+    toReqs.docs.forEach((doc) => reqBatch.delete(doc.ref));
+    await reqBatch.commit();
+    console.log(
+        `Cancelled ${fromReqs.size + toReqs.size} match request(s) for ${uid}`,
+    );
+  }
+
+  // ── 2. Delete guest/doubles matches this user created. Safe to
+  // remove entirely — a guest/doubles match only ever has ONE real
+  // registered account on it (the creator) until a guest later claims
+  // it, so this can never remove data another still-active real user
+  // depends on. Regular matches, and guest matches this user merely
+  // CLAIMED (created by someone else), are deliberately left alone.
+  const createdMatchesSnap = await db.collection("matches")
+      .where("createdBy", "==", uid)
+      .get();
+
+  for (const doc of createdMatchesSnap.docs) {
+    const match = doc.data();
+    if (match.type !== "guest" && match.type !== "doubles_guest") continue;
+
+    // Clean up the phoneIndex lookup entry so it doesn't dangle
+    const phone = match.guestOpponent && match.guestOpponent.phone;
+    if (phone) {
+      await db.collection("phoneIndex").doc(phone)
+          .collection("matches").doc(doc.id).delete().catch(() => {
+            // Index entry already gone — nothing to clean up
+          });
+    }
+
+    // Recursively removes the match doc plus its messages/ratings
+    // subcollections
+    await db.recursiveDelete(doc.ref);
+  }
+  console.log(`Removed guest/doubles matches created by ${uid}`);
+
+  // ── 3. Delete the profile photo from Storage, if any ──
+  await getStorage().bucket().file(`profile_photos/${uid}.jpg`)
+      .delete().catch(() => {
+        // No photo on file — nothing to clean up
+      });
+
+  // ── 4. Delete the user's own document, including its headToHead
+  // subcollection
+  await db.recursiveDelete(db.collection("users").doc(uid));
+
+  // ── 5. Finally, delete the Firebase Auth account itself ──
+  await admin.auth().deleteUser(uid);
+
+  console.log(`✅ Account ${uid} fully deleted`);
+  return {success: true};
+});

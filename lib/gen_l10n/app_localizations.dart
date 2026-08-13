@@ -2067,7 +2067,7 @@ abstract class AppLocalizations {
   /// No description provided for @deleteAccountWarning.
   ///
   /// In en, this message translates to:
-  /// **'This permanently deletes your profile, stats, and sign you out — this cannot be undone. Matches you've already played will remain visible in other players' history, since that information belongs to them too, but you won't be able to recover your own account or data. If you use TennisMatch again later, you'll start from zero.'**
+  /// **'This permanently deletes your profile, stats, and sign you out — this cannot be undone. Matches you\'ve already played will remain visible in other players\' history, since that information belongs to them too, but you won\'t be able to recover your own account or data. If you use TennisMatch again later, you\'ll start from zero.'**
   String get deleteAccountWarning;
 
   /// No description provided for @deleteAccountConfirmWord.
