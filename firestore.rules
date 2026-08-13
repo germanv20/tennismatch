@@ -114,6 +114,21 @@ service cloud.firestore {
             resource.data.get('type', '') == 'guest' &&
             resource.data.get('guestOpponent', {}).get('claimedBy', null) == null
           )
+          ||
+          // City activity feed: any authenticated user can read a completed
+          // regular match (not pending/confirmed — those keep scheduling
+          // details participant-only). Written explicitly as `type ==
+          // 'regular'` (added by add_match_result_screen.dart on
+          // completion) rather than "type absent", so this condition lines
+          // up exactly with the feed's query filters — Firestore can only
+          // prove a list query safe against rules it can match structurally.
+          // Older completed regular matches predating this field simply
+          // don't participate in the feed, which is fine for a "this week"
+          // view.
+          (
+            resource.data.type == 'regular' &&
+            resource.data.status == 'completed'
+          )
         );
       // Case A: Regular match create
       allow create: if isAuthenticated() &&
@@ -154,7 +169,7 @@ service cloud.firestore {
               .hasOnly([
                 'status','completedAt','winnerUid',
                 'player1Uid','player2Uid','playerNames',
-                'result','summary','isTie'
+                'result','summary','isTie','type'
               ])
           )
           ||
@@ -200,10 +215,12 @@ service cloud.firestore {
         resource.data.get('guestOpponent', {}).get('claimedBy', null) == null &&
         request.resource.data.diff(resource.data).affectedKeys()
           .hasOnly(['guestOpponent', 'players', 'claimantResult']);
-      // Regular match delete (type field may not exist on older matches)
+      // Regular match delete (type field may not exist on older matches;
+      // newer completed regular matches now carry `type: 'regular'`,
+      // set by add_match_result_screen.dart for the city activity feed)
       allow delete: if isAuthenticated() &&
         isParticipant(resource.data.players) &&
-        !('type' in resource.data) &&
+        (!('type' in resource.data) || resource.data.type == 'regular') &&
         resource.data.deletionRequest.status == 'accepted' &&
         request.auth.uid == resource.data.deletionRequest.requestedBy;
       // Guest match delete (singles)

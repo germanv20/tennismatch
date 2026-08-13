@@ -17,6 +17,7 @@ import 'log_guest_match_screen.dart'; // NEW
 import 'log_doubles_match_screen.dart'; // NEW
 import 'ranking_screen.dart';
 import '../widgets/home_card.dart';
+import '../widgets/recent_activity_card.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:tennismatch/gen_l10n/app_localizations.dart';
  
@@ -586,9 +587,14 @@ class _HomeScreenState extends State<HomeScreen> {
               children: [
  
                 buildProfileCard(loc),
- 
+
+                const SizedBox(height: spaceM),
+
+                // ── Recent Activity teaser — Idea 1, city activity feed ──
+                const RecentActivityCard(),
+
                 const SizedBox(height: spaceL),
- 
+
                 Align(
                   alignment: Alignment.centerLeft,
                   child: Text(
@@ -895,7 +901,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       aspectRatio: 1,
                       child: HomeCard(
                         title: loc.rankingTitle,
-                        icon: Icons.leaderboard,
+                        icon: Icons.emoji_events,
                         onTap: () => Navigator.push(
                           context,
                           MaterialPageRoute(

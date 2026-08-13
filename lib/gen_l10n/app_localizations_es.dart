@@ -1122,4 +1122,54 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get deleteAccountError =>
       'Ocurrió un error al eliminar tu cuenta. Inténtalo de nuevo.';
+
+  @override
+  String get recentActivityTitle => 'Actividad reciente';
+
+  @override
+  String get recentActivityCardSubtitle =>
+      'Mira lo que se ha jugado en tu ciudad esta semana';
+
+  @override
+  String get recentActivityCardSeeAll => 'Ver todo';
+
+  @override
+  String recentActivityCityHeader(String city) {
+    return 'Esta semana en $city';
+  }
+
+  @override
+  String get recentActivityNoCityTitle => 'Sin ciudad configurada';
+
+  @override
+  String get recentActivityNoCitySubtitle =>
+      'Configura tu ciudad en tu perfil para ver la actividad local de partidos.';
+
+  @override
+  String get recentActivityEmptyTitle => 'Sin partidos esta semana';
+
+  @override
+  String get recentActivityEmptySubtitle =>
+      'Cuando los jugadores de tu ciudad registren un partido, aparecerá aquí.';
+
+  @override
+  String recentActivityWinnerLine(String winner, String loser) {
+    return '$winner venció a $loser';
+  }
+
+  @override
+  String recentActivityTieLine(String player1, String player2) {
+    return '$player1 y $player2 empataron';
+  }
+
+  @override
+  String daysAgoCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Hace $count días',
+      one: 'Hace 1 día',
+    );
+    return '$_temp0';
+  }
 }

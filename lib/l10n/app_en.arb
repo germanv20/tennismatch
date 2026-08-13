@@ -408,5 +408,20 @@
   "@deleteAccountConfirmHint": {"placeholders": {"word": {"type": "String"}}},
   "deleteAccountInProgress": "Deleting your account…",
   "deleteAccountSuccess": "Your account has been deleted.",
-  "deleteAccountError": "Something went wrong deleting your account. Please try again."
+  "deleteAccountError": "Something went wrong deleting your account. Please try again.",
+  "recentActivityTitle": "Recent Activity",
+  "recentActivityCardSubtitle": "See what your city has been playing this week",
+  "recentActivityCardSeeAll": "See all",
+  "recentActivityCityHeader": "This week in {city}",
+  "@recentActivityCityHeader": {"placeholders": {"city": {"type": "String"}}},
+  "recentActivityNoCityTitle": "No city set",
+  "recentActivityNoCitySubtitle": "Set your city in your profile to see local match activity.",
+  "recentActivityEmptyTitle": "No matches yet this week",
+  "recentActivityEmptySubtitle": "Once players in your city log a match, it'll show up here.",
+  "recentActivityWinnerLine": "{winner} defeated {loser}",
+  "@recentActivityWinnerLine": {"placeholders": {"winner": {"type": "String"}, "loser": {"type": "String"}}},
+  "recentActivityTieLine": "{player1} and {player2} tied",
+  "@recentActivityTieLine": {"placeholders": {"player1": {"type": "String"}, "player2": {"type": "String"}}},
+  "daysAgoCount": "{count, plural, =1{1 day ago} other{{count} days ago}}",
+  "@daysAgoCount": {"placeholders": {"count": {"type": "int"}}}
 }

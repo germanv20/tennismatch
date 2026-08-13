@@ -408,5 +408,20 @@
   "@deleteAccountConfirmHint": {"placeholders": {"word": {"type": "String"}}},
   "deleteAccountInProgress": "Eliminando tu cuenta…",
   "deleteAccountSuccess": "Tu cuenta ha sido eliminada.",
-  "deleteAccountError": "Ocurrió un error al eliminar tu cuenta. Inténtalo de nuevo."
+  "deleteAccountError": "Ocurrió un error al eliminar tu cuenta. Inténtalo de nuevo.",
+  "recentActivityTitle": "Actividad reciente",
+  "recentActivityCardSubtitle": "Mira lo que se ha jugado en tu ciudad esta semana",
+  "recentActivityCardSeeAll": "Ver todo",
+  "recentActivityCityHeader": "Esta semana en {city}",
+  "@recentActivityCityHeader": {"placeholders": {"city": {"type": "String"}}},
+  "recentActivityNoCityTitle": "Sin ciudad configurada",
+  "recentActivityNoCitySubtitle": "Configura tu ciudad en tu perfil para ver la actividad local de partidos.",
+  "recentActivityEmptyTitle": "Sin partidos esta semana",
+  "recentActivityEmptySubtitle": "Cuando los jugadores de tu ciudad registren un partido, aparecerá aquí.",
+  "recentActivityWinnerLine": "{winner} venció a {loser}",
+  "@recentActivityWinnerLine": {"placeholders": {"winner": {"type": "String"}, "loser": {"type": "String"}}},
+  "recentActivityTieLine": "{player1} y {player2} empataron",
+  "@recentActivityTieLine": {"placeholders": {"player1": {"type": "String"}, "player2": {"type": "String"}}},
+  "daysAgoCount": "{count, plural, =1{Hace 1 día} other{Hace {count} días}}",
+  "@daysAgoCount": {"placeholders": {"count": {"type": "int"}}}
 }

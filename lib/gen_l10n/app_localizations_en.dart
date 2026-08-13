@@ -1105,4 +1105,54 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get deleteAccountError =>
       'Something went wrong deleting your account. Please try again.';
+
+  @override
+  String get recentActivityTitle => 'Recent Activity';
+
+  @override
+  String get recentActivityCardSubtitle =>
+      'See what your city has been playing this week';
+
+  @override
+  String get recentActivityCardSeeAll => 'See all';
+
+  @override
+  String recentActivityCityHeader(String city) {
+    return 'This week in $city';
+  }
+
+  @override
+  String get recentActivityNoCityTitle => 'No city set';
+
+  @override
+  String get recentActivityNoCitySubtitle =>
+      'Set your city in your profile to see local match activity.';
+
+  @override
+  String get recentActivityEmptyTitle => 'No matches yet this week';
+
+  @override
+  String get recentActivityEmptySubtitle =>
+      'Once players in your city log a match, it\'ll show up here.';
+
+  @override
+  String recentActivityWinnerLine(String winner, String loser) {
+    return '$winner defeated $loser';
+  }
+
+  @override
+  String recentActivityTieLine(String player1, String player2) {
+    return '$player1 and $player2 tied';
+  }
+
+  @override
+  String daysAgoCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count days ago',
+      one: '1 day ago',
+    );
+    return '$_temp0';
+  }
 }

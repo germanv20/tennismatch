@@ -2099,6 +2099,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Something went wrong deleting your account. Please try again.'**
   String get deleteAccountError;
+
+  /// No description provided for @recentActivityTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent Activity'**
+  String get recentActivityTitle;
+
+  /// No description provided for @recentActivityCardSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'See what your city has been playing this week'**
+  String get recentActivityCardSubtitle;
+
+  /// No description provided for @recentActivityCardSeeAll.
+  ///
+  /// In en, this message translates to:
+  /// **'See all'**
+  String get recentActivityCardSeeAll;
+
+  /// No description provided for @recentActivityCityHeader.
+  ///
+  /// In en, this message translates to:
+  /// **'This week in {city}'**
+  String recentActivityCityHeader(String city);
+
+  /// No description provided for @recentActivityNoCityTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No city set'**
+  String get recentActivityNoCityTitle;
+
+  /// No description provided for @recentActivityNoCitySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Set your city in your profile to see local match activity.'**
+  String get recentActivityNoCitySubtitle;
+
+  /// No description provided for @recentActivityEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No matches yet this week'**
+  String get recentActivityEmptyTitle;
+
+  /// No description provided for @recentActivityEmptySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Once players in your city log a match, it\'ll show up here.'**
+  String get recentActivityEmptySubtitle;
+
+  /// No description provided for @recentActivityWinnerLine.
+  ///
+  /// In en, this message translates to:
+  /// **'{winner} defeated {loser}'**
+  String recentActivityWinnerLine(String winner, String loser);
+
+  /// No description provided for @recentActivityTieLine.
+  ///
+  /// In en, this message translates to:
+  /// **'{player1} and {player2} tied'**
+  String recentActivityTieLine(String player1, String player2);
+
+  /// No description provided for @daysAgoCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 day ago} other{{count} days ago}}'**
+  String daysAgoCount(int count);
 }
 
 class _AppLocalizationsDelegate

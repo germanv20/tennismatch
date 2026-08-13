@@ -249,6 +249,12 @@ class _AddMatchResultScreenState extends State<AddMatchResultScreen> {
     final batch = FirebaseFirestore.instance.batch();
 
     batch.update(matchRef, {
+      // Explicit type tag (regular matches never had one before) so the
+      // city activity feed's Firestore query/rules can target completed
+      // regular matches directly. Every read path elsewhere already
+      // treats a missing `type` as 'regular' (`data['type'] ?? 'regular'`),
+      // so this is additive and doesn't change any existing behavior.
+      'type': 'regular',
       'status': 'completed',
       'completedAt': FieldValue.serverTimestamp(),
       'winnerUid': winnerUid, // null for ties
