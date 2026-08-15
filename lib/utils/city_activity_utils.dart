@@ -5,8 +5,8 @@ import 'city_utils.dart';
 const int cityActivityWindowDays = 7;
 
 /// One row in the city activity feed — a reduced summary (who played, who
-/// won, when), deliberately not the full match record (score breakdown,
-/// location, notes) even though the underlying match documents do carry
+/// won, the set score, when) — deliberately not the full match record
+/// (location, notes) even though the underlying match documents do carry
 /// that detail. Built from three very differently-shaped Firestore match
 /// documents (regular / guest / doubles_guest), normalized here so the UI
 /// only ever deals with one shape.
@@ -18,6 +18,7 @@ class CityActivityMatch {
   final String player2Label;
   final bool isTie;
   final bool player1Won; // meaningless when isTie is true
+  final String scoreText; // e.g. "6-4, 6-3" — empty if unavailable
 
   const CityActivityMatch({
     required this.id,
@@ -27,7 +28,20 @@ class CityActivityMatch {
     required this.player2Label,
     required this.isTie,
     required this.player1Won,
+    required this.scoreText,
   });
+}
+
+/// Formats a match's per-set score as a compact "6-4, 6-3" string, the same
+/// convention already used for the WhatsApp share message in
+/// log_doubles_match_screen.dart's `_formatScore()` (tiebreak points aren't
+/// broken out separately there either, so this stays consistent with it).
+String formatSetScore(dynamic rawSets) {
+  if (rawSets is! List) return '';
+  return rawSets
+      .whereType<Map>()
+      .map((set) => '${set['p1'] ?? 0}-${set['p2'] ?? 0}')
+      .join(', ');
 }
 
 /// Builds the city activity feed from three already-fetched inputs:
@@ -72,6 +86,7 @@ List<CityActivityMatch> buildCityActivityFeed({
     final isTie = data['isTie'] == true;
     final winnerUid = data['winnerUid'] as String?;
     final player1Uid = data['player1Uid'] as String?;
+    final result = data['result'] as Map<String, dynamic>?;
 
     feed.add(CityActivityMatch(
       id: doc.id,
@@ -81,6 +96,7 @@ List<CityActivityMatch> buildCityActivityFeed({
       player2Label: (summary['p2Name'] as String?) ?? '',
       isTie: isTie,
       player1Won: !isTie && winnerUid != null && winnerUid == player1Uid,
+      scoreText: formatSetScore(result?['sets']),
     ));
   }
 
@@ -96,6 +112,7 @@ List<CityActivityMatch> buildCityActivityFeed({
 
     final type = data['type'] as String? ?? 'guest';
     final isTie = data['isTie'] == true;
+    final result = data['result'] as Map<String, dynamic>?;
 
     if (type == 'doubles_guest') {
       final team1 = data['team1'] as Map<String, dynamic>? ?? {};
@@ -112,6 +129,7 @@ List<CityActivityMatch> buildCityActivityFeed({
             '${team2['player1'] ?? ''} / ${team2['player2'] ?? ''}',
         isTie: isTie,
         player1Won: !isTie && winnerTeam == 1,
+        scoreText: formatSetScore(result?['sets']),
       ));
     } else {
       final summary = data['summary'] as Map<String, dynamic>?;
@@ -125,6 +143,7 @@ List<CityActivityMatch> buildCityActivityFeed({
         player2Label: (summary?['p2Name'] as String?) ?? '',
         isTie: isTie,
         player1Won: !isTie && winnerUid == createdBy,
+        scoreText: formatSetScore(result?['sets']),
       ));
     }
   }

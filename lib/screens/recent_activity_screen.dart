@@ -205,9 +205,24 @@ class _ActivityCard extends StatelessWidget {
           ),
           const SizedBox(width: 12),
           Expanded(
-            child: Text(
-              resultLine,
-              style: const TextStyle(fontWeight: FontWeight.w600),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  resultLine,
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
+                if (match.scoreText.isNotEmpty) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    match.scoreText,
+                    style: TextStyle(
+                      color: Colors.grey.shade600,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ],
             ),
           ),
           const SizedBox(width: 8),
