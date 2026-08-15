@@ -380,7 +380,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get useOfficialScoring => 'Use official tennis scoring';
 
   @override
-  String get sets => 'Sets';
+  String get sets => 'Match Result';
 
   @override
   String get addSet => '+ Add Set';
@@ -541,7 +541,24 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String tiebreakEntryLabel(Object number) {
+    return 'Tie-break $number';
+  }
+
+  @override
+  String get tiebreakOnlyScoring => 'Tie-breaks';
+
+  @override
+  String get tiebreakOnlyHint =>
+      'Each entry is a single tiebreak, not a full set — pick this when you\'re just playing quick tiebreaks instead of a full match.';
+
+  @override
   String matchResultSentence(Object winnerName, Object loserName) {
+    return '$winnerName defeated $loserName';
+  }
+
+  @override
+  String matchResultSentenceDoubles(Object winnerName, Object loserName) {
     return '$winnerName defeated $loserName';
   }
 
@@ -1137,6 +1154,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String recentActivityWinnerLine(String winner, String loser) {
+    return '$winner defeated $loser';
+  }
+
+  @override
+  String recentActivityWinnerLineDoubles(String winner, String loser) {
     return '$winner defeated $loser';
   }
 

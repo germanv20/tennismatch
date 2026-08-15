@@ -121,7 +121,7 @@ class DoublesMatchDetailsScreen extends StatelessWidget {
                   style: const TextStyle(color: Colors.black, fontSize: 16),
                   children: [
                     TextSpan(
-                      text: loc.matchResultSentence(
+                      text: loc.matchResultSentenceDoubles(
                         team1Won ? team1Label : team2Label,
                         team1Won ? team2Label : team1Label,
                       ),

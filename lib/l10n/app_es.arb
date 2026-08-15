@@ -140,7 +140,7 @@
 
   "addMatchResultTitle": "Agregar resultado",
   "useOfficialScoring": "Usar puntuación oficial",
-  "sets": "Sets",
+  "sets": "Resultado del partido",
   "addSet": "+ Agregar set",
   "selectMatchDate": "Seleccionar fecha",
   "matchDateLabel": "Fecha del partido: {date}",
@@ -208,8 +208,24 @@
     }
   },
 
+  "tiebreakEntryLabel": "Tie-break {number}",
+  "@tiebreakEntryLabel": {
+    "placeholders": {
+      "number": {}
+    }
+  },
+  "tiebreakOnlyScoring": "Tie-breaks",
+  "tiebreakOnlyHint": "Cada entrada es un solo tiebreak, no un set completo — elige esta opción si solo van a jugar tiebreaks rápidos en lugar de un partido completo.",
+
   "matchResultSentence": "{winnerName} derrotó a {loserName}",
   "@matchResultSentence": {
+    "placeholders": {
+      "winnerName": {},
+      "loserName": {}
+    }
+  },
+  "matchResultSentenceDoubles": "{winnerName} derrotaron a {loserName}",
+  "@matchResultSentenceDoubles": {
     "placeholders": {
       "winnerName": {},
       "loserName": {}
@@ -420,6 +436,8 @@
   "recentActivityEmptySubtitle": "Cuando los jugadores de tu ciudad registren un partido, aparecerá aquí.",
   "recentActivityWinnerLine": "{winner} venció a {loser}",
   "@recentActivityWinnerLine": {"placeholders": {"winner": {"type": "String"}, "loser": {"type": "String"}}},
+  "recentActivityWinnerLineDoubles": "{winner} vencieron a {loser}",
+  "@recentActivityWinnerLineDoubles": {"placeholders": {"winner": {"type": "String"}, "loser": {"type": "String"}}},
   "recentActivityTieLine": "{player1} y {player2} empataron",
   "@recentActivityTieLine": {"placeholders": {"player1": {"type": "String"}, "player2": {"type": "String"}}},
   "daysAgoCount": "{count, plural, =1{Hace 1 día} other{Hace {count} días}}",

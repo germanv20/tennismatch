@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:tennismatch/gen_l10n/app_localizations.dart';
 
 /// A single set score row with automatic tiebreak detection.
@@ -10,10 +11,17 @@ import 'package:tennismatch/gen_l10n/app_localizations.dart';
 /// passing a [SetScoreData] with the current values.
 /// Scoring mode determines at what score a tiebreak is triggered and shown.
 enum ScoringMode {
-  official,  // best of 6 games, tiebreak at 6-6 (score 7-6)
-  proSet,    // single set to 8 games, tiebreak at 7-7 (score 8-7)
-  open,      // no validation, no automatic tiebreak detection
+  official,     // best of 6 games, tiebreak at 6-6 (score 7-6)
+  proSet,       // single set to 8 games, tiebreak at 7-7 (score 8-7)
+  open,         // no validation, no automatic tiebreak detection
+  tiebreakOnly, // each entry is a standalone tiebreak, not a full set
 }
+
+/// Hard cap on how many sets/tiebreak entries a single match can have.
+/// Sets were previously uncapped (only pro-set was ever locked to one) —
+/// this guards against a stray tap (or a joke entry) producing a garbage,
+/// oversized match document rather than reflecting any realistic match.
+const int kMaxMatchEntries = 9;
 
 class SetScoreRow extends StatefulWidget {
   final int index;
@@ -84,6 +92,8 @@ class SetScoreRowState extends State<SetScoreRow> {
     // - official: set score 7-6 or 6-7 (tiebreak at 6-6)
     // - proSet: set score 8-7 or 7-8 (tiebreak at 7-7)
     // - open: never auto-detect — user enters whatever they want
+    // - tiebreakOnly: the entry *is* a tiebreak already — no nested
+    //   breaker-within-a-set field makes sense here
     bool isTiebreak;
     switch (widget.scoringMode) {
       case ScoringMode.official:
@@ -93,6 +103,7 @@ class SetScoreRowState extends State<SetScoreRow> {
         isTiebreak = (p1 == 8 && p2 == 7) || (p1 == 7 && p2 == 8);
         break;
       case ScoringMode.open:
+      case ScoringMode.tiebreakOnly:
         isTiebreak = false;
         break;
     }
@@ -130,6 +141,9 @@ class SetScoreRowState extends State<SetScoreRow> {
   @override
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context)!;
+    final entryLabel = widget.scoringMode == ScoringMode.tiebreakOnly
+        ? loc.tiebreakEntryLabel(widget.index + 1)
+        : loc.setLabel(widget.index + 1);
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
@@ -145,8 +159,14 @@ class SetScoreRowState extends State<SetScoreRow> {
                   controller: p1Controller,
                   keyboardType: TextInputType.number,
                   textAlign: TextAlign.center,
+                  // Free/open scoring has no built-in range validation, so
+                  // cap entry at 2 digits — a real set score is never that
+                  // long, this just guards against fat-fingered input.
+                  inputFormatters: widget.scoringMode == ScoringMode.open
+                      ? [LengthLimitingTextInputFormatter(2)]
+                      : null,
                   decoration: InputDecoration(
-                    labelText: loc.setLabel(widget.index + 1),
+                    labelText: entryLabel,
                     border: const OutlineInputBorder(),
                   ),
                 ),
@@ -166,8 +186,11 @@ class SetScoreRowState extends State<SetScoreRow> {
                   controller: p2Controller,
                   keyboardType: TextInputType.number,
                   textAlign: TextAlign.center,
+                  inputFormatters: widget.scoringMode == ScoringMode.open
+                      ? [LengthLimitingTextInputFormatter(2)]
+                      : null,
                   decoration: InputDecoration(
-                    labelText: loc.setLabel(widget.index + 1),
+                    labelText: entryLabel,
                     border: const OutlineInputBorder(),
                   ),
                 ),

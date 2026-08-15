@@ -140,7 +140,7 @@
 
   "addMatchResultTitle": "Add Match Result",
   "useOfficialScoring": "Use official tennis scoring",
-  "sets": "Sets",
+  "sets": "Match Result",
   "addSet": "+ Add Set",
   "selectMatchDate": "Select match date",
   "matchDateLabel": "Match Date: {date}",
@@ -208,8 +208,24 @@
     }
   },
 
+  "tiebreakEntryLabel": "Tie-break {number}",
+  "@tiebreakEntryLabel": {
+    "placeholders": {
+      "number": {}
+    }
+  },
+  "tiebreakOnlyScoring": "Tie-breaks",
+  "tiebreakOnlyHint": "Each entry is a single tiebreak, not a full set — pick this when you're just playing quick tiebreaks instead of a full match.",
+
   "matchResultSentence": "{winnerName} defeated {loserName}",
   "@matchResultSentence": {
+    "placeholders": {
+      "winnerName": {},
+      "loserName": {}
+    }
+  },
+  "matchResultSentenceDoubles": "{winnerName} defeated {loserName}",
+  "@matchResultSentenceDoubles": {
     "placeholders": {
       "winnerName": {},
       "loserName": {}
@@ -420,6 +436,8 @@
   "recentActivityEmptySubtitle": "Once players in your city log a match, it'll show up here.",
   "recentActivityWinnerLine": "{winner} defeated {loser}",
   "@recentActivityWinnerLine": {"placeholders": {"winner": {"type": "String"}, "loser": {"type": "String"}}},
+  "recentActivityWinnerLineDoubles": "{winner} defeated {loser}",
+  "@recentActivityWinnerLineDoubles": {"placeholders": {"winner": {"type": "String"}, "loser": {"type": "String"}}},
   "recentActivityTieLine": "{player1} and {player2} tied",
   "@recentActivityTieLine": {"placeholders": {"player1": {"type": "String"}, "player2": {"type": "String"}}},
   "daysAgoCount": "{count, plural, =1{1 day ago} other{{count} days ago}}",

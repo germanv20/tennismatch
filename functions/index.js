@@ -630,6 +630,15 @@ async function applyEloRatings(match) {
   const type = match.type || "regular";
   if (type !== "regular") return;
 
+  // Tiebreak-only matches (each "set" is a standalone tiebreak, not a
+  // full set) still count toward matchesPlayed/wins/losses via
+  // applyMatchStats() above, but are excluded from Elo — a tiebreak is a
+  // much smaller, noisier sample of relative skill than a full match, and
+  // weighting it the same as a real match would also make the existing
+  // collusion risk (two players repeatedly faking results) cheaper to
+  // pull off, since a fake tiebreak is quicker to fabricate than fake sets.
+  if (match.result && match.result.scoringMode === "tiebreakOnly") return;
+
   const players = (match.players || [])
       .filter((uid) => uid && uid !== "guest");
   if (players.length !== 2) return;

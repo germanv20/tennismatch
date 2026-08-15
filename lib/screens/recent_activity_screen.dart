@@ -180,13 +180,20 @@ class _ActivityCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDoubles = match.type == 'doubles_guest';
     final resultLine = match.isTie
         ? loc.recentActivityTieLine(match.player1Label, match.player2Label)
         : (match.player1Won
-            ? loc.recentActivityWinnerLine(
-                match.player1Label, match.player2Label)
-            : loc.recentActivityWinnerLine(
-                match.player2Label, match.player1Label));
+            ? (isDoubles
+                ? loc.recentActivityWinnerLineDoubles(
+                    match.player1Label, match.player2Label)
+                : loc.recentActivityWinnerLine(
+                    match.player1Label, match.player2Label))
+            : (isDoubles
+                ? loc.recentActivityWinnerLineDoubles(
+                    match.player2Label, match.player1Label)
+                : loc.recentActivityWinnerLine(
+                    match.player2Label, match.player1Label)));
 
     return Container(
       margin: const EdgeInsets.only(bottom: 8),

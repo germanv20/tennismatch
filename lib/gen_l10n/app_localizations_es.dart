@@ -382,7 +382,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get useOfficialScoring => 'Usar puntuación oficial';
 
   @override
-  String get sets => 'Sets';
+  String get sets => 'Resultado del partido';
 
   @override
   String get addSet => '+ Agregar set';
@@ -546,8 +546,25 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
+  String tiebreakEntryLabel(Object number) {
+    return 'Tie-break $number';
+  }
+
+  @override
+  String get tiebreakOnlyScoring => 'Tie-breaks';
+
+  @override
+  String get tiebreakOnlyHint =>
+      'Cada entrada es un solo tiebreak, no un set completo — elige esta opción si solo van a jugar tiebreaks rápidos en lugar de un partido completo.';
+
+  @override
   String matchResultSentence(Object winnerName, Object loserName) {
     return '$winnerName derrotó a $loserName';
+  }
+
+  @override
+  String matchResultSentenceDoubles(Object winnerName, Object loserName) {
+    return '$winnerName derrotaron a $loserName';
   }
 
   @override
@@ -1155,6 +1172,11 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String recentActivityWinnerLine(String winner, String loser) {
     return '$winner venció a $loser';
+  }
+
+  @override
+  String recentActivityWinnerLineDoubles(String winner, String loser) {
+    return '$winner vencieron a $loser';
   }
 
   @override

@@ -115,11 +115,16 @@ class _CardShell extends StatelessWidget {
       return loc.recentActivityTieLine(
           latest!.player1Label, latest!.player2Label);
     }
-    return latest!.player1Won
-        ? loc.recentActivityWinnerLine(
-            latest!.player1Label, latest!.player2Label)
-        : loc.recentActivityWinnerLine(
-            latest!.player2Label, latest!.player1Label);
+    final isDoubles = latest!.type == 'doubles_guest';
+    final winner = latest!.player1Won
+        ? latest!.player1Label
+        : latest!.player2Label;
+    final loser = latest!.player1Won
+        ? latest!.player2Label
+        : latest!.player1Label;
+    return isDoubles
+        ? loc.recentActivityWinnerLineDoubles(winner, loser)
+        : loc.recentActivityWinnerLine(winner, loser);
   }
 
   @override

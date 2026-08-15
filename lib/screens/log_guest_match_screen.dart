@@ -61,6 +61,7 @@ class _LogGuestMatchScreenState extends State<LogGuestMatchScreen> {
   }
 
   void addSet() {
+    if (_setKeys.length >= kMaxMatchEntries) return;
     setState(() {
       _setKeys.add(GlobalKey<SetScoreRowState>());
     });
@@ -303,6 +304,11 @@ class _LogGuestMatchScreenState extends State<LogGuestMatchScreen> {
       if (scoringMode == ScoringMode.proSet &&
           !isValidProSet(p1, p2)) {
         showError(loc.invalidProSetScore);
+        return;
+      }
+      if (scoringMode == ScoringMode.tiebreakOnly &&
+          !isValidTiebreak(p1, p2)) {
+        showError(loc.invalidTiebreakScore);
         return;
       }
 
@@ -596,11 +602,22 @@ class _LogGuestMatchScreenState extends State<LogGuestMatchScreen> {
                     mode: ScoringMode.proSet,
                   ),
                 ),
-                const SizedBox(width: 6),
+              ],
+            ),
+            const SizedBox(height: 6),
+            Row(
+              children: [
                 Expanded(
                   child: _scoringModeChip(
                     label: loc.openScoring,
                     mode: ScoringMode.open,
+                  ),
+                ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: _scoringModeChip(
+                    label: loc.tiebreakOnlyScoring,
+                    mode: ScoringMode.tiebreakOnly,
                   ),
                 ),
               ],
@@ -610,6 +627,18 @@ class _LogGuestMatchScreenState extends State<LogGuestMatchScreen> {
                 padding: const EdgeInsets.only(top: 6),
                 child: Text(
                   loc.proSetHint,
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: Colors.grey[600],
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ),
+            if (scoringMode == ScoringMode.tiebreakOnly)
+              Padding(
+                padding: const EdgeInsets.only(top: 6),
+                child: Text(
+                  loc.tiebreakOnlyHint,
                   style: TextStyle(
                     fontSize: 11,
                     color: Colors.grey[600],
@@ -674,7 +703,8 @@ class _LogGuestMatchScreenState extends State<LogGuestMatchScreen> {
               );
             }),
 
-            if (scoringMode != ScoringMode.proSet)
+            if (scoringMode != ScoringMode.proSet &&
+                _setKeys.length < kMaxMatchEntries)
               TextButton.icon(
                 onPressed: isSaving ? null : addSet,
                 icon: const Icon(Icons.add),

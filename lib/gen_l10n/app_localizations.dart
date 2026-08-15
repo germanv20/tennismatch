@@ -827,7 +827,7 @@ abstract class AppLocalizations {
   /// No description provided for @sets.
   ///
   /// In en, this message translates to:
-  /// **'Sets'**
+  /// **'Match Result'**
   String get sets;
 
   /// No description provided for @addSet.
@@ -1130,11 +1130,35 @@ abstract class AppLocalizations {
   /// **'Set {number}'**
   String setLabel(Object number);
 
+  /// No description provided for @tiebreakEntryLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Tie-break {number}'**
+  String tiebreakEntryLabel(Object number);
+
+  /// No description provided for @tiebreakOnlyScoring.
+  ///
+  /// In en, this message translates to:
+  /// **'Tie-breaks'**
+  String get tiebreakOnlyScoring;
+
+  /// No description provided for @tiebreakOnlyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Each entry is a single tiebreak, not a full set — pick this when you're just playing quick tiebreaks instead of a full match.'**
+  String get tiebreakOnlyHint;
+
   /// No description provided for @matchResultSentence.
   ///
   /// In en, this message translates to:
   /// **'{winnerName} defeated {loserName}'**
   String matchResultSentence(Object winnerName, Object loserName);
+
+  /// No description provided for @matchResultSentenceDoubles.
+  ///
+  /// In en, this message translates to:
+  /// **'{winnerName} defeated {loserName}'**
+  String matchResultSentenceDoubles(Object winnerName, Object loserName);
 
   /// No description provided for @completeProfile.
   ///
@@ -2153,6 +2177,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{winner} defeated {loser}'**
   String recentActivityWinnerLine(String winner, String loser);
+
+  /// No description provided for @recentActivityWinnerLineDoubles.
+  ///
+  /// In en, this message translates to:
+  /// **'{winner} defeated {loser}'**
+  String recentActivityWinnerLineDoubles(String winner, String loser);
 
   /// No description provided for @recentActivityTieLine.
   ///
