@@ -7,6 +7,7 @@ import 'add_match_result_screen.dart';
 import 'package:tennismatch/services/h2h_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../widgets/rate_opponent_dialog.dart';
+import '../utils/scoring_mode_utils.dart';
 
 class MatchDetailScreen extends StatefulWidget {
   final DocumentSnapshot matchDoc;
@@ -547,9 +548,11 @@ class _MatchDetailScreenState extends State<MatchDetailScreen> {
                     (data['result']['sets'] as List).length,
                     (index) {
                       final set = data['result']['sets'][index];
-                      return Text(
-                        '${loc.setLabel(index + 1)}: ${set['p1']} - ${set['p2']}',
-                      );
+                      final entryLabel =
+                          data['result']['scoringMode'] == 'tiebreakOnly'
+                              ? loc.tiebreakEntryLabel(index + 1)
+                              : loc.setLabel(index + 1);
+                      return Text('$entryLabel: ${set['p1']} - ${set['p2']}');
                     },
                   ),
                   const SizedBox(height: 10),
@@ -557,6 +560,12 @@ class _MatchDetailScreenState extends State<MatchDetailScreen> {
                     '${loc.locationLabel}: ${data['result']['location']}'),
                   Text(
                     '${loc.durationLabel}: ${data['result']['durationMinutes']} min'),
+                  const SizedBox(height: 4),
+                  Text(
+                    '${loc.scoringModeLabel}: '
+                    '${scoringModeDisplayLabel(data['result']['scoringMode'] as String?, loc)}',
+                    style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+                  ),
                 ],
 
                 // ── Rate opponent — Phase 1, regular matches only ──

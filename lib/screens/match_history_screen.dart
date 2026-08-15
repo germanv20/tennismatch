@@ -7,6 +7,7 @@ import '../widgets/empty_state.dart';
 import 'match_details_screen.dart';
 import 'guest_match_details_screen.dart';
 import 'doubles_match_details_screen.dart';
+import '../utils/scoring_mode_utils.dart';
 
 class MatchHistoryScreen extends StatefulWidget {
   const MatchHistoryScreen({super.key});
@@ -112,6 +113,7 @@ class _MatchHistoryScreenState extends State<MatchHistoryScreen> {
     final location = match['result']?['location'] ?? '';
     final duration = match['result']?['durationMinutes'] ?? 0;
     final notes = match['result']?['notes']?.toString();
+    final scoringMode = match['result']?['scoringMode'] as String?;
     final deletionRequest = match['deletionRequest'];
 
     final bool hasDeleteNotification = deletionRequest != null &&
@@ -141,6 +143,7 @@ class _MatchHistoryScreenState extends State<MatchHistoryScreen> {
                 duration: duration,
                 matchDate: matchDate,
                 notes: notes,
+                scoringMode: scoringMode,
               ),
             ),
           );
@@ -173,6 +176,7 @@ class _MatchHistoryScreenState extends State<MatchHistoryScreen> {
           currentUserUid: currentUid,
           isTie: match['isTie'] == true,
           notes: notes,
+          scoringMode: scoringMode,
         ),
       ),
     );
@@ -225,6 +229,7 @@ class _MatchHistoryScreenState extends State<MatchHistoryScreen> {
     final location = match['result']?['location'] ?? '';
     final duration = match['result']?['durationMinutes'] ?? 0;
     final guestNotes = match['result']?['notes']?.toString();
+    final scoringMode = match['result']?['scoringMode'] as String?;
 
     Timestamp? matchDateTs = match['result']?['matchDate'];
     final DateTime matchDate =
@@ -261,6 +266,7 @@ class _MatchHistoryScreenState extends State<MatchHistoryScreen> {
                 winnerUid: currentUserWon ? currentUid : 'opponent',
                 currentUserUid: currentUid,
                 notes: guestNotes,
+                scoringMode: scoringMode,
               ),
             ),
           );
@@ -287,6 +293,7 @@ class _MatchHistoryScreenState extends State<MatchHistoryScreen> {
           currentUserWon: currentUserWon,
           isTie: isTie, // doubles can now be tied
           loc: loc,
+          scoringMode: scoringMode,
         ),
       ),
     );
@@ -309,6 +316,7 @@ class _MatchHistoryScreenState extends State<MatchHistoryScreen> {
     final location = match['result']?['location'] ?? '';
     final duration = match['result']?['durationMinutes'] ?? 0;
     final doublesNotes = match['result']?['notes']?.toString();
+    final scoringMode = match['result']?['scoringMode'] as String?;
     Timestamp? matchDateTs = match['result']?['matchDate'];
     final DateTime matchDate =
         matchDateTs != null ? matchDateTs.toDate() : DateTime.now();
@@ -335,6 +343,7 @@ class _MatchHistoryScreenState extends State<MatchHistoryScreen> {
                 duration: duration,
                 matchDate: matchDate,
                 notes: doublesNotes,
+                scoringMode: scoringMode,
               ),
             ),
           );
@@ -432,6 +441,15 @@ class _MatchHistoryScreenState extends State<MatchHistoryScreen> {
                     Text(
                       '$location • ${matchDate.day}/${matchDate.month}/${matchDate.year} • $duration min',
                       style: const TextStyle(color: Colors.grey),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      scoringModeDisplayLabel(scoringMode, loc),
+                      style: TextStyle(
+                        color: Colors.grey.shade500,
+                        fontSize: 11,
+                        fontStyle: FontStyle.italic,
+                      ),
                     ),
                   ],
                 ),
@@ -1023,6 +1041,7 @@ class _GuestMatchCard extends StatelessWidget {
   final bool currentUserWon;
   final bool isTie;
   final AppLocalizations loc;
+  final String? scoringMode;
 
   const _GuestMatchCard({
     required this.playerName,
@@ -1034,6 +1053,7 @@ class _GuestMatchCard extends StatelessWidget {
     required this.currentUserWon,
     required this.isTie,
     required this.loc,
+    this.scoringMode,
   });
 
   @override
@@ -1145,6 +1165,15 @@ class _GuestMatchCard extends StatelessWidget {
                 Text(
                   '$location • ${matchDate.day}/${matchDate.month}/${matchDate.year} • $duration min',
                   style: const TextStyle(color: Colors.grey),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  scoringModeDisplayLabel(scoringMode, loc),
+                  style: TextStyle(
+                    color: Colors.grey.shade500,
+                    fontSize: 11,
+                    fontStyle: FontStyle.italic,
+                  ),
                 ),
               ],
             ),

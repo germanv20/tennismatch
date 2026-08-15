@@ -144,6 +144,12 @@ class SetScoreRowState extends State<SetScoreRow> {
     final entryLabel = widget.scoringMode == ScoringMode.tiebreakOnly
         ? loc.tiebreakEntryLabel(widget.index + 1)
         : loc.setLabel(widget.index + 1);
+    // Free/open scoring has no built-in range validation, and a standalone
+    // tiebreak's points are also unbounded by any win-by-2-from-N rule —
+    // cap both at 2 digits, since a real score is never that long. This
+    // just guards against fat-fingered input.
+    final capScoreDigits = widget.scoringMode == ScoringMode.open ||
+        widget.scoringMode == ScoringMode.tiebreakOnly;
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
@@ -159,10 +165,7 @@ class SetScoreRowState extends State<SetScoreRow> {
                   controller: p1Controller,
                   keyboardType: TextInputType.number,
                   textAlign: TextAlign.center,
-                  // Free/open scoring has no built-in range validation, so
-                  // cap entry at 2 digits — a real set score is never that
-                  // long, this just guards against fat-fingered input.
-                  inputFormatters: widget.scoringMode == ScoringMode.open
+                  inputFormatters: capScoreDigits
                       ? [LengthLimitingTextInputFormatter(2)]
                       : null,
                   decoration: InputDecoration(
@@ -186,7 +189,7 @@ class SetScoreRowState extends State<SetScoreRow> {
                   controller: p2Controller,
                   keyboardType: TextInputType.number,
                   textAlign: TextAlign.center,
-                  inputFormatters: widget.scoringMode == ScoringMode.open
+                  inputFormatters: capScoreDigits
                       ? [LengthLimitingTextInputFormatter(2)]
                       : null,
                   decoration: InputDecoration(

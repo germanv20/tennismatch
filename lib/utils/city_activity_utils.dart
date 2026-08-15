@@ -19,6 +19,7 @@ class CityActivityMatch {
   final bool isTie;
   final bool player1Won; // meaningless when isTie is true
   final String scoreText; // e.g. "6-4, 6-3" — empty if unavailable
+  final String? scoringMode; // raw ScoringMode.name, e.g. 'tiebreakOnly'
 
   const CityActivityMatch({
     required this.id,
@@ -29,6 +30,7 @@ class CityActivityMatch {
     required this.isTie,
     required this.player1Won,
     required this.scoreText,
+    required this.scoringMode,
   });
 }
 
@@ -97,6 +99,7 @@ List<CityActivityMatch> buildCityActivityFeed({
       isTie: isTie,
       player1Won: !isTie && winnerUid != null && winnerUid == player1Uid,
       scoreText: formatSetScore(result?['sets']),
+      scoringMode: result?['scoringMode'] as String?,
     ));
   }
 
@@ -130,6 +133,7 @@ List<CityActivityMatch> buildCityActivityFeed({
         isTie: isTie,
         player1Won: !isTie && winnerTeam == 1,
         scoreText: formatSetScore(result?['sets']),
+        scoringMode: result?['scoringMode'] as String?,
       ));
     } else {
       final summary = data['summary'] as Map<String, dynamic>?;
@@ -144,6 +148,7 @@ List<CityActivityMatch> buildCityActivityFeed({
         isTie: isTie,
         player1Won: !isTie && winnerUid == createdBy,
         scoreText: formatSetScore(result?['sets']),
+        scoringMode: result?['scoringMode'] as String?,
       ));
     }
   }

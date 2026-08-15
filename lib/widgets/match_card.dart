@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../screens/match_details_screen.dart';
 import 'package:tennismatch/gen_l10n/app_localizations.dart';
+import '../utils/scoring_mode_utils.dart';
 
 class MatchCard extends StatelessWidget {
 
@@ -19,6 +20,7 @@ class MatchCard extends StatelessWidget {
   final Map<String, dynamic>? deletionRequest;
   final bool isTie;
   final String? notes;
+  final String? scoringMode;
 
   const MatchCard({
     super.key,
@@ -37,6 +39,7 @@ class MatchCard extends StatelessWidget {
     required this.deletionRequest,
     this.isTie = false,
     this.notes,
+    this.scoringMode,
   });
 
   Widget? buildDeletionStatus(BuildContext context) {
@@ -138,6 +141,7 @@ class MatchCard extends StatelessWidget {
               duration: duration,
               matchDate: matchDate,
               notes: notes,
+              scoringMode: scoringMode,
             ),
           ),
         );
@@ -254,6 +258,15 @@ class MatchCard extends StatelessWidget {
                   Text(
                     '$location • ${matchDate.day}/${matchDate.month}/${matchDate.year} • $duration min',
                     style: const TextStyle(color: Colors.grey),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    scoringModeDisplayLabel(scoringMode, loc),
+                    style: TextStyle(
+                      color: Colors.grey.shade500,
+                      fontSize: 11,
+                      fontStyle: FontStyle.italic,
+                    ),
                   ),
 
                   if (buildDeletionStatus(context) != null)

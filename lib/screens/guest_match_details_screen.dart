@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:tennismatch/gen_l10n/app_localizations.dart';
+import '../utils/scoring_mode_utils.dart';
 
 class GuestMatchDetailsScreen extends StatelessWidget {
   final String matchId;
@@ -15,6 +16,7 @@ class GuestMatchDetailsScreen extends StatelessWidget {
   final String winnerUid;
   final String currentUserUid;
   final String? notes;
+  final String? scoringMode;
 
   const GuestMatchDetailsScreen({
     super.key,
@@ -29,6 +31,7 @@ class GuestMatchDetailsScreen extends StatelessWidget {
     required this.winnerUid,
     required this.currentUserUid,
     this.notes,
+    this.scoringMode,
   });
 
   String _formatScore() {
@@ -285,7 +288,9 @@ class GuestMatchDetailsScreen extends StatelessWidget {
                               SizedBox(
                                 width: 56,
                                 child: Text(
-                                  loc.setLabel(index + 1),
+                                  scoringMode == 'tiebreakOnly'
+                                      ? loc.tiebreakEntryLabel(index + 1)
+                                      : loc.setLabel(index + 1),
                                   style: TextStyle(fontSize: 13, color: Colors.grey[600]),
                                 ),
                               ),
@@ -353,6 +358,11 @@ class GuestMatchDetailsScreen extends StatelessWidget {
               Text(
                 '${loc.dateLabel}: ${matchDate.day}/${matchDate.month}/${matchDate.year}',
                 style: const TextStyle(fontWeight: FontWeight.w500),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                '${loc.scoringModeLabel}: ${scoringModeDisplayLabel(scoringMode, loc)}',
+                style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
               ),
 
               if (notes != null && notes!.isNotEmpty) ...[

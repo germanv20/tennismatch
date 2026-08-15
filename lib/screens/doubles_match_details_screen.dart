@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:tennismatch/gen_l10n/app_localizations.dart';
+import '../utils/scoring_mode_utils.dart';
 
 class DoublesMatchDetailsScreen extends StatelessWidget {
   final String matchId;
@@ -14,6 +15,7 @@ class DoublesMatchDetailsScreen extends StatelessWidget {
   final int duration;
   final DateTime matchDate;
   final String? notes;
+  final String? scoringMode;
 
   const DoublesMatchDetailsScreen({
     super.key,
@@ -28,6 +30,7 @@ class DoublesMatchDetailsScreen extends StatelessWidget {
     required this.duration,
     required this.matchDate,
     this.notes,
+    this.scoringMode,
   });
 
   Future<void> _deleteMatch(BuildContext context, AppLocalizations loc) async {
@@ -219,7 +222,9 @@ class DoublesMatchDetailsScreen extends StatelessWidget {
                               SizedBox(
                                 width: 56,
                                 child: Text(
-                                  loc.setLabel(index + 1),
+                                  scoringMode == 'tiebreakOnly'
+                                      ? loc.tiebreakEntryLabel(index + 1)
+                                      : loc.setLabel(index + 1),
                                   style: TextStyle(
                                     fontSize: 13,
                                     color: Colors.grey[600],
@@ -300,6 +305,11 @@ class DoublesMatchDetailsScreen extends StatelessWidget {
               const SizedBox(height: 4),
               Text('${loc.dateLabel}: ${matchDate.day}/${matchDate.month}/${matchDate.year}',
                 style: const TextStyle(fontWeight: FontWeight.w500)),
+              const SizedBox(height: 4),
+              Text(
+                '${loc.scoringModeLabel}: ${scoringModeDisplayLabel(scoringMode, loc)}',
+                style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+              ),
 
               if (notes != null && notes!.isNotEmpty) ...[
                 const SizedBox(height: 8),

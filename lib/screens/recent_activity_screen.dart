@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:tennismatch/gen_l10n/app_localizations.dart';
 import '../utils/city_utils.dart';
 import '../utils/city_activity_utils.dart';
+import '../utils/scoring_mode_utils.dart';
 import '../widgets/empty_state.dart';
 
 /// City-scoped "recent activity" feed (Idea 1): every completed match from
@@ -229,6 +230,15 @@ class _ActivityCard extends StatelessWidget {
                     ),
                   ),
                 ],
+                const SizedBox(height: 2),
+                Text(
+                  scoringModeDisplayLabel(match.scoringMode, loc),
+                  style: TextStyle(
+                    color: Colors.grey.shade500,
+                    fontSize: 11,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
               ],
             ),
           ),

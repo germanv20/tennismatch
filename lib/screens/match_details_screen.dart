@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:tennismatch/gen_l10n/app_localizations.dart';
 import 'package:tennismatch/services/h2h_service.dart';
 import '../widgets/rate_opponent_dialog.dart';
+import '../utils/scoring_mode_utils.dart';
 
 class MatchDetailsScreen extends StatefulWidget {
 
@@ -17,6 +18,7 @@ class MatchDetailsScreen extends StatefulWidget {
   final String matchId;
   final List players;
   final String? notes;
+  final String? scoringMode;
 
   const MatchDetailsScreen({
     super.key,
@@ -30,6 +32,7 @@ class MatchDetailsScreen extends StatefulWidget {
     required this.duration,
     required this.matchDate,
     this.notes,
+    this.scoringMode,
   });
 
   @override
@@ -384,7 +387,9 @@ class _MatchDetailsScreenState extends State<MatchDetailsScreen> {
                                     SizedBox(
                                       width: 56,
                                       child: Text(
-                                        loc.setLabel(index + 1),
+                                        widget.scoringMode == 'tiebreakOnly'
+                                            ? loc.tiebreakEntryLabel(index + 1)
+                                            : loc.setLabel(index + 1),
                                         style: TextStyle(fontSize: 13, color: Colors.grey[600]),
                                       ),
                                     ),
@@ -451,6 +456,11 @@ class _MatchDetailsScreenState extends State<MatchDetailsScreen> {
                       style: const TextStyle(fontWeight: FontWeight.w500)),
                     Text('${loc.dateLabel}: ${widget.matchDate.day}/${widget.matchDate.month}/${widget.matchDate.year}',
                       style: const TextStyle(fontWeight: FontWeight.w500)),
+                    const SizedBox(height: 4),
+                    Text(
+                      '${loc.scoringModeLabel}: ${scoringModeDisplayLabel(widget.scoringMode, loc)}',
+                      style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+                    ),
 
                     if (widget.notes != null && widget.notes!.isNotEmpty) ...[
                       const SizedBox(height: 8),
