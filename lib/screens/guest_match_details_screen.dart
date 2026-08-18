@@ -58,7 +58,7 @@ class GuestMatchDetailsScreen extends StatelessWidget {
       _formatScore(),
       location,
       '${matchDate.day}/${matchDate.month}/${matchDate.year}',
-      'https://tennismatch.app',
+      'https://play.google.com/store/apps/details?id=com.tennismatch.app',
     );
 
     final encodedMessage = Uri.encodeComponent(message);

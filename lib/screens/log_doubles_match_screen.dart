@@ -198,7 +198,7 @@ class _LogDoublesMatchScreenState extends State<LogDoublesMatchScreen> {
       score,
       location,
       date,
-      'https://tennismatch.app', // placeholder — replace with real link
+      'https://play.google.com/store/apps/details?id=com.tennismatch.app',
     );
   }
 
