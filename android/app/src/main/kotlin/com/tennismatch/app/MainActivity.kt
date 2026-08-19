@@ -1,4 +1,4 @@
-package com.example.tennismatch
+package com.tennismatch.app
 
 import io.flutter.embedding.android.FlutterActivity
 

@@ -29,6 +29,64 @@
       "api_key": [
         {
           "current_key": "AIzaSyBJztqfbWH1RXDoMW52tJNhGRT6xZPHS30"
+        },
+        {
+          "current_key": "AIzaSyB5H3m6KiIy660sCTgBc0U_P66JD-WEwSI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "619706153138-vbhd2pmm4desced8n8n63trhq3s1glfg.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "619706153138-bve3laa0chimn1mjro9b1rsr3tbl1fot.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.tennismatch"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:619706153138:android:8efe98ccfbb9a9ad3331ab",
+        "android_client_info": {
+          "package_name": "com.tennismatch.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "619706153138-l9df29tnadip3b3tpksavvn5lhmv6sce.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.tennismatch.app",
+            "certificate_hash": "6c79f4ec837692689d2ce038faa9926ec5b96e34"
+          }
+        },
+        {
+          "client_id": "619706153138-p48ubvtqceqstr8nskor2p4n0hmk87bi.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.tennismatch.app",
+            "certificate_hash": "3a75661fdd41ee423369a48b6fd64aff11d39b23"
+          }
+        },
+        {
+          "client_id": "619706153138-vbhd2pmm4desced8n8n63trhq3s1glfg.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBJztqfbWH1RXDoMW52tJNhGRT6xZPHS30"
+        },
+        {
+          "current_key": "AIzaSyB5H3m6KiIy660sCTgBc0U_P66JD-WEwSI"
         }
       ],
       "services": {
