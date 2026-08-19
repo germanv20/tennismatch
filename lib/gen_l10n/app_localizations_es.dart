@@ -277,6 +277,12 @@ class AppLocalizationsEs extends AppLocalizations {
   String get requested => 'Solicitado';
 
   @override
+  String get sentYouRequestBadge => 'Te envió una solicitud';
+
+  @override
+  String get tapToRespond => 'Toca para responder';
+
+  @override
   String get invalidUserData => 'Datos inválidos';
 
   @override

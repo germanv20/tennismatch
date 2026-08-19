@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:country_picker/country_picker.dart';
 import 'package:tennismatch/gen_l10n/app_localizations.dart';
 import 'player_profile_view_screen.dart';
+import 'incoming_requests_screen.dart';
 import '../widgets/empty_state.dart';
 import '../widgets/error_state.dart';
 import '../utils/city_utils.dart';
@@ -88,6 +89,16 @@ class _AvailablePlayersScreenState extends State<AvailablePlayersScreen> {
     return FirebaseFirestore.instance
         .collection('match_requests')
         .where('fromUid', isEqualTo: uid)
+        .where('status', isEqualTo: 'pending')
+        .snapshots();
+  }
+
+  // Pending requests OTHERS have sent to me — used to flag their cards
+  // instead of leaving them looking like any other available player.
+  Stream<QuerySnapshot> getIncomingPendingRequests(String uid) {
+    return FirebaseFirestore.instance
+        .collection('match_requests')
+        .where('toUid', isEqualTo: uid)
         .where('status', isEqualTo: 'pending')
         .snapshots();
   }
@@ -299,6 +310,26 @@ class _AvailablePlayersScreenState extends State<AvailablePlayersScreen> {
                                       ...confirmedOpponentUids,
                                     };
 
+                                    // Players who already sent ME a pending
+                                    // request — flagged (not blocked) so I
+                                    // notice and go respond instead of
+                                    // firing off a redundant request.
+                                    return StreamBuilder<QuerySnapshot>(
+                                      stream: getIncomingPendingRequests(
+                                          user.uid),
+                                      builder: (context, incomingSnapshot) {
+                                        if (!incomingSnapshot.hasData) {
+                                          return const Center(
+                                              child:
+                                                  CircularProgressIndicator());
+                                        }
+
+                                        final incomingRequestUids =
+                                            incomingSnapshot.data!.docs
+                                                .map((doc) =>
+                                                    doc['fromUid'] as String)
+                                                .toSet();
+
                                 // Sort: by city then name when showing all
                                 // cities (groups nearby players together);
                                 // just by name within "My city" since
@@ -389,13 +420,16 @@ class _AvailablePlayersScreenState extends State<AvailablePlayersScreen> {
                                     _buildPlayerCard(
                                       context, loc, doc, data,
                                       blockedUserIds,
+                                      incomingRequestUids,
                                     ),
                                   );
                                 }
 
-                                return ListView(children: listItems);
-                              },
-                            ); // inner StreamBuilder (confirmed matches)
+                                        return ListView(children: listItems);
+                                      },
+                                    ); // innermost StreamBuilder (incoming requests)
+                                  },
+                                ); // inner StreamBuilder (confirmed matches)
                               },
                             ), // outer StreamBuilder (pending requests)
                     ),
@@ -426,6 +460,7 @@ class _AvailablePlayersScreenState extends State<AvailablePlayersScreen> {
     QueryDocumentSnapshot doc,
     Map<String, dynamic> data,
     Set<String> blockedUserIds,
+    Set<String> incomingRequestUids,
   ) {
     final List availabilityRaw = data['availability'] ?? [];
     final List<String> sortedAvailability =
@@ -440,6 +475,10 @@ class _AvailablePlayersScreenState extends State<AvailablePlayersScreen> {
         ? data['uid'] as String
         : doc.id;
     final isAlreadyRequested = blockedUserIds.contains(playerUid);
+    // They already sent ME a pending request — takes priority over the
+    // outgoing-blocked state: the useful action here is to go respond,
+    // not to be told a redundant request "was already sent" by me.
+    final hasIncomingRequest = incomingRequestUids.contains(playerUid);
     final playerCity =
         formatCityDisplay((data['city'] as String? ?? '').trim());
 
@@ -451,27 +490,40 @@ class _AvailablePlayersScreenState extends State<AvailablePlayersScreen> {
             const Duration(minutes: 2);
 
     return GestureDetector(
-      onTap: isAlreadyRequested
-          ? null
-          : () {
+      onTap: hasIncomingRequest
+          ? () {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (_) => PlayerProfileViewScreen(
-                    userData: data,
-                    onRequestMatch: () async {
-                      await requestMatch(context, doc.id);
-                      if (!context.mounted) return;
-                      Navigator.pop(context);
-                    },
-                  ),
+                  builder: (_) => const IncomingRequestsScreen(),
                 ),
               );
-            },
+            }
+          : isAlreadyRequested
+              ? null
+              : () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => PlayerProfileViewScreen(
+                        userData: data,
+                        onRequestMatch: () async {
+                          await requestMatch(context, doc.id);
+                          if (!context.mounted) return;
+                          Navigator.pop(context);
+                        },
+                      ),
+                    ),
+                  );
+                },
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         child: Card(
-          color: isAlreadyRequested ? Colors.grey[300] : null,
+          color: hasIncomingRequest
+              ? Colors.blue[50]
+              : isAlreadyRequested
+                  ? Colors.grey[300]
+                  : null,
           child: ListTile(
             leading: Stack(
               clipBehavior: Clip.none,
@@ -508,6 +560,28 @@ class _AvailablePlayersScreenState extends State<AvailablePlayersScreen> {
             subtitle: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                if (hasIncomingRequest)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 2),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.mark_email_unread,
+                            size: 14, color: Colors.blue),
+                        const SizedBox(width: 4),
+                        Flexible(
+                          child: Text(
+                            '${loc.sentYouRequestBadge} · ${loc.tapToRespond}',
+                            style: const TextStyle(
+                              color: Colors.blue,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 Text(
                   '${loc.availableLabel}: $availabilityText',
                   style: const TextStyle(color: Colors.grey),
@@ -523,15 +597,17 @@ class _AvailablePlayersScreenState extends State<AvailablePlayersScreen> {
                   ),
               ],
             ),
-            trailing: isAlreadyRequested
-                ? Text(
-                    loc.requested,
-                    style: const TextStyle(
-                      color: Colors.grey,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  )
-                : const Icon(Icons.sports_tennis),
+            trailing: hasIncomingRequest
+                ? const Icon(Icons.mark_email_unread, color: Colors.blue)
+                : isAlreadyRequested
+                    ? Text(
+                        loc.requested,
+                        style: const TextStyle(
+                          color: Colors.grey,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      )
+                    : const Icon(Icons.sports_tennis),
           ),
         ),
       ),

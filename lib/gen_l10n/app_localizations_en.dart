@@ -274,6 +274,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get requested => 'Requested';
 
   @override
+  String get sentYouRequestBadge => 'Sent you a request';
+
+  @override
+  String get tapToRespond => 'Tap to respond';
+
+  @override
   String get invalidUserData => 'Invalid user data';
 
   @override

@@ -620,6 +620,18 @@ abstract class AppLocalizations {
   /// **'Requested'**
   String get requested;
 
+  /// No description provided for @sentYouRequestBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Sent you a request'**
+  String get sentYouRequestBadge;
+
+  /// No description provided for @tapToRespond.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to respond'**
+  String get tapToRespond;
+
   /// No description provided for @invalidUserData.
   ///
   /// In en, this message translates to:
@@ -1145,7 +1157,7 @@ abstract class AppLocalizations {
   /// No description provided for @tiebreakOnlyHint.
   ///
   /// In en, this message translates to:
-  /// **'Each entry is a single tiebreak, not a full set — pick this when you're just playing quick tiebreaks instead of a full match.'**
+  /// **'Each entry is a single tiebreak, not a full set — pick this when you\'re just playing quick tiebreaks instead of a full match.'**
   String get tiebreakOnlyHint;
 
   /// No description provided for @matchResultSentence.

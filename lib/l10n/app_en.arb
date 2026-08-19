@@ -97,6 +97,8 @@
   "setAvailabilityToFindPlayers": "Set availability to find players",
   "playMatchesToSeeHistory": "Play some matches to see them here 🎾",
   "requested": "Requested",
+  "sentYouRequestBadge": "Sent you a request",
+  "tapToRespond": "Tap to respond",
   "invalidUserData": "Invalid user data",
   "availableLabel": "Available",
   "unknown": "Unknown",
