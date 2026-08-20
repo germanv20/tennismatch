@@ -470,6 +470,24 @@ abstract class AppLocalizations {
   /// **'No players available'**
   String get noPlayersAvailable;
 
+  /// No description provided for @searchPlayerHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search player by name'**
+  String get searchPlayerHint;
+
+  /// No description provided for @noSearchResultsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No players found'**
+  String get noSearchResultsTitle;
+
+  /// No description provided for @noSearchResultsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Try a different name'**
+  String get noSearchResultsSubtitle;
+
   /// No description provided for @noMatchesFound.
   ///
   /// In en, this message translates to:

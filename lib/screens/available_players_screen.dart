@@ -49,6 +49,17 @@ class _AvailablePlayersScreenState extends State<AvailablePlayersScreen> {
   // true = show only my city, false = show all cities
   bool _filterByCity = true;
 
+  // Type-to-filter search box, narrows the (already alphabetically sorted)
+  // list by name — helps find a specific player once the list grows.
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
   Future<void> requestMatch(BuildContext context, String toUid) async {
     final loc = AppLocalizations.of(context)!;
     final fromUid = FirebaseAuth.instance.currentUser!.uid;
@@ -248,18 +259,37 @@ class _AvailablePlayersScreenState extends State<AvailablePlayersScreen> {
                       }).toList()
                     : availableByDay;
 
+                // Further narrow by the search box (name contains query,
+                // case-insensitive). Applied after the city filter so the
+                // "X of Y in <city>" toggle count above still reflects the
+                // city filter alone, not the search text.
+                final searchQuery = _searchQuery.trim().toLowerCase();
+                final searchFilteredMatches = searchQuery.isEmpty
+                    ? matches
+                    : matches.where((doc) {
+                        final data = doc.data() as Map<String, dynamic>;
+                        final name =
+                            (data['name'] as String? ?? '').toLowerCase();
+                        return name.contains(searchQuery);
+                      }).toList();
+
                 return Column(
                   children: [
                     // ── City filter toggle ──
                     _buildCityToggle(loc, userCity, matches.length,
                         availableByDay.length),
 
+                    // ── Search box ──
+                    if (matches.isNotEmpty) _buildSearchBar(loc),
+
                     // ── Player list ──
                     Expanded(
                       child: matches.isEmpty
                           ? _buildEmptyState(
                               loc, userCity, availableByDay.length)
-                          : StreamBuilder<QuerySnapshot>(
+                          : searchFilteredMatches.isEmpty
+                              ? _buildNoSearchResults(loc)
+                              : StreamBuilder<QuerySnapshot>(
                               stream: getMyPendingRequests(user.uid),
                               builder: (context, requestSnapshot) {
                                 if (!requestSnapshot.hasData) {
@@ -335,7 +365,8 @@ class _AvailablePlayersScreenState extends State<AvailablePlayersScreen> {
                                 // just by name within "My city" since
                                 // everyone's already in the same place.
                                 final sortedMatches =
-                                    List<QueryDocumentSnapshot>.from(matches);
+                                    List<QueryDocumentSnapshot>.from(
+                                        searchFilteredMatches);
                                 sortedMatches.sort((a, b) {
                                   final aData =
                                       a.data() as Map<String, dynamic>;
@@ -611,6 +642,50 @@ class _AvailablePlayersScreenState extends State<AvailablePlayersScreen> {
           ),
         ),
       ),
+    );
+  }
+
+  /// Type-to-filter search box shown above the player list once there's
+  /// at least one player to search through.
+  Widget _buildSearchBar(AppLocalizations loc) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
+      child: TextField(
+        controller: _searchController,
+        onChanged: (value) => setState(() => _searchQuery = value),
+        decoration: InputDecoration(
+          hintText: loc.searchPlayerHint,
+          prefixIcon: const Icon(Icons.search),
+          suffixIcon: _searchQuery.isEmpty
+              ? null
+              : IconButton(
+                  icon: const Icon(Icons.clear),
+                  onPressed: () {
+                    _searchController.clear();
+                    setState(() => _searchQuery = '');
+                  },
+                ),
+          isDense: true,
+          filled: true,
+          fillColor: Colors.grey[100],
+          contentPadding:
+              const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+            borderSide: BorderSide.none,
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Shown when the search box matches no one, distinct from the general
+  /// "no players available" empty state (city/availability filters).
+  Widget _buildNoSearchResults(AppLocalizations loc) {
+    return EmptyState(
+      icon: Icons.search_off,
+      title: loc.noSearchResultsTitle,
+      subtitle: loc.noSearchResultsSubtitle,
     );
   }
 

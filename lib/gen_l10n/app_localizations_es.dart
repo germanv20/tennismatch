@@ -197,6 +197,15 @@ class AppLocalizationsEs extends AppLocalizations {
   String get noPlayersAvailable => 'No hay jugadores disponibles';
 
   @override
+  String get searchPlayerHint => 'Buscar jugador por nombre';
+
+  @override
+  String get noSearchResultsTitle => 'No se encontraron jugadores';
+
+  @override
+  String get noSearchResultsSubtitle => 'Intenta con otro nombre';
+
+  @override
   String get noMatchesFound => 'No se encontraron partidos';
 
   @override
