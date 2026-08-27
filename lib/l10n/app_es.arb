@@ -12,7 +12,7 @@
   "signOutConfirmation": "¿Estás seguro de que quieres cerrar sesión?",
 
   "findPlayers": "Buscar jugadores",
-  "myMatches": "Mis partidos",
+  "myMatches": "Mis Partidos Agendados",
   "matchHistory": "Historial",
   "myStats": "Mis estadísticas",
   "incomingRequests": "Solicitudes recibidas",
@@ -52,6 +52,9 @@
   "accept": "Aceptar",
   "reject": "Rechazar",
   "cancel": "Cancelar",
+  "discardMatchTitle": "¿Descartar este partido?",
+  "discardMatchMessage": "El marcador y los detalles que ingresaste aún no se han guardado. Si regresas ahora, se perderán.",
+  "discardButton": "Descartar",
   "loading": "Cargando...",
   "processing": "Procesando...",
   "waitingForResponse": "Esperando respuesta",
@@ -116,7 +119,7 @@
   "unmatch": "Eliminar",
   "signOut": "Cerrar sesión",
 
-  "myMatchesTitle": "Mis partidos",
+  "myMatchesTitle": "Mis Partidos Agendados",
   "failedToLoadMatches": "Error al cargar partidos",
   "refreshOrTryLater": "Intenta actualizar o vuelve más tarde",
   "startByFindingPlayer": "Empieza buscando un jugador 🎾",
@@ -221,6 +224,8 @@
   },
   "tiebreakOnlyScoring": "Tie-breaks",
   "tiebreakOnlyHint": "Cada entrada es un solo tiebreak, no un set completo — elige esta opción si solo van a jugar tiebreaks rápidos en lugar de un partido completo.",
+  "shortSetScoring": "Set corto",
+  "shortSetHint": "Set único a 4 juegos, ganando por 2 — un tiebreak lo decide en 3-3 (se registra 4-3).",
 
   "matchResultSentence": "{winnerName} derrotó a {loserName}",
   "@matchResultSentence": {
@@ -286,6 +291,7 @@
   "tiebreakPointsLabel": "Puntos",
   "enterTiebreakScore": "Por favor ingresa el marcador del tiebreak.",
   "invalidTiebreakScore": "Marcador de tiebreak inválido. El ganador debe llegar al menos a 7, ganar por 2.",
+  "invalidShortSetScore": "Marcador de set corto inválido. El ganador debe llegar a 4 juegos, ganando por 2 (o 4-3 con tiebreak).",
   "tiebreakWinnerMismatch": "El ganador del tiebreak debe coincidir con el ganador del set.",
   "logDoubles": "Registrar partido de dobles",
   "logDoublesMatch": "Registrar partido de dobles",

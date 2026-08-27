@@ -368,6 +368,24 @@ abstract class AppLocalizations {
   /// **'Cancel'**
   String get cancel;
 
+  /// No description provided for @discardMatchTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard this match?'**
+  String get discardMatchTitle;
+
+  /// No description provided for @discardMatchMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'The score and details you've entered haven't been saved yet. If you go back now, they'll be lost.'**
+  String get discardMatchMessage;
+
+  /// No description provided for @discardButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard'**
+  String get discardButton;
+
   /// No description provided for @loading.
   ///
   /// In en, this message translates to:
@@ -1178,6 +1196,18 @@ abstract class AppLocalizations {
   /// **'Each entry is a single tiebreak, not a full set — pick this when you\'re just playing quick tiebreaks instead of a full match.'**
   String get tiebreakOnlyHint;
 
+  /// No description provided for @shortSetScoring.
+  ///
+  /// In en, this message translates to:
+  /// **'Short set'**
+  String get shortSetScoring;
+
+  /// No description provided for @shortSetHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Single set to 4 games, win by 2 — a tiebreak decides it at 3-3 (recorded as 4-3).'**
+  String get shortSetHint;
+
   /// No description provided for @matchResultSentence.
   ///
   /// In en, this message translates to:
@@ -1424,6 +1454,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Invalid tiebreak score. Winner must reach at least 7, win by 2.'**
   String get invalidTiebreakScore;
+
+  /// No description provided for @invalidShortSetScore.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid short set score. Winner must reach 4 games, win by 2 (or 4-3 with a tiebreak).'**
+  String get invalidShortSetScore;
 
   /// No description provided for @tiebreakWinnerMismatch.
   ///

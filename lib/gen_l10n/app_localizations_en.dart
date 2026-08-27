@@ -39,7 +39,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get findPlayers => 'Find Players';
 
   @override
-  String get myMatches => 'My Matches';
+  String get myMatches => 'My Scheduled Matches';
 
   @override
   String get matchHistory => 'Match History';
@@ -143,6 +143,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cancel => 'Cancel';
+
+  @override
+  String get discardMatchTitle => 'Discard this match?';
+
+  @override
+  String get discardMatchMessage => 'The score and details you\'ve entered haven\'t been saved yet. If you go back now, they\'ll be lost.';
+
+  @override
+  String get discardButton => 'Discard';
 
   @override
   String get loading => 'Loading...';
@@ -329,7 +338,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get signOut => 'Sign Out';
 
   @override
-  String get myMatchesTitle => 'My Matches';
+  String get myMatchesTitle => 'My Scheduled Matches';
 
   @override
   String get failedToLoadMatches => 'Failed to load matches';
@@ -568,6 +577,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'Each entry is a single tiebreak, not a full set — pick this when you\'re just playing quick tiebreaks instead of a full match.';
 
   @override
+  String get shortSetScoring => 'Short set';
+
+  @override
+  String get shortSetHint =>
+      'Single set to 4 games, win by 2 — a tiebreak decides it at 3-3 (recorded as 4-3).';
+
+  @override
   String matchResultSentence(Object winnerName, Object loserName) {
     return '$winnerName defeated $loserName';
   }
@@ -704,6 +720,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get invalidTiebreakScore =>
       'Invalid tiebreak score. Winner must reach at least 7, win by 2.';
+
+  @override
+  String get invalidShortSetScore =>
+      'Invalid short set score. Winner must reach 4 games, win by 2 (or 4-3 with a tiebreak).';
 
   @override
   String get tiebreakWinnerMismatch => 'Tiebreak winner must match set winner.';

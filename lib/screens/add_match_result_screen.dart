@@ -132,6 +132,16 @@ class _AddMatchResultScreenState extends State<AddMatchResultScreen> {
     return maxScore >= 7 && (maxScore - minScore) >= 2;
   }
 
+  /// Short set: single set to 4 games, win by 2, tiebreak at 3-3 (recorded
+  /// as a 4-3 set score). The breaker itself follows the same first-to-7,
+  /// win-by-2 rule as every other tiebreak in the app (isValidTiebreak).
+  bool isValidShortSet(int p1, int p2) {
+    if (p1 < 4 && p2 < 4) return false;
+    if ((p1 == 4 && p2 <= 2) || (p2 == 4 && p1 <= 2)) return true;
+    if ((p1 == 4 && p2 == 3) || (p2 == 4 && p1 == 3)) return true;
+    return false;
+  }
+
   Future<void> pickMatchDate() async {
     final picked = await showDatePicker(
       context: context,
@@ -186,6 +196,11 @@ class _AddMatchResultScreenState extends State<AddMatchResultScreen> {
         showError(loc.invalidTiebreakScore);
         return;
       }
+      if (scoringMode == ScoringMode.shortSet &&
+          !isValidShortSet(p1, p2)) {
+        showError(loc.invalidShortSetScore);
+        return;
+      }
 
       if (data.isTiebreak) {
         if (data.tb1 == null || data.tb2 == null) {
@@ -199,6 +214,11 @@ class _AddMatchResultScreenState extends State<AddMatchResultScreen> {
         }
         if (scoringMode == ScoringMode.proSet &&
             !isValidProSetTiebreak(data.tb1!, data.tb2!)) {
+          showError(loc.invalidTiebreakScore);
+          return;
+        }
+        if (scoringMode == ScoringMode.shortSet &&
+            !isValidTiebreak(data.tb1!, data.tb2!)) {
           showError(loc.invalidTiebreakScore);
           return;
         }
@@ -399,6 +419,18 @@ class _AddMatchResultScreenState extends State<AddMatchResultScreen> {
                 ),
               ],
             ),
+            const SizedBox(height: 6),
+            Row(
+              children: [
+                Expanded(
+                  child: _scoringModeChip(
+                      label: loc.shortSetScoring,
+                      mode: ScoringMode.shortSet),
+                ),
+                const SizedBox(width: 6),
+                const Expanded(child: SizedBox.shrink()),
+              ],
+            ),
             if (scoringMode == ScoringMode.proSet)
               Padding(
                 padding: const EdgeInsets.only(top: 6),
@@ -416,6 +448,18 @@ class _AddMatchResultScreenState extends State<AddMatchResultScreen> {
                 padding: const EdgeInsets.only(top: 6),
                 child: Text(
                   loc.tiebreakOnlyHint,
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: Colors.grey[600],
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ),
+            if (scoringMode == ScoringMode.shortSet)
+              Padding(
+                padding: const EdgeInsets.only(top: 6),
+                child: Text(
+                  loc.shortSetHint,
                   style: TextStyle(
                     fontSize: 11,
                     color: Colors.grey[600],

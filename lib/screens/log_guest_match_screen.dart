@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:country_picker/country_picker.dart';
 import 'package:tennismatch/gen_l10n/app_localizations.dart';
 import '../main.dart' show navigatorKey;
 import '../widgets/set_score_row.dart';
@@ -58,6 +59,33 @@ class _LogGuestMatchScreenState extends State<LogGuestMatchScreen> {
     setState(() {
       currentUserName = doc['name'] ?? user.displayName ?? 'Player';
     });
+
+    // Default the guest's phone field to the creator's own country code —
+    // most logged opponents share the same country. Only a starting
+    // point: the field stays fully editable, and this never overwrites
+    // anything the user may have already typed while this future ran.
+    final data = doc.data();
+    final ownCountryCode = data?['countryCode'] as String?;
+    if (opponentPhoneController.text.trim().isEmpty) {
+      final prefix = _phoneCodePrefix(ownCountryCode);
+      if (prefix != null) {
+        opponentPhoneController.text = prefix;
+      }
+    }
+  }
+
+  /// Returns "+<callingCode> " for the given ISO country code (e.g. "CO"
+  /// -> "+57 "), or null if it can't be resolved.
+  String? _phoneCodePrefix(String? isoCountryCode) {
+    if (isoCountryCode == null || isoCountryCode.isEmpty) return null;
+    try {
+      final match = CountryService()
+          .getAll()
+          .firstWhere((c) => c.countryCode == isoCountryCode);
+      return '+${match.phoneCode} ';
+    } catch (_) {
+      return null;
+    }
   }
 
   void addSet() {
@@ -124,6 +152,45 @@ class _LogGuestMatchScreenState extends State<LogGuestMatchScreen> {
     super.dispose();
   }
 
+  // Whether the user has meaningfully started filling this out — used to
+  // decide whether an accidental back-press needs a confirm dialog.
+  // Deliberately ignores the phone field, since it's now pre-filled with
+  // a country-code default that would otherwise mark the form "dirty"
+  // the instant the screen opens, before the user's touched anything.
+  bool get _hasUnsavedData {
+    if (opponentNameController.text.trim().isNotEmpty) return true;
+    if (locationController.text.trim().isNotEmpty) return true;
+    if (durationController.text.trim().isNotEmpty) return true;
+    if (notesController.text.trim().isNotEmpty) return true;
+    for (final key in _setKeys) {
+      final data = key.currentState?.currentData;
+      if (data != null && (data.p1 != null || data.p2 != null)) return true;
+    }
+    return false;
+  }
+
+  Future<bool> _confirmDiscard(AppLocalizations loc) async {
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(loc.discardMatchTitle),
+        content: Text(loc.discardMatchMessage),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: Text(loc.cancel),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: Text(loc.discardButton,
+                style: const TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+    return result ?? false;
+  }
+
   void showError(String message) {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
@@ -161,6 +228,16 @@ class _LogGuestMatchScreenState extends State<LogGuestMatchScreen> {
     final maxScore = tb1 > tb2 ? tb1 : tb2;
     final minScore = tb1 < tb2 ? tb1 : tb2;
     return maxScore >= 7 && (maxScore - minScore) >= 2;
+  }
+
+  /// Short set: single set to 4 games, win by 2, tiebreak at 3-3 (recorded
+  /// as a 4-3 set score). The breaker itself follows the same first-to-7,
+  /// win-by-2 rule as every other tiebreak in the app (isValidTiebreak).
+  bool isValidShortSet(int p1, int p2) {
+    if (p1 < 4 && p2 < 4) return false;
+    if ((p1 == 4 && p2 <= 2) || (p2 == 4 && p1 <= 2)) return true;
+    if ((p1 == 4 && p2 == 3) || (p2 == 4 && p1 == 3)) return true;
+    return false;
   }
 
   Future<void> pickMatchDate() async {
@@ -311,6 +388,11 @@ class _LogGuestMatchScreenState extends State<LogGuestMatchScreen> {
         showError(loc.invalidTiebreakScore);
         return;
       }
+      if (scoringMode == ScoringMode.shortSet &&
+          !isValidShortSet(p1, p2)) {
+        showError(loc.invalidShortSetScore);
+        return;
+      }
 
       if (data.isTiebreak) {
         if (data.tb1 == null || data.tb2 == null) {
@@ -324,6 +406,11 @@ class _LogGuestMatchScreenState extends State<LogGuestMatchScreen> {
         }
         if (scoringMode == ScoringMode.proSet &&
             !isValidProSetTiebreak(data.tb1!, data.tb2!)) {
+          showError(loc.invalidTiebreakScore);
+          return;
+        }
+        if (scoringMode == ScoringMode.shortSet &&
+            !isValidTiebreak(data.tb1!, data.tb2!)) {
           showError(loc.invalidTiebreakScore);
           return;
         }
@@ -370,9 +457,15 @@ class _LogGuestMatchScreenState extends State<LogGuestMatchScreen> {
 
     // ── Build match document ──
     final uid = currentUserUid!;
-    // Normalise phone to E.164 with + prefix for consistent storage
-    // This ensures phoneIndex lookup matches CompleteProfileScreen format
-    final rawPhoneInput = opponentPhoneController.text.trim();
+    // Normalise phone to E.164 with + prefix for consistent storage.
+    // Strips spaces/dashes/parens first — the phone field is now
+    // pre-filled with "+<code> " (see _loadCurrentUser), so the raw
+    // input routinely contains a space the old code below never
+    // accounted for; without stripping it here, the phoneIndex key
+    // would silently mismatch CompleteProfileScreen's own normalised
+    // (space-free) format and break the guest-match claim mechanic.
+    final rawPhoneInput =
+        opponentPhoneController.text.trim().replaceAll(RegExp(r'[\s\-\(\)]'), '');
     final opponentPhone = rawPhoneInput.isNotEmpty && !rawPhoneInput.startsWith('+')
         ? '+$rawPhoneInput'
         : rawPhoneInput;
@@ -524,16 +617,25 @@ class _LogGuestMatchScreenState extends State<LogGuestMatchScreen> {
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context)!;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(loc.logMatch),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: ListView(
-          children: [
+    return PopScope(
+      canPop: !_hasUnsavedData,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return;
+        final shouldDiscard = await _confirmDiscard(loc);
+        if (shouldDiscard && context.mounted) {
+          Navigator.of(context).pop();
+        }
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(loc.logMatch),
+        ),
+        body: Padding(
+          padding: const EdgeInsets.all(16),
+          child: ListView(
+            children: [
 
-            // ── Section: Opponent Info ──
+              // ── Section: Opponent Info ──
             Text(
               loc.opponentLabel,
               style: const TextStyle(
@@ -622,6 +724,19 @@ class _LogGuestMatchScreenState extends State<LogGuestMatchScreen> {
                 ),
               ],
             ),
+            const SizedBox(height: 6),
+            Row(
+              children: [
+                Expanded(
+                  child: _scoringModeChip(
+                    label: loc.shortSetScoring,
+                    mode: ScoringMode.shortSet,
+                  ),
+                ),
+                const SizedBox(width: 6),
+                const Expanded(child: SizedBox.shrink()),
+              ],
+            ),
             if (scoringMode == ScoringMode.proSet)
               Padding(
                 padding: const EdgeInsets.only(top: 6),
@@ -639,6 +754,18 @@ class _LogGuestMatchScreenState extends State<LogGuestMatchScreen> {
                 padding: const EdgeInsets.only(top: 6),
                 child: Text(
                   loc.tiebreakOnlyHint,
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: Colors.grey[600],
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ),
+            if (scoringMode == ScoringMode.shortSet)
+              Padding(
+                padding: const EdgeInsets.only(top: 6),
+                child: Text(
+                  loc.shortSetHint,
                   style: TextStyle(
                     fontSize: 11,
                     color: Colors.grey[600],
@@ -844,6 +971,7 @@ class _LogGuestMatchScreenState extends State<LogGuestMatchScreen> {
             const SizedBox(height: 24),
           ],
         ),
+      ),
       ),
     );
   }

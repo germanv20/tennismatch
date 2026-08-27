@@ -12,7 +12,7 @@
   "signOutConfirmation": "Are you sure you want to sign out?",
 
   "findPlayers": "Find Players",
-  "myMatches": "My Matches",
+  "myMatches": "My Scheduled Matches",
   "matchHistory": "Match History",
   "myStats": "My Stats",
   "incomingRequests": "Incoming Match Requests",
@@ -52,6 +52,9 @@
   "accept": "Accept",
   "reject": "Reject",
   "cancel": "Cancel",
+  "discardMatchTitle": "Discard this match?",
+  "discardMatchMessage": "The score and details you've entered haven't been saved yet. If you go back now, they'll be lost.",
+  "discardButton": "Discard",
   "loading": "Loading...",
   "processing": "Processing...",
   "waitingForResponse": "Waiting for response",
@@ -116,7 +119,7 @@
   "unmatch": "Unmatch",
   "signOut": "Sign Out",
 
-  "myMatchesTitle": "My Matches",
+  "myMatchesTitle": "My Scheduled Matches",
   "failedToLoadMatches": "Failed to load matches",
   "refreshOrTryLater": "Try refreshing or check again later",
   "startByFindingPlayer": "Start by finding a player to play with 🎾",
@@ -221,6 +224,8 @@
   },
   "tiebreakOnlyScoring": "Tie-breaks",
   "tiebreakOnlyHint": "Each entry is a single tiebreak, not a full set — pick this when you're just playing quick tiebreaks instead of a full match.",
+  "shortSetScoring": "Short set",
+  "shortSetHint": "Single set to 4 games, win by 2 — a tiebreak decides it at 3-3 (recorded as 4-3).",
 
   "matchResultSentence": "{winnerName} defeated {loserName}",
   "@matchResultSentence": {
@@ -286,6 +291,7 @@
   "tiebreakPointsLabel": "Points",
   "enterTiebreakScore": "Please enter the tiebreak score.",
   "invalidTiebreakScore": "Invalid tiebreak score. Winner must reach at least 7, win by 2.",
+  "invalidShortSetScore": "Invalid short set score. Winner must reach 4 games, win by 2 (or 4-3 with a tiebreak).",
   "tiebreakWinnerMismatch": "Tiebreak winner must match set winner.",
   "logDoubles": "Log Doubles Match",
   "logDoublesMatch": "Log a Doubles Match",

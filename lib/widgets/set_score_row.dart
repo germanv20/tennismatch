@@ -15,6 +15,7 @@ enum ScoringMode {
   proSet,       // single set to 8 games, tiebreak at 7-7 (score 8-7)
   open,         // no validation, no automatic tiebreak detection
   tiebreakOnly, // each entry is a standalone tiebreak, not a full set
+  shortSet,     // best of 4 games, tiebreak at 3-3 (score 4-3)
 }
 
 /// Hard cap on how many sets/tiebreak entries a single match can have.
@@ -91,6 +92,7 @@ class SetScoreRowState extends State<SetScoreRow> {
     // Detect tiebreak based on scoring mode:
     // - official: set score 7-6 or 6-7 (tiebreak at 6-6)
     // - proSet: set score 8-7 or 7-8 (tiebreak at 7-7)
+    // - shortSet: set score 4-3 or 3-4 (tiebreak at 3-3)
     // - open: never auto-detect — user enters whatever they want
     // - tiebreakOnly: the entry *is* a tiebreak already — no nested
     //   breaker-within-a-set field makes sense here
@@ -101,6 +103,9 @@ class SetScoreRowState extends State<SetScoreRow> {
         break;
       case ScoringMode.proSet:
         isTiebreak = (p1 == 8 && p2 == 7) || (p1 == 7 && p2 == 8);
+        break;
+      case ScoringMode.shortSet:
+        isTiebreak = (p1 == 4 && p2 == 3) || (p1 == 3 && p2 == 4);
         break;
       case ScoringMode.open:
       case ScoringMode.tiebreakOnly:

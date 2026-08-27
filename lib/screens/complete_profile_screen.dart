@@ -21,6 +21,10 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
   // Pre-fill name from Google account so user can confirm or edit it
   final TextEditingController _nameController = TextEditingController();
 
+  // Auto-filled with the calling code once a country is picked (see
+  // showCountryPicker's onSelect below) — user only types the rest.
+  final TextEditingController _phoneController = TextEditingController();
+
   DateTime? birthdate;
   String? name; // collected here as safety net if Google doesn't provide it
   String? city;
@@ -335,7 +339,25 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
   @override
   void dispose() {
     _nameController.dispose();
+    _phoneController.dispose();
     super.dispose();
+  }
+
+  /// Returns "+<callingCode> " for the given ISO country code (e.g. "CO"
+  /// -> "+57 "), or null if it can't be resolved. Used to auto-fill the
+  /// phone field's country code once a country is picked, same lookup
+  /// data source (country_picker's CountryService) already used elsewhere
+  /// in the app (e.g. AvailablePlayersScreen's flag/country display).
+  String? _phoneCodePrefix(String? isoCountryCode) {
+    if (isoCountryCode == null || isoCountryCode.isEmpty) return null;
+    try {
+      final match = CountryService()
+          .getAll()
+          .firstWhere((c) => c.countryCode == isoCountryCode);
+      return '+${match.phoneCode} ';
+    } catch (_) {
+      return null;
+    }
   }
 
   String _translateDay(String day, AppLocalizations loc) {
@@ -402,17 +424,6 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
 
               const SizedBox(height: 12),
 
-              // City
-              TextFormField(
-                decoration: InputDecoration(labelText: loc.city),
-                onChanged: (value) => city = value,
-                validator: (value) => value == null || value.isEmpty
-                    ? loc.requiredField
-                    : null,
-              ),
-
-              const SizedBox(height: 12),
-
               Text(
                 loc.country,
                 style: const TextStyle(
@@ -457,10 +468,33 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                       setState(() {
                         country = selectedCountry.name;
                         countryCode = selectedCountry.countryCode;
+                        // Auto-fill the phone field's calling code the
+                        // first time a country is picked, so the user
+                        // only has to type the rest of their number —
+                        // never overwrites something they already typed.
+                        if (_phoneController.text.trim().isEmpty) {
+                          final prefix =
+                              _phoneCodePrefix(selectedCountry.countryCode);
+                          if (prefix != null) {
+                            _phoneController.text = prefix;
+                            phoneNumber = prefix;
+                          }
+                        }
                       });
                     },
                   );
                 },
+              ),
+
+              const SizedBox(height: 12),
+
+              // City
+              TextFormField(
+                decoration: InputDecoration(labelText: loc.city),
+                onChanged: (value) => city = value,
+                validator: (value) => value == null || value.isEmpty
+                    ? loc.requiredField
+                    : null,
               ),
 
               const SizedBox(height: 12),
@@ -532,6 +566,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
               const SizedBox(height: 8),
 
               TextFormField(
+                controller: _phoneController,
                 keyboardType: TextInputType.phone,
                 decoration: InputDecoration(
                   labelText: loc.phoneNumberLabel,

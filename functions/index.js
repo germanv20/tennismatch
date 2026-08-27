@@ -558,6 +558,54 @@ async function applyMatchStats(match) {
   }
 }
 
+/**
+ * Passively builds a "courts" dataset from the free-text location string
+ * every match already records — no UI change, no extra user action.
+ * Upserts one doc per (city, location) pair with a running use count, so
+ * a real, organic list of frequently-used venues accumulates per city
+ * over time. This is intentionally rough: location is free text (typos,
+ * casing, "cancha" vs "Cancha"), so the key is just a lowercased/trimmed
+ * string, not a cleaned-up canonical name — good enough to later power a
+ * location autocomplete or surface popular courts, not a finished courts
+ * database on its own. City comes from the match creator's own profile
+ * (regular: player1Uid, guest/doubles_guest: createdBy), since matches
+ * don't store city directly — same reasoning as ranking_utils.dart /
+ * city_activity_utils.dart on the client side.
+ * @param {object} match The match document data.
+ * @return {Promise<void>}
+ */
+async function recordLocationUsage(match) {
+  const rawLocation = (match.location || "").trim();
+  if (!rawLocation) return;
+
+  const type = match.type || "regular";
+  const creatorUid = type === "regular" ? match.player1Uid : match.createdBy;
+  if (!creatorUid) return;
+
+  const userDoc = await db.collection("users").doc(creatorUid).get();
+  const city = (userDoc.data()?.city || "").trim();
+  if (!city) return;
+
+  const normalizedCity = city.toLowerCase();
+  const normalizedLocation = rawLocation.toLowerCase();
+  // Doc ID must avoid '/' (Firestore path separator) — sanitize rather
+  // than reject, since a location typed with a slash is still real data.
+  const docId = `${normalizedCity}__${normalizedLocation}`
+      .replace(/\//g, "-")
+      .replace(/\s+/g, " ")
+      .trim();
+  if (!docId) return;
+
+  await db.collection("courts").doc(docId).set({
+    city,
+    normalizedCity,
+    name: rawLocation,
+    normalizedLocation,
+    useCount: admin.firestore.FieldValue.increment(1),
+    lastUsedAt: admin.firestore.FieldValue.serverTimestamp(),
+  }, {merge: true});
+}
+
 // Case A: match created already completed (guest matches, doubles matches)
 exports.onMatchCreatedCompleted = onDocumentCreated(
     "matches/{matchId}",
@@ -568,6 +616,7 @@ exports.onMatchCreatedCompleted = onDocumentCreated(
       console.log(`Match ${event.params.matchId} created as completed — applying stats.`);
       await applyMatchStats(match);
       await applyEloRatings(match);
+      await recordLocationUsage(match);
     },
 );
 
@@ -585,6 +634,7 @@ exports.onMatchUpdatedCompleted = onDocumentUpdated(
       console.log(`Match ${event.params.matchId} updated to completed — applying stats.`);
       await applyMatchStats(after);
       await applyEloRatings(after);
+      await recordLocationUsage(after);
       await notifyPlayersToRate(event.params.matchId, after);
     },
 );

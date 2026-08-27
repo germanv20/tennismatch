@@ -40,7 +40,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get findPlayers => 'Buscar jugadores';
 
   @override
-  String get myMatches => 'Mis partidos';
+  String get myMatches => 'Mis Partidos Agendados';
 
   @override
   String get matchHistory => 'Historial';
@@ -143,6 +143,15 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get cancel => 'Cancelar';
+
+  @override
+  String get discardMatchTitle => '¿Descartar este partido?';
+
+  @override
+  String get discardMatchMessage => 'El marcador y los detalles que ingresaste aún no se han guardado. Si regresas ahora, se perderán.';
+
+  @override
+  String get discardButton => 'Descartar';
 
   @override
   String get loading => 'Cargando...';
@@ -332,7 +341,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get signOut => 'Cerrar sesión';
 
   @override
-  String get myMatchesTitle => 'Mis partidos';
+  String get myMatchesTitle => 'Mis Partidos Agendados';
 
   @override
   String get failedToLoadMatches => 'Error al cargar partidos';
@@ -573,6 +582,13 @@ class AppLocalizationsEs extends AppLocalizations {
       'Cada entrada es un solo tiebreak, no un set completo — elige esta opción si solo van a jugar tiebreaks rápidos en lugar de un partido completo.';
 
   @override
+  String get shortSetScoring => 'Set corto';
+
+  @override
+  String get shortSetHint =>
+      'Set único a 4 juegos, ganando por 2 — un tiebreak lo decide en 3-3 (se registra 4-3).';
+
+  @override
   String matchResultSentence(Object winnerName, Object loserName) {
     return '$winnerName derrotó a $loserName';
   }
@@ -712,6 +728,10 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get invalidTiebreakScore =>
       'Marcador de tiebreak inválido. El ganador debe llegar al menos a 7, ganar por 2.';
+
+  @override
+  String get invalidShortSetScore =>
+      'Marcador de set corto inválido. El ganador debe llegar a 4 juegos, ganando por 2 (o 4-3 con tiebreak).';
 
   @override
   String get tiebreakWinnerMismatch =>

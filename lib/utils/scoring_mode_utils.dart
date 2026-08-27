@@ -19,6 +19,8 @@ String scoringModeDisplayLabel(String? scoringMode, AppLocalizations loc) {
       return loc.openScoring;
     case 'tiebreakOnly':
       return loc.tiebreakOnlyScoring;
+    case 'shortSet':
+      return loc.shortSetScoring;
     case 'official':
     default:
       return loc.officialScoring;

@@ -224,24 +224,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
               const SizedBox(height: 12),
 
-              // ── City — required ──
-              TextFormField(
-                controller: _cityController,
-                decoration: InputDecoration(
-                  labelText: loc.city,
-                  border: const OutlineInputBorder(),
-                ),
-                onChanged: (value) => city = value,
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return loc.requiredField;
-                  }
-                  return null;
-                },
-              ),
-
-              const SizedBox(height: 12),
-
               // ── Country — required ──
               ListTile(
                 contentPadding: EdgeInsets.zero,
@@ -296,6 +278,24 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     style: const TextStyle(color: Colors.red, fontSize: 12),
                   ),
                 ),
+
+              const SizedBox(height: 12),
+
+              // ── City — required ──
+              TextFormField(
+                controller: _cityController,
+                decoration: InputDecoration(
+                  labelText: loc.city,
+                  border: const OutlineInputBorder(),
+                ),
+                onChanged: (value) => city = value,
+                validator: (value) {
+                  if (value == null || value.trim().isEmpty) {
+                    return loc.requiredField;
+                  }
+                  return null;
+                },
+              ),
 
               const SizedBox(height: 12),
 
