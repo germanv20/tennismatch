@@ -148,7 +148,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get discardMatchTitle => 'Discard this match?';
 
   @override
-  String get discardMatchMessage => 'The score and details you\'ve entered haven\'t been saved yet. If you go back now, they\'ll be lost.';
+  String get discardMatchMessage =>
+      'The score and details you\'ve entered haven\'t been saved yet. If you go back now, they\'ll be lost.';
 
   @override
   String get discardButton => 'Discard';
@@ -581,7 +582,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get shortSetHint =>
-      'Single set to 4 games, win by 2 — a tiebreak decides it at 3-3 (recorded as 4-3).';
+      'Best of 2 sets to 4 games, win by 2 — a tiebreak decides a set at 3-3 (recorded as 4-3). If the sets are split 1-1, a super tie-break to 10 (win by 2) decides the match.';
+
+  @override
+  String get superTiebreakLabel => 'Super Tie-break';
 
   @override
   String matchResultSentence(Object winnerName, Object loserName) {
@@ -724,6 +728,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get invalidShortSetScore =>
       'Invalid short set score. Winner must reach 4 games, win by 2 (or 4-3 with a tiebreak).';
+
+  @override
+  String get invalidSuperTiebreakScore =>
+      'Invalid super tie-break score. Winner must reach at least 10 points, win by 2.';
 
   @override
   String get tiebreakWinnerMismatch => 'Tiebreak winner must match set winner.';

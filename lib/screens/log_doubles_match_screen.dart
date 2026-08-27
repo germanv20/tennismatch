@@ -61,7 +61,7 @@ class _LogDoublesMatchScreenState extends State<LogDoublesMatchScreen> {
   }
 
   void _addSet() {
-    if (_setKeys.length >= kMaxMatchEntries) return;
+    if (_setKeys.length >= _maxEntriesForCurrentMode) return;
     setState(() {
       _setKeys.add(GlobalKey<SetScoreRowState>());
     });
@@ -75,8 +75,16 @@ class _LogDoublesMatchScreenState extends State<LogDoublesMatchScreen> {
   void _setScoringMode(ScoringMode mode) {
     setState(() {
       scoringMode = mode;
-      if (mode == ScoringMode.proSet && _setKeys.length > 1) {
-        _setKeys.removeRange(1, _setKeys.length);
+      // Pro-set is always a single deciding set, short-set is always
+      // best-of-3 (2 sets + an optional super tie-break decider) — trim
+      // down if more entries were added under another mode.
+      final maxEntries = mode == ScoringMode.proSet
+          ? 1
+          : mode == ScoringMode.shortSet
+              ? kMaxShortSetEntries
+              : kMaxMatchEntries;
+      if (_setKeys.length > maxEntries) {
+        _setKeys.removeRange(maxEntries, _setKeys.length);
       }
     });
   }
@@ -203,6 +211,42 @@ class _LogDoublesMatchScreenState extends State<LogDoublesMatchScreen> {
     if ((p1 == 4 && p2 <= 2) || (p2 == 4 && p1 <= 2)) return true;
     if ((p1 == 4 && p2 == 3) || (p2 == 4 && p1 == 3)) return true;
     return false;
+  }
+
+  /// Super tie-break: the match-deciding breaker played instead of a 3rd
+  /// short set when the first two are split 1-1. First to 10, win by 2 —
+  /// no upper cap, keeps going past 9-9 until someone is ahead by 2.
+  bool isValidSuperTiebreak(int p1, int p2) {
+    final maxScore = p1 > p2 ? p1 : p2;
+    final minScore = p1 < p2 ? p1 : p2;
+    return maxScore >= 10 && (maxScore - minScore) >= 2;
+  }
+
+  /// True when [index] is the match-deciding super tie-break under
+  /// ScoringMode.shortSet — the 3rd entry, once the first two short sets
+  /// (already-entered scores, read live via their GlobalKeys) are split
+  /// 1-1. Drives both the live "Super Tie-break" label and its validation.
+  bool _isShortSetDecider(int index) {
+    if (scoringMode != ScoringMode.shortSet || index != 2) return false;
+    if (_setKeys.length < 2) return false;
+    final s0 = _setKeys[0].currentState?.currentData;
+    final s1 = _setKeys[1].currentState?.currentData;
+    if (s0?.p1 == null || s0?.p2 == null || s1?.p1 == null || s1?.p2 == null) {
+      return false;
+    }
+    final p1Wins = (s0!.p1! > s0.p2! ? 1 : 0) + (s1!.p1! > s1.p2! ? 1 : 0);
+    final p2Wins = (s0.p1! < s0.p2! ? 1 : 0) + (s1.p1! < s1.p2! ? 1 : 0);
+    return p1Wins == 1 && p2Wins == 1;
+  }
+
+  /// Max score entries allowed for the current scoring mode: pro-set is
+  /// always a single deciding set, short-set is always best-of-3 (2 sets
+  /// + an optional super tie-break decider), everything else shares the
+  /// generic hard cap.
+  int get _maxEntriesForCurrentMode {
+    if (scoringMode == ScoringMode.proSet) return 1;
+    if (scoringMode == ScoringMode.shortSet) return kMaxShortSetEntries;
+    return kMaxMatchEntries;
   }
 
   Future<void> pickMatchDate() async {
@@ -418,9 +462,20 @@ class _LogDoublesMatchScreenState extends State<LogDoublesMatchScreen> {
         showError(loc.invalidTiebreakScore);
         return;
       }
+      // Under shortSet, a 3rd entry after sets split 1-1 is the mandatory
+      // super tie-break decider, not another best-of-4 short set.
+      final isShortSetDecider = scoringMode == ScoringMode.shortSet &&
+          i == 2 &&
+          team1Wins == 1 &&
+          team2Wins == 1;
       if (scoringMode == ScoringMode.shortSet &&
+          !isShortSetDecider &&
           !isValidShortSet(p1, p2)) {
         showError(loc.invalidShortSetScore);
+        return;
+      }
+      if (isShortSetDecider && !isValidSuperTiebreak(p1, p2)) {
+        showError(loc.invalidSuperTiebreakScore);
         return;
       }
       if (data.isTiebreak) {
@@ -701,8 +756,8 @@ class _LogDoublesMatchScreenState extends State<LogDoublesMatchScreen> {
               children: [
                 Expanded(
                   child: _scoringModeChip(
-                    label: loc.openScoring,
-                    mode: ScoringMode.open,
+                    label: loc.shortSetScoring,
+                    mode: ScoringMode.shortSet,
                   ),
                 ),
                 const SizedBox(width: 6),
@@ -719,8 +774,8 @@ class _LogDoublesMatchScreenState extends State<LogDoublesMatchScreen> {
               children: [
                 Expanded(
                   child: _scoringModeChip(
-                    label: loc.shortSetScoring,
-                    mode: ScoringMode.shortSet,
+                    label: loc.openScoring,
+                    mode: ScoringMode.open,
                   ),
                 ),
                 const SizedBox(width: 6),
@@ -813,13 +868,14 @@ class _LogDoublesMatchScreenState extends State<LogDoublesMatchScreen> {
                 canRemove: _setKeys.length > 1,
                 isSaving: isSaving,
                 scoringMode: scoringMode,
+                isSuperTiebreak: _isShortSetDecider(index),
                 onRemove: () => _removeSet(index),
-                onChanged: (_) {},
+                onChanged: (_) => setState(() {}),
               );
             }),
 
             if (scoringMode != ScoringMode.proSet &&
-                _setKeys.length < kMaxMatchEntries)
+                _setKeys.length < _maxEntriesForCurrentMode)
               TextButton.icon(
                 onPressed: isSaving ? null : _addSet,
                 icon: const Icon(Icons.add),

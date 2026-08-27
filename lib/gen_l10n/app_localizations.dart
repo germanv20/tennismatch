@@ -161,7 +161,7 @@ abstract class AppLocalizations {
   /// No description provided for @myMatches.
   ///
   /// In en, this message translates to:
-  /// **'My Matches'**
+  /// **'My Scheduled Matches'**
   String get myMatches;
 
   /// No description provided for @matchHistory.
@@ -377,7 +377,7 @@ abstract class AppLocalizations {
   /// No description provided for @discardMatchMessage.
   ///
   /// In en, this message translates to:
-  /// **'The score and details you've entered haven't been saved yet. If you go back now, they'll be lost.'**
+  /// **'The score and details you\'ve entered haven\'t been saved yet. If you go back now, they\'ll be lost.'**
   String get discardMatchMessage;
 
   /// No description provided for @discardButton.
@@ -749,7 +749,7 @@ abstract class AppLocalizations {
   /// No description provided for @myMatchesTitle.
   ///
   /// In en, this message translates to:
-  /// **'My Matches'**
+  /// **'My Scheduled Matches'**
   String get myMatchesTitle;
 
   /// No description provided for @failedToLoadMatches.
@@ -1205,8 +1205,14 @@ abstract class AppLocalizations {
   /// No description provided for @shortSetHint.
   ///
   /// In en, this message translates to:
-  /// **'Single set to 4 games, win by 2 — a tiebreak decides it at 3-3 (recorded as 4-3).'**
+  /// **'Best of 2 sets to 4 games, win by 2 — a tiebreak decides a set at 3-3 (recorded as 4-3). If the sets are split 1-1, a super tie-break to 10 (win by 2) decides the match.'**
   String get shortSetHint;
+
+  /// No description provided for @superTiebreakLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Super Tie-break'**
+  String get superTiebreakLabel;
 
   /// No description provided for @matchResultSentence.
   ///
@@ -1460,6 +1466,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Invalid short set score. Winner must reach 4 games, win by 2 (or 4-3 with a tiebreak).'**
   String get invalidShortSetScore;
+
+  /// No description provided for @invalidSuperTiebreakScore.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid super tie-break score. Winner must reach at least 10 points, win by 2.'**
+  String get invalidSuperTiebreakScore;
 
   /// No description provided for @tiebreakWinnerMismatch.
   ///

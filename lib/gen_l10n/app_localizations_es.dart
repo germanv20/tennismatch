@@ -148,7 +148,8 @@ class AppLocalizationsEs extends AppLocalizations {
   String get discardMatchTitle => '¿Descartar este partido?';
 
   @override
-  String get discardMatchMessage => 'El marcador y los detalles que ingresaste aún no se han guardado. Si regresas ahora, se perderán.';
+  String get discardMatchMessage =>
+      'El marcador y los detalles que ingresaste aún no se han guardado. Si regresas ahora, se perderán.';
 
   @override
   String get discardButton => 'Descartar';
@@ -586,7 +587,10 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get shortSetHint =>
-      'Set único a 4 juegos, ganando por 2 — un tiebreak lo decide en 3-3 (se registra 4-3).';
+      'Al mejor de 2 sets a 4 juegos, ganando por 2 — un tiebreak decide un set en 3-3 (se registra 4-3). Si los sets quedan 1-1, un súper tiebreak a 10 (ganando por 2) decide el partido.';
+
+  @override
+  String get superTiebreakLabel => 'Súper Tiebreak';
 
   @override
   String matchResultSentence(Object winnerName, Object loserName) {
@@ -732,6 +736,10 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get invalidShortSetScore =>
       'Marcador de set corto inválido. El ganador debe llegar a 4 juegos, ganando por 2 (o 4-3 con tiebreak).';
+
+  @override
+  String get invalidSuperTiebreakScore =>
+      'Marcador de súper tiebreak inválido. El ganador debe llegar al menos a 10 puntos, ganando por 2.';
 
   @override
   String get tiebreakWinnerMismatch =>

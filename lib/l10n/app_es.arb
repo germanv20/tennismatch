@@ -225,7 +225,8 @@
   "tiebreakOnlyScoring": "Tie-breaks",
   "tiebreakOnlyHint": "Cada entrada es un solo tiebreak, no un set completo — elige esta opción si solo van a jugar tiebreaks rápidos en lugar de un partido completo.",
   "shortSetScoring": "Set corto",
-  "shortSetHint": "Set único a 4 juegos, ganando por 2 — un tiebreak lo decide en 3-3 (se registra 4-3).",
+  "shortSetHint": "Al mejor de 2 sets a 4 juegos, ganando por 2 — un tiebreak decide un set en 3-3 (se registra 4-3). Si los sets quedan 1-1, un súper tiebreak a 10 (ganando por 2) decide el partido.",
+  "superTiebreakLabel": "Súper Tiebreak",
 
   "matchResultSentence": "{winnerName} derrotó a {loserName}",
   "@matchResultSentence": {
@@ -292,6 +293,7 @@
   "enterTiebreakScore": "Por favor ingresa el marcador del tiebreak.",
   "invalidTiebreakScore": "Marcador de tiebreak inválido. El ganador debe llegar al menos a 7, ganar por 2.",
   "invalidShortSetScore": "Marcador de set corto inválido. El ganador debe llegar a 4 juegos, ganando por 2 (o 4-3 con tiebreak).",
+  "invalidSuperTiebreakScore": "Marcador de súper tiebreak inválido. El ganador debe llegar al menos a 10 puntos, ganando por 2.",
   "tiebreakWinnerMismatch": "El ganador del tiebreak debe coincidir con el ganador del set.",
   "logDoubles": "Registrar partido de dobles",
   "logDoublesMatch": "Registrar partido de dobles",

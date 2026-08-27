@@ -24,6 +24,10 @@ enum ScoringMode {
 /// oversized match document rather than reflecting any realistic match.
 const int kMaxMatchEntries = 9;
 
+/// `ScoringMode.shortSet` is always a best-of-3-short-sets match — once a
+/// 3rd entry (the super tie-break decider) is played, the match is over.
+const int kMaxShortSetEntries = 3;
+
 class SetScoreRow extends StatefulWidget {
   final int index;
   final String player1Name;
@@ -33,6 +37,12 @@ class SetScoreRow extends StatefulWidget {
   final ScoringMode scoringMode;
   final VoidCallback onRemove;
   final ValueChanged<SetScoreData> onChanged;
+
+  /// True when this entry is the match-deciding super tie-break played
+  /// instead of a 3rd short set (sets split 1-1 under `ScoringMode.shortSet`).
+  /// Overrides the entry's label and validation shape — it's a standalone
+  /// first-to-10 score, not a "best of 4 games" set.
+  final bool isSuperTiebreak;
 
   const SetScoreRow({
     super.key,
@@ -44,6 +54,7 @@ class SetScoreRow extends StatefulWidget {
     required this.onRemove,
     required this.onChanged,
     this.scoringMode = ScoringMode.official,
+    this.isSuperTiebreak = false,
   });
 
   @override
@@ -79,7 +90,8 @@ class SetScoreRowState extends State<SetScoreRow> {
   @override
   void didUpdateWidget(SetScoreRow oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.scoringMode != widget.scoringMode) {
+    if (oldWidget.scoringMode != widget.scoringMode ||
+        oldWidget.isSuperTiebreak != widget.isSuperTiebreak) {
       // Re-evaluate tiebreak visibility under the new scoring mode
       _onScoreChanged();
     }
@@ -96,21 +108,27 @@ class SetScoreRowState extends State<SetScoreRow> {
     // - open: never auto-detect — user enters whatever they want
     // - tiebreakOnly: the entry *is* a tiebreak already — no nested
     //   breaker-within-a-set field makes sense here
+    // A super tie-break decider (shortSet, sets split 1-1) is likewise a
+    // single standalone score, not a "set" — never shows a nested breaker.
     bool isTiebreak;
-    switch (widget.scoringMode) {
-      case ScoringMode.official:
-        isTiebreak = (p1 == 7 && p2 == 6) || (p1 == 6 && p2 == 7);
-        break;
-      case ScoringMode.proSet:
-        isTiebreak = (p1 == 8 && p2 == 7) || (p1 == 7 && p2 == 8);
-        break;
-      case ScoringMode.shortSet:
-        isTiebreak = (p1 == 4 && p2 == 3) || (p1 == 3 && p2 == 4);
-        break;
-      case ScoringMode.open:
-      case ScoringMode.tiebreakOnly:
-        isTiebreak = false;
-        break;
+    if (widget.isSuperTiebreak) {
+      isTiebreak = false;
+    } else {
+      switch (widget.scoringMode) {
+        case ScoringMode.official:
+          isTiebreak = (p1 == 7 && p2 == 6) || (p1 == 6 && p2 == 7);
+          break;
+        case ScoringMode.proSet:
+          isTiebreak = (p1 == 8 && p2 == 7) || (p1 == 7 && p2 == 8);
+          break;
+        case ScoringMode.shortSet:
+          isTiebreak = (p1 == 4 && p2 == 3) || (p1 == 3 && p2 == 4);
+          break;
+        case ScoringMode.open:
+        case ScoringMode.tiebreakOnly:
+          isTiebreak = false;
+          break;
+      }
     }
 
     if (isTiebreak != _showTiebreak) {
@@ -146,15 +164,18 @@ class SetScoreRowState extends State<SetScoreRow> {
   @override
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context)!;
-    final entryLabel = widget.scoringMode == ScoringMode.tiebreakOnly
-        ? loc.tiebreakEntryLabel(widget.index + 1)
-        : loc.setLabel(widget.index + 1);
+    final entryLabel = widget.isSuperTiebreak
+        ? loc.superTiebreakLabel
+        : widget.scoringMode == ScoringMode.tiebreakOnly
+            ? loc.tiebreakEntryLabel(widget.index + 1)
+            : loc.setLabel(widget.index + 1);
     // Free/open scoring has no built-in range validation, and a standalone
-    // tiebreak's points are also unbounded by any win-by-2-from-N rule —
-    // cap both at 2 digits, since a real score is never that long. This
-    // just guards against fat-fingered input.
+    // tiebreak's points (including a super tie-break decider) are also
+    // unbounded by any win-by-2-from-N rule — cap all three at 2 digits,
+    // since a real score is never that long. Just guards fat-fingered input.
     final capScoreDigits = widget.scoringMode == ScoringMode.open ||
-        widget.scoringMode == ScoringMode.tiebreakOnly;
+        widget.scoringMode == ScoringMode.tiebreakOnly ||
+        widget.isSuperTiebreak;
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
