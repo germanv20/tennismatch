@@ -182,10 +182,19 @@ class MatchCard extends StatelessWidget {
                           final p1 = set['p1'];
                           final p2 = set['p2'];
                           final bool wonSet = p1 > p2;
-                          return Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 4),
+                          // Fixed-width cell (not just horizontal padding)
+                          // so a 1-digit score in one player's row and a
+                          // 2-digit score in the same set for the other
+                          // player's row still occupy the same column
+                          // width — otherwise the two rows' number groups
+                          // (each right-anchored via spaceBetween) drift
+                          // out of vertical alignment whenever their total
+                          // digit counts differ.
+                          return SizedBox(
+                            width: 26,
                             child: Text(
                               p1.toString(),
+                              textAlign: TextAlign.center,
                               style: TextStyle(
                                 fontSize: 16,
                                 fontFeatures: const [
@@ -232,13 +241,21 @@ class MatchCard extends StatelessWidget {
                           final p1 = set['p1'];
                           final p2 = set['p2'];
                           final bool wonSet = p2 > p1;
-                          return Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 4),
+                          // Same fixed-width cell as player 1's row above,
+                          // and the same font (was 'monospace' here vs. the
+                          // default font + tabularFigures above — a font
+                          // mismatch between the two rows compounded the
+                          // digit-width misalignment).
+                          return SizedBox(
+                            width: 26,
                             child: Text(
                               p2.toString(),
+                              textAlign: TextAlign.center,
                               style: TextStyle(
                                 fontSize: 16,
-                                fontFamily: 'monospace',
+                                fontFeatures: const [
+                                  FontFeature.tabularFigures()
+                                ],
                                 fontWeight: wonSet
                                     ? FontWeight.bold
                                     : FontWeight.normal,

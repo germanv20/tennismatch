@@ -390,10 +390,15 @@ class _MatchHistoryScreenState extends State<MatchHistoryScreen> {
                             final p1 = set['p1'] ?? 0;
                             final p2 = set['p2'] ?? 0;
                             final won = p1 > p2;
-                            return Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 4),
+                            // Fixed-width cell so a 1-digit score here and a
+                            // 2-digit score in the same set for team 2's row
+                            // below still line up in the same column.
+                            return SizedBox(
+                              width: 26,
                               child: Text(p1.toString(),
+                                textAlign: TextAlign.center,
                                 style: TextStyle(fontSize: 16,
+                                  fontFeatures: const [FontFeature.tabularFigures()],
                                   fontWeight: won ? FontWeight.bold : FontWeight.normal,
                                   color: won ? Colors.green.shade700 : Colors.grey)),
                             );
@@ -426,10 +431,12 @@ class _MatchHistoryScreenState extends State<MatchHistoryScreen> {
                             final p1 = set['p1'] ?? 0;
                             final p2 = set['p2'] ?? 0;
                             final won = p2 > p1;
-                            return Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 4),
+                            return SizedBox(
+                              width: 26,
                               child: Text(p2.toString(),
+                                textAlign: TextAlign.center,
                                 style: TextStyle(fontSize: 16,
+                                  fontFeatures: const [FontFeature.tabularFigures()],
                                   fontWeight: won ? FontWeight.bold : FontWeight.normal,
                                   color: won ? Colors.green.shade700 : Colors.grey)),
                             );
@@ -1092,13 +1099,19 @@ class _GuestMatchCard extends StatelessWidget {
                         final p1 = set['p1'] ?? 0;
                         final p2 = set['p2'] ?? 0;
                         final won = p1 > p2;
-                        return Padding(
-                          padding:
-                              const EdgeInsets.symmetric(horizontal: 4),
+                        // Fixed-width cell so a 1-digit score here and a
+                        // 2-digit score in the same set for the opponent's
+                        // row below still line up in the same column.
+                        return SizedBox(
+                          width: 26,
                           child: Text(
                             p1.toString(),
+                            textAlign: TextAlign.center,
                             style: TextStyle(
                               fontSize: 16,
+                              fontFeatures: const [
+                                FontFeature.tabularFigures()
+                              ],
                               fontWeight: won
                                   ? FontWeight.bold
                                   : FontWeight.normal,
@@ -1139,13 +1152,16 @@ class _GuestMatchCard extends StatelessWidget {
                         final p1 = set['p1'] ?? 0;
                         final p2 = set['p2'] ?? 0;
                         final won = p2 > p1;
-                        return Padding(
-                          padding:
-                              const EdgeInsets.symmetric(horizontal: 4),
+                        return SizedBox(
+                          width: 26,
                           child: Text(
                             p2.toString(),
+                            textAlign: TextAlign.center,
                             style: TextStyle(
                               fontSize: 16,
+                              fontFeatures: const [
+                                FontFeature.tabularFigures()
+                              ],
                               fontWeight: won
                                   ? FontWeight.bold
                                   : FontWeight.normal,
