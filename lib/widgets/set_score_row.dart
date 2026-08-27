@@ -92,8 +92,15 @@ class SetScoreRowState extends State<SetScoreRow> {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.scoringMode != widget.scoringMode ||
         oldWidget.isSuperTiebreak != widget.isSuperTiebreak) {
-      // Re-evaluate tiebreak visibility under the new scoring mode
-      _onScoreChanged();
+      // Re-evaluate tiebreak visibility under the new scoring mode.
+      // Deferred to a post-frame callback: didUpdateWidget fires while the
+      // parent (e.g. after tapping a scoring-mode chip) is still in the
+      // middle of its own build, and _onScoreChanged() calls widget.onChanged
+      // which the parent screens wire to setState() — calling that
+      // synchronously here would trigger "setState() called during build".
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _onScoreChanged();
+      });
     }
   }
 
