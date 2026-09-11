@@ -16,6 +16,7 @@ class DoublesMatchDetailsScreen extends StatelessWidget {
   final DateTime matchDate;
   final String? notes;
   final String? scoringMode;
+  final bool superTiebreakDecider;
 
   const DoublesMatchDetailsScreen({
     super.key,
@@ -31,6 +32,7 @@ class DoublesMatchDetailsScreen extends StatelessWidget {
     required this.matchDate,
     this.notes,
     this.scoringMode,
+    this.superTiebreakDecider = false,
   });
 
   Future<void> _deleteMatch(BuildContext context, AppLocalizations loc) async {
@@ -222,9 +224,12 @@ class DoublesMatchDetailsScreen extends StatelessWidget {
                               SizedBox(
                                 width: 56,
                                 child: Text(
-                                  scoringMode == 'tiebreakOnly'
-                                      ? loc.tiebreakEntryLabel(index + 1)
-                                      : loc.setLabel(index + 1),
+                                  (superTiebreakDecider &&
+                                          index == sets.length - 1)
+                                      ? loc.superTiebreakLabel
+                                      : scoringMode == 'tiebreakOnly'
+                                          ? loc.tiebreakEntryLabel(index + 1)
+                                          : loc.setLabel(index + 1),
                                   style: TextStyle(
                                     fontSize: 13,
                                     color: Colors.grey[600],

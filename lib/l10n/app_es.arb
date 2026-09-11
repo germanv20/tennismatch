@@ -114,6 +114,26 @@
   "headToHead": "Cara a cara",
   "errorPrefix": "Error",
   "wantsToPlayMatch": "Quiere jugar un partido",
+  "notificationsTooltip": "Notificaciones",
+  "noNewNotifications": "No hay notificaciones nuevas",
+  "notificationIncomingRequest": "{name} quiere jugar un partido",
+  "@notificationIncomingRequest": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "notificationRequestAccepted": "{name} aceptó tu solicitud de partido",
+  "@notificationRequestAccepted": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "notificationRequestRejected": "{name} rechazó tu solicitud de partido",
+  "@notificationRequestRejected": {
+    "placeholders": {
+      "name": {}
+    }
+  },
   "unmatchConfirmation": "¿Seguro que quieres eliminar la coincidencia? Esto cerrará el chat.",
   "unmatchTitle": "¿Eliminar emparejamiento?",
   "unmatch": "Eliminar",
@@ -227,6 +247,8 @@
   "shortSetScoring": "Set corto",
   "shortSetHint": "Al mejor de 2 sets a 4 juegos, ganando por 2 — un tiebreak decide un set en 3-3 (se registra 4-3). Si los sets quedan 1-1, un súper tiebreak a 10 (ganando por 2) decide el partido.",
   "superTiebreakLabel": "Súper Tiebreak",
+  "officialSuperTiebreakOption": "Decidir con un súper tiebreak",
+  "officialSuperTiebreakOptionHint": "Si los sets quedan 1-1, jugar un súper tiebreak a 10 (ganando por 2) en lugar de un 3er set.",
 
   "matchResultSentence": "{winnerName} derrotó a {loserName}",
   "@matchResultSentence": {

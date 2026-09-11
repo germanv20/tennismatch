@@ -34,6 +34,11 @@ class _AddMatchResultScreenState extends State<AddMatchResultScreen> {
   String? player2Name;
   bool isSaving = false;
   bool allowTie = false;
+  // Optional, Official-mode-only: decide the match with a super tie-break
+  // instead of a 3rd set once the first two sets split 1-1. Mirrors
+  // ScoringMode.shortSet's mandatory decider rule, but opt-in here since
+  // most Official matches still want a real 3rd set.
+  bool officialSuperTiebreakEnabled = false;
 
   @override
   void initState() {
@@ -59,14 +64,7 @@ class _AddMatchResultScreenState extends State<AddMatchResultScreen> {
   void _setScoringMode(ScoringMode mode) {
     setState(() {
       scoringMode = mode;
-      // Pro-set is always a single deciding set, short-set is always
-      // best-of-3 (2 sets + an optional super tie-break decider) — trim
-      // down if more entries were added under another mode.
-      final maxEntries = mode == ScoringMode.proSet
-          ? 1
-          : mode == ScoringMode.shortSet
-              ? kMaxShortSetEntries
-              : kMaxMatchEntries;
+      final maxEntries = _maxEntriesForCurrentMode;
       if (_setKeys.length > maxEntries) {
         _setKeys.removeRange(maxEntries, _setKeys.length);
       }
@@ -176,6 +174,32 @@ class _AddMatchResultScreenState extends State<AddMatchResultScreen> {
     return p1Wins == 1 && p2Wins == 1;
   }
 
+  /// Same idea as _isShortSetDecider, but for ScoringMode.official's
+  /// optional super tie-break (officialSuperTiebreakEnabled) — only fires
+  /// once that option is checked, unlike shortSet where it's mandatory.
+  bool _isOfficialSuperTiebreakDecider(int index) {
+    if (scoringMode != ScoringMode.official ||
+        !officialSuperTiebreakEnabled ||
+        index != 2) {
+      return false;
+    }
+    if (_setKeys.length < 2) return false;
+    final s0 = _setKeys[0].currentState?.currentData;
+    final s1 = _setKeys[1].currentState?.currentData;
+    if (s0?.p1 == null || s0?.p2 == null || s1?.p1 == null || s1?.p2 == null) {
+      return false;
+    }
+    final p1Wins = (s0!.p1! > s0.p2! ? 1 : 0) + (s1!.p1! > s1.p2! ? 1 : 0);
+    final p2Wins = (s0.p1! < s0.p2! ? 1 : 0) + (s1.p1! < s1.p2! ? 1 : 0);
+    return p1Wins == 1 && p2Wins == 1;
+  }
+
+  /// True when [index] is the match-deciding super tie-break under either
+  /// rule — shortSet's mandatory one or official's opt-in one. Single call
+  /// site used everywhere the "is this entry the decider" question matters.
+  bool _isMatchDecider(int index) =>
+      _isShortSetDecider(index) || _isOfficialSuperTiebreakDecider(index);
+
   /// Max score entries allowed for the current scoring mode: pro-set is
   /// always a single deciding set, short-set is always best-of-3 (2 sets
   /// + an optional super tie-break decider), everything else shares the
@@ -183,6 +207,9 @@ class _AddMatchResultScreenState extends State<AddMatchResultScreen> {
   int get _maxEntriesForCurrentMode {
     if (scoringMode == ScoringMode.proSet) return 1;
     if (scoringMode == ScoringMode.shortSet) return kMaxShortSetEntries;
+    if (scoringMode == ScoringMode.official && officialSuperTiebreakEnabled) {
+      return kMaxShortSetEntries;
+    }
     return kMaxMatchEntries;
   }
 
@@ -208,6 +235,10 @@ class _AddMatchResultScreenState extends State<AddMatchResultScreen> {
     List<Map<String, dynamic>> formattedSets = [];
     int p1Wins = 0;
     int p2Wins = 0;
+    // True only once an Official-mode super tie-break decider entry is
+    // actually validated below — the toggle alone (officialSuperTiebreakEnabled)
+    // doesn't guarantee the match ever reached a 1-1 split that needed one.
+    bool officialDeciderReached = false;
 
     for (int i = 0; i < _setKeys.length; i++) {
       final data = _setKeys[i].currentState?.currentData;
@@ -225,11 +256,24 @@ class _AddMatchResultScreenState extends State<AddMatchResultScreen> {
         return;
       }
 
+      // Under Official mode with the optional super tie-break toggle on, a
+      // 3rd entry after sets split 1-1 is the decider, not another full set.
+      final isOfficialDecider = scoringMode == ScoringMode.official &&
+          officialSuperTiebreakEnabled &&
+          i == 2 &&
+          p1Wins == 1 &&
+          p2Wins == 1;
       if (scoringMode == ScoringMode.official &&
+          !isOfficialDecider &&
           !isValidTennisSet(p1, p2)) {
         showError(loc.invalidSetScore);
         return;
       }
+      if (isOfficialDecider && !isValidSuperTiebreak(p1, p2)) {
+        showError(loc.invalidSuperTiebreakScore);
+        return;
+      }
+      if (isOfficialDecider) officialDeciderReached = true;
       if (scoringMode == ScoringMode.proSet &&
           !isValidProSet(p1, p2)) {
         showError(loc.invalidProSetScore);
@@ -349,6 +393,7 @@ class _AddMatchResultScreenState extends State<AddMatchResultScreen> {
         'durationMinutes': duration,
         'matchDate': Timestamp.fromDate(selectedMatchDate!),
         'scoringMode': scoringMode.name,
+        if (officialDeciderReached) 'superTiebreakDecider': true,
         if (notesController.text.trim().isNotEmpty)
           'notes': notesController.text.trim(),
       },
@@ -544,7 +589,7 @@ class _AddMatchResultScreenState extends State<AddMatchResultScreen> {
                 canRemove: _setKeys.length > 1,
                 isSaving: isSaving,
                 scoringMode: scoringMode,
-                isSuperTiebreak: _isShortSetDecider(index),
+                isSuperTiebreak: _isMatchDecider(index),
                 onRemove: () => _removeSet(index),
                 onChanged: (_) => setState(() {}),
               );
@@ -556,6 +601,56 @@ class _AddMatchResultScreenState extends State<AddMatchResultScreen> {
                 icon: const Icon(Icons.add),
                 label: Text(loc.addSet),
               ),
+
+            if (scoringMode == ScoringMode.official) ...[
+              const SizedBox(height: 8),
+              // ── Official-mode super tie-break option ──
+              Row(
+                children: [
+                  Checkbox(
+                    value: officialSuperTiebreakEnabled,
+                    onChanged: isSaving
+                        ? null
+                        : (v) => setState(() {
+                              officialSuperTiebreakEnabled = v ?? false;
+                              if (officialSuperTiebreakEnabled &&
+                                  _setKeys.length > kMaxShortSetEntries) {
+                                _setKeys.removeRange(
+                                    kMaxShortSetEntries, _setKeys.length);
+                              }
+                            }),
+                  ),
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: isSaving
+                          ? null
+                          : () => setState(() {
+                                officialSuperTiebreakEnabled =
+                                    !officialSuperTiebreakEnabled;
+                                if (officialSuperTiebreakEnabled &&
+                                    _setKeys.length > kMaxShortSetEntries) {
+                                  _setKeys.removeRange(
+                                      kMaxShortSetEntries, _setKeys.length);
+                                }
+                              }),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            loc.officialSuperTiebreakOption,
+                            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
+                          ),
+                          Text(
+                            loc.officialSuperTiebreakOptionHint,
+                            style: TextStyle(fontSize: 11, color: Colors.grey[600]),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
 
             // ── Tie option ──
             Row(

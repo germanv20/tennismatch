@@ -326,6 +326,27 @@ class AppLocalizationsEn extends AppLocalizations {
   String get wantsToPlayMatch => 'Wants to play a match';
 
   @override
+  String get notificationsTooltip => 'Notifications';
+
+  @override
+  String get noNewNotifications => 'No new notifications';
+
+  @override
+  String notificationIncomingRequest(Object name) {
+    return '$name wants to play a match';
+  }
+
+  @override
+  String notificationRequestAccepted(Object name) {
+    return '$name accepted your match request';
+  }
+
+  @override
+  String notificationRequestRejected(Object name) {
+    return '$name declined your match request';
+  }
+
+  @override
   String get unmatchConfirmation =>
       'Are you sure you want to unmatch? This will remove the chat.';
 
@@ -586,6 +607,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get superTiebreakLabel => 'Super Tie-break';
+
+  @override
+  String get officialSuperTiebreakOption => 'Decide with a super tie-break';
+
+  @override
+  String get officialSuperTiebreakOptionHint =>
+      'If the sets split 1-1, play a super tie-break to 10 (win by 2) instead of a 3rd set.';
 
   @override
   String matchResultSentence(Object winnerName, Object loserName) {

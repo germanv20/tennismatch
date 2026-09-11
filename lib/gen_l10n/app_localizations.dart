@@ -722,6 +722,36 @@ abstract class AppLocalizations {
   /// **'Wants to play a match'**
   String get wantsToPlayMatch;
 
+  /// No description provided for @notificationsTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications'**
+  String get notificationsTooltip;
+
+  /// No description provided for @noNewNotifications.
+  ///
+  /// In en, this message translates to:
+  /// **'No new notifications'**
+  String get noNewNotifications;
+
+  /// No description provided for @notificationIncomingRequest.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} wants to play a match'**
+  String notificationIncomingRequest(Object name);
+
+  /// No description provided for @notificationRequestAccepted.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} accepted your match request'**
+  String notificationRequestAccepted(Object name);
+
+  /// No description provided for @notificationRequestRejected.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} declined your match request'**
+  String notificationRequestRejected(Object name);
+
   /// No description provided for @unmatchConfirmation.
   ///
   /// In en, this message translates to:
@@ -1213,6 +1243,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Super Tie-break'**
   String get superTiebreakLabel;
+
+  /// No description provided for @officialSuperTiebreakOption.
+  ///
+  /// In en, this message translates to:
+  /// **'Decide with a super tie-break'**
+  String get officialSuperTiebreakOption;
+
+  /// No description provided for @officialSuperTiebreakOptionHint.
+  ///
+  /// In en, this message translates to:
+  /// **'If the sets split 1-1, play a super tie-break to 10 (win by 2) instead of a 3rd set.'**
+  String get officialSuperTiebreakOptionHint;
 
   /// No description provided for @matchResultSentence.
   ///

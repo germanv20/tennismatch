@@ -75,6 +75,12 @@ service cloud.firestore {
          request.resource.data.status in ["accepted", "rejected"]) ||
         (request.auth.uid == resource.data.fromUid &&
          request.resource.data.status == "cancelled") ||
+        // Notification bell: the original sender marks an accepted/rejected
+        // outcome as seen once they've viewed it in the dropdown. Scoped to
+        // only this one field so it can never be used to change status,
+        // regardless of the request's current state.
+        (request.auth.uid == resource.data.fromUid &&
+         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['seenBySender'])) ||
         // Cloud Function sets expired — allow via admin SDK (no auth)
         // For client-side safety, also allow fromUid to read their expired requests
         request.resource.data.status == "expired"

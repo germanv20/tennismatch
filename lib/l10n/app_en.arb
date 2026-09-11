@@ -114,6 +114,26 @@
   "headToHead": "Head-to-Head",
   "errorPrefix": "Error",
   "wantsToPlayMatch": "Wants to play a match",
+  "notificationsTooltip": "Notifications",
+  "noNewNotifications": "No new notifications",
+  "notificationIncomingRequest": "{name} wants to play a match",
+  "@notificationIncomingRequest": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "notificationRequestAccepted": "{name} accepted your match request",
+  "@notificationRequestAccepted": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "notificationRequestRejected": "{name} declined your match request",
+  "@notificationRequestRejected": {
+    "placeholders": {
+      "name": {}
+    }
+  },
   "unmatchConfirmation": "Are you sure you want to unmatch? This will remove the chat.",
   "unmatchTitle": "Unmatch?",
   "unmatch": "Unmatch",
@@ -227,6 +247,8 @@
   "shortSetScoring": "Short set",
   "shortSetHint": "Best of 2 sets to 4 games, win by 2 — a tiebreak decides a set at 3-3 (recorded as 4-3). If the sets are split 1-1, a super tie-break to 10 (win by 2) decides the match.",
   "superTiebreakLabel": "Super Tie-break",
+  "officialSuperTiebreakOption": "Decide with a super tie-break",
+  "officialSuperTiebreakOptionHint": "If the sets split 1-1, play a super tie-break to 10 (win by 2) instead of a 3rd set.",
 
   "matchResultSentence": "{winnerName} defeated {loserName}",
   "@matchResultSentence": {

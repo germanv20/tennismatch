@@ -19,6 +19,7 @@ class MatchDetailsScreen extends StatefulWidget {
   final List players;
   final String? notes;
   final String? scoringMode;
+  final bool superTiebreakDecider;
 
   const MatchDetailsScreen({
     super.key,
@@ -33,6 +34,7 @@ class MatchDetailsScreen extends StatefulWidget {
     required this.matchDate,
     this.notes,
     this.scoringMode,
+    this.superTiebreakDecider = false,
   });
 
   @override
@@ -387,9 +389,12 @@ class _MatchDetailsScreenState extends State<MatchDetailsScreen> {
                                     SizedBox(
                                       width: 56,
                                       child: Text(
-                                        widget.scoringMode == 'tiebreakOnly'
-                                            ? loc.tiebreakEntryLabel(index + 1)
-                                            : loc.setLabel(index + 1),
+                                        (widget.superTiebreakDecider &&
+                                                index == widget.sets.length - 1)
+                                            ? loc.superTiebreakLabel
+                                            : widget.scoringMode == 'tiebreakOnly'
+                                                ? loc.tiebreakEntryLabel(index + 1)
+                                                : loc.setLabel(index + 1),
                                         style: TextStyle(fontSize: 13, color: Colors.grey[600]),
                                       ),
                                     ),

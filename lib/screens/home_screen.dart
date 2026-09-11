@@ -73,6 +73,23 @@ class NotificationBadge extends StatelessWidget {
   }
 }
  
+/// One entry in the notification bell's dropdown — either an incoming
+/// pending request awaiting the viewer's response, or an outgoing request
+/// the viewer sent that was just accepted or rejected (not yet seen).
+class _BellNotificationItem {
+  final DocumentReference requestRef;
+  final String type; // 'incoming_pending' | 'accepted' | 'rejected'
+  final String otherName;
+  final Timestamp? timestamp;
+
+  const _BellNotificationItem({
+    required this.requestRef,
+    required this.type,
+    required this.otherName,
+    required this.timestamp,
+  });
+}
+
 const weekOrder = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
  
 class HomeScreen extends StatefulWidget {
@@ -91,6 +108,7 @@ class HomeScreen extends StatefulWidget {
  
 class _HomeScreenState extends State<HomeScreen> {
   int? outgoingOverrideCount;
+  final GlobalKey _bellKey = GlobalKey();
  
   String translateLevel(String level, AppLocalizations loc) {
     switch (level) {
@@ -461,6 +479,237 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
  
+  /// The bell icon itself, badge count live via three merged streams
+  /// (incoming pending requests + unseen outgoing accept/reject outcomes).
+  /// Nested StreamBuilders, same "merge multiple live sources client-side"
+  /// pattern used elsewhere (e.g. available_players_screen.dart's incoming
+  /// pending request flag) since Firestore can't union dissimilar queries.
+  Widget _buildNotificationBell(AppLocalizations loc) {
+    final uid = widget.currentUser.uid;
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('match_requests')
+          .where('toUid', isEqualTo: uid)
+          .where('status', isEqualTo: 'pending')
+          .snapshots(),
+      builder: (context, incomingSnap) {
+        final incomingCount = incomingSnap.data?.docs.length ?? 0;
+        return StreamBuilder<QuerySnapshot>(
+          stream: FirebaseFirestore.instance
+              .collection('match_requests')
+              .where('fromUid', isEqualTo: uid)
+              .where('status', isEqualTo: 'accepted')
+              .where('seenBySender', isEqualTo: false)
+              .snapshots(),
+          builder: (context, acceptedSnap) {
+            final acceptedCount = acceptedSnap.data?.docs.length ?? 0;
+            return StreamBuilder<QuerySnapshot>(
+              stream: FirebaseFirestore.instance
+                  .collection('match_requests')
+                  .where('fromUid', isEqualTo: uid)
+                  .where('status', isEqualTo: 'rejected')
+                  .where('seenBySender', isEqualTo: false)
+                  .snapshots(),
+              builder: (context, rejectedSnap) {
+                final rejectedCount = rejectedSnap.data?.docs.length ?? 0;
+                final total = incomingCount + acceptedCount + rejectedCount;
+                return NotificationBadge(
+                  count: total,
+                  child: IconButton(
+                    key: _bellKey,
+                    icon: const Icon(Icons.notifications_outlined),
+                    tooltip: loc.notificationsTooltip,
+                    onPressed: () => _showNotificationsDropdown(loc),
+                  ),
+                );
+              },
+            );
+          },
+        );
+      },
+    );
+  }
+
+  /// Fetches the dropdown's contents fresh each time the bell is tapped
+  /// (not a live stream while open — the badge above is what stays live).
+  /// Resolves each request's other-party name with a per-doc `users` read,
+  /// same approach incoming_requests_screen.dart already uses per row.
+  Future<List<_BellNotificationItem>> _fetchBellNotifications(
+      String uid) async {
+    final firestore = FirebaseFirestore.instance;
+    final results = <_BellNotificationItem>[];
+
+    Future<void> addFrom(
+      QuerySnapshot snap,
+      String type,
+      String Function(Map<String, dynamic>) otherUidOf,
+      String Function(Map<String, dynamic>) timestampFieldOf,
+    ) async {
+      for (final doc in snap.docs) {
+        final data = doc.data() as Map<String, dynamic>;
+        final otherUid = otherUidOf(data);
+        if (otherUid.isEmpty) continue;
+        final userSnap = await firestore.collection('users').doc(otherUid).get();
+        final name = (userSnap.data()?['name'] as String?) ?? '';
+        results.add(_BellNotificationItem(
+          requestRef: doc.reference,
+          type: type,
+          otherName: name,
+          timestamp: data[timestampFieldOf(data)] as Timestamp?,
+        ));
+      }
+    }
+
+    final incomingSnap = await firestore
+        .collection('match_requests')
+        .where('toUid', isEqualTo: uid)
+        .where('status', isEqualTo: 'pending')
+        .orderBy('createdAt', descending: true)
+        .get();
+    await addFrom(
+      incomingSnap,
+      'incoming_pending',
+      (data) => data['fromUid'] as String? ?? '',
+      (_) => 'createdAt',
+    );
+
+    final acceptedSnap = await firestore
+        .collection('match_requests')
+        .where('fromUid', isEqualTo: uid)
+        .where('status', isEqualTo: 'accepted')
+        .where('seenBySender', isEqualTo: false)
+        .get();
+    await addFrom(
+      acceptedSnap,
+      'accepted',
+      (data) => data['toUid'] as String? ?? '',
+      (_) => 'respondedAt',
+    );
+
+    final rejectedSnap = await firestore
+        .collection('match_requests')
+        .where('fromUid', isEqualTo: uid)
+        .where('status', isEqualTo: 'rejected')
+        .where('seenBySender', isEqualTo: false)
+        .get();
+    await addFrom(
+      rejectedSnap,
+      'rejected',
+      (data) => data['toUid'] as String? ?? '',
+      (_) => 'respondedAt',
+    );
+
+    results.sort((a, b) {
+      final at = a.timestamp?.millisecondsSinceEpoch ?? 0;
+      final bt = b.timestamp?.millisecondsSinceEpoch ?? 0;
+      return bt.compareTo(at); // newest first
+    });
+
+    return results;
+  }
+
+  Widget _buildNotificationTile(_BellNotificationItem item, AppLocalizations loc) {
+    IconData icon;
+    Color color;
+    String text;
+    switch (item.type) {
+      case 'accepted':
+        icon = Icons.check_circle;
+        color = Colors.green;
+        text = loc.notificationRequestAccepted(item.otherName);
+        break;
+      case 'rejected':
+        icon = Icons.cancel;
+        color = Colors.red;
+        text = loc.notificationRequestRejected(item.otherName);
+        break;
+      default:
+        icon = Icons.mail;
+        color = Colors.blue;
+        text = loc.notificationIncomingRequest(item.otherName);
+    }
+    return Row(
+      children: [
+        Icon(icon, color: color, size: 20),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(text, style: const TextStyle(fontSize: 13)),
+        ),
+      ],
+    );
+  }
+
+  /// Incoming pending -> Incoming Requests screen. Accepted -> marks seen
+  /// then opens My Scheduled Matches. Rejected -> marks seen and dismisses
+  /// only, since there's no natural destination screen for it.
+  Future<void> _handleNotificationTap(_BellNotificationItem item) async {
+    if (item.type == 'incoming_pending') {
+      if (!mounted) return;
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const IncomingRequestsScreen()),
+      );
+      return;
+    }
+
+    await item.requestRef.update({'seenBySender': true});
+
+    if (item.type == 'accepted') {
+      if (!mounted) return;
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => MyMatchesScreen(currentUser: widget.currentUser),
+        ),
+      );
+    }
+    // rejected: dismiss only — handled by marking seen above.
+  }
+
+  Future<void> _showNotificationsDropdown(AppLocalizations loc) async {
+    final uid = widget.currentUser.uid;
+    final items = await _fetchBellNotifications(uid);
+
+    if (!mounted) return;
+
+    final RenderBox button =
+        _bellKey.currentContext!.findRenderObject() as RenderBox;
+    final RenderBox overlay =
+        Overlay.of(context).context.findRenderObject() as RenderBox;
+    final position = RelativeRect.fromRect(
+      Rect.fromPoints(
+        button.localToGlobal(Offset.zero, ancestor: overlay),
+        button.localToGlobal(button.size.bottomRight(Offset.zero), ancestor: overlay),
+      ),
+      Offset.zero & overlay.size,
+    );
+
+    final selected = await showMenu<_BellNotificationItem?>(
+      context: context,
+      position: position,
+      constraints: const BoxConstraints(minWidth: 280, maxWidth: 320),
+      items: items.isEmpty
+          ? [
+              PopupMenuItem<_BellNotificationItem?>(
+                enabled: false,
+                child: Text(
+                  loc.noNewNotifications,
+                  style: TextStyle(color: Colors.grey[600]),
+                ),
+              ),
+            ]
+          : items
+              .map((item) => PopupMenuItem<_BellNotificationItem?>(
+                    value: item,
+                    child: _buildNotificationTile(item, loc),
+                  ))
+              .toList(),
+    );
+
+    if (selected == null) return;
+    await _handleNotificationTap(selected);
+  }
+
   Stream<int> getIncomingRequestsCount(String userId) {
     return FirebaseFirestore.instance
         .collection('match_requests')
@@ -547,6 +796,10 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         title: Text(loc.appTitle),
         actions: [
+          // Notification bell — live count of pending incoming requests
+          // plus unseen outgoing accept/reject outcomes, dropdown fetched
+          // fresh each time it's opened (see _showNotificationsDropdown).
+          _buildNotificationBell(loc),
           // Theme selector button
           IconButton(
             icon: const Icon(Icons.palette_outlined),

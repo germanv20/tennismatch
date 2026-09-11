@@ -17,6 +17,7 @@ class GuestMatchDetailsScreen extends StatelessWidget {
   final String currentUserUid;
   final String? notes;
   final String? scoringMode;
+  final bool superTiebreakDecider;
 
   const GuestMatchDetailsScreen({
     super.key,
@@ -32,6 +33,7 @@ class GuestMatchDetailsScreen extends StatelessWidget {
     required this.currentUserUid,
     this.notes,
     this.scoringMode,
+    this.superTiebreakDecider = false,
   });
 
   String _formatScore() {
@@ -288,9 +290,12 @@ class GuestMatchDetailsScreen extends StatelessWidget {
                               SizedBox(
                                 width: 56,
                                 child: Text(
-                                  scoringMode == 'tiebreakOnly'
-                                      ? loc.tiebreakEntryLabel(index + 1)
-                                      : loc.setLabel(index + 1),
+                                  (superTiebreakDecider &&
+                                          index == sets.length - 1)
+                                      ? loc.superTiebreakLabel
+                                      : scoringMode == 'tiebreakOnly'
+                                          ? loc.tiebreakEntryLabel(index + 1)
+                                          : loc.setLabel(index + 1),
                                   style: TextStyle(fontSize: 13, color: Colors.grey[600]),
                                 ),
                               ),

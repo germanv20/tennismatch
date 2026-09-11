@@ -114,6 +114,8 @@ class _MatchHistoryScreenState extends State<MatchHistoryScreen> {
     final duration = match['result']?['durationMinutes'] ?? 0;
     final notes = match['result']?['notes']?.toString();
     final scoringMode = match['result']?['scoringMode'] as String?;
+    final superTiebreakDecider =
+        match['result']?['superTiebreakDecider'] == true;
     final deletionRequest = match['deletionRequest'];
 
     final bool hasDeleteNotification = deletionRequest != null &&
@@ -144,6 +146,7 @@ class _MatchHistoryScreenState extends State<MatchHistoryScreen> {
                 matchDate: matchDate,
                 notes: notes,
                 scoringMode: scoringMode,
+                superTiebreakDecider: superTiebreakDecider,
               ),
             ),
           );
@@ -230,6 +233,8 @@ class _MatchHistoryScreenState extends State<MatchHistoryScreen> {
     final duration = match['result']?['durationMinutes'] ?? 0;
     final guestNotes = match['result']?['notes']?.toString();
     final scoringMode = match['result']?['scoringMode'] as String?;
+    final superTiebreakDecider =
+        match['result']?['superTiebreakDecider'] == true;
 
     Timestamp? matchDateTs = match['result']?['matchDate'];
     final DateTime matchDate =
@@ -267,6 +272,7 @@ class _MatchHistoryScreenState extends State<MatchHistoryScreen> {
                 currentUserUid: currentUid,
                 notes: guestNotes,
                 scoringMode: scoringMode,
+                superTiebreakDecider: superTiebreakDecider,
               ),
             ),
           );
@@ -317,6 +323,8 @@ class _MatchHistoryScreenState extends State<MatchHistoryScreen> {
     final duration = match['result']?['durationMinutes'] ?? 0;
     final doublesNotes = match['result']?['notes']?.toString();
     final scoringMode = match['result']?['scoringMode'] as String?;
+    final superTiebreakDecider =
+        match['result']?['superTiebreakDecider'] == true;
     Timestamp? matchDateTs = match['result']?['matchDate'];
     final DateTime matchDate =
         matchDateTs != null ? matchDateTs.toDate() : DateTime.now();
@@ -344,6 +352,7 @@ class _MatchHistoryScreenState extends State<MatchHistoryScreen> {
                 matchDate: matchDate,
                 notes: doublesNotes,
                 scoringMode: scoringMode,
+                superTiebreakDecider: superTiebreakDecider,
               ),
             ),
           );

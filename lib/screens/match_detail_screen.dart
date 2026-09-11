@@ -547,9 +547,14 @@ class _MatchDetailScreenState extends State<MatchDetailScreen> {
                   ...List.generate(
                     (data['result']['sets'] as List).length,
                     (index) {
-                      final set = data['result']['sets'][index];
-                      final entryLabel =
-                          data['result']['scoringMode'] == 'tiebreakOnly'
+                      final sets = data['result']['sets'] as List;
+                      final set = sets[index];
+                      final isDeciderEntry =
+                          data['result']['superTiebreakDecider'] == true &&
+                              index == sets.length - 1;
+                      final entryLabel = isDeciderEntry
+                          ? loc.superTiebreakLabel
+                          : data['result']['scoringMode'] == 'tiebreakOnly'
                               ? loc.tiebreakEntryLabel(index + 1)
                               : loc.setLabel(index + 1);
                       return Text('$entryLabel: ${set['p1']} - ${set['p2']}');

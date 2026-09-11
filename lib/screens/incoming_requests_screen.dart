@@ -23,8 +23,16 @@ class IncomingRequestsScreen extends StatelessWidget {
     final batch = FirebaseFirestore.instance.batch();
 
     // 2️⃣ Update request status
+    // seenBySender starts false so the sender's notification bell can flag
+    // this outcome (accepted/rejected) until they've actually viewed it —
+    // see home_screen.dart's bell dropdown, which flips it back to true.
+    // respondedAt records when the outcome actually happened (createdAt is
+    // the original request's timestamp, which could be days earlier), so
+    // the bell dropdown can sort by real recency of the notification itself.
     batch.update(requestRef, {
       'status': status,
+      'seenBySender': false,
+      'respondedAt': FieldValue.serverTimestamp(),
     });
 
     // 3️⃣ If accepted → create match
