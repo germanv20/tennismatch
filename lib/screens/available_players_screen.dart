@@ -613,6 +613,15 @@ class _AvailablePlayersScreenState extends State<AvailablePlayersScreen> {
                       ],
                     ),
                   ),
+                if ((data['tennisLevel'] as String?)?.isNotEmpty == true)
+                  Text(
+                    translateLevel(data['tennisLevel'] as String, loc),
+                    style: const TextStyle(
+                      color: Colors.green,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 12,
+                    ),
+                  ),
                 Text(
                   '${loc.availableLabel}: $availabilityText',
                   style: const TextStyle(color: Colors.grey),

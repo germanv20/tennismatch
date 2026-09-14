@@ -81,6 +81,12 @@ service cloud.firestore {
         // regardless of the request's current state.
         (request.auth.uid == resource.data.fromUid &&
          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['seenBySender'])) ||
+        // Notification bell: the recipient marks a still-pending incoming
+        // request as seen once it's been shown in the dropdown, so the
+        // badge count can clear without waiting for them to accept/reject
+        // it. Same single-field scoping as seenBySender above.
+        (request.auth.uid == resource.data.toUid &&
+         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['seenByRecipient'])) ||
         // Cloud Function sets expired — allow via admin SDK (no auth)
         // For client-side safety, also allow fromUid to read their expired requests
         request.resource.data.status == "expired"

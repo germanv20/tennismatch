@@ -493,7 +493,17 @@ class _HomeScreenState extends State<HomeScreen> {
           .where('status', isEqualTo: 'pending')
           .snapshots(),
       builder: (context, incomingSnap) {
-        final incomingCount = incomingSnap.data?.docs.length ?? 0;
+        // Filtered client-side, not via a Firestore `where` clause: existing
+        // pending requests created before this field existed have no
+        // `seenByRecipient` at all, and a Firestore equality filter on
+        // `== false` would silently exclude docs missing the field
+        // entirely, hiding them from the badge forever.
+        final incomingCount = incomingSnap.data?.docs
+                .where((d) =>
+                    (d.data() as Map<String, dynamic>)['seenByRecipient'] !=
+                    true)
+                .length ??
+            0;
         return StreamBuilder<QuerySnapshot>(
           stream: FirebaseFirestore.instance
               .collection('match_requests')
@@ -573,6 +583,20 @@ class _HomeScreenState extends State<HomeScreen> {
       (_) => 'createdAt',
     );
 
+    // Mark whatever's currently shown as seen, so the badge clears now that
+    // the user has viewed it in the dropdown — the item itself stays in the
+    // list below (still pending, still worth seeing again), only the badge
+    // count reacts to this flag (see _buildNotificationBell).
+    final unseenIncoming = incomingSnap.docs.where(
+        (d) => (d.data() as Map<String, dynamic>)['seenByRecipient'] != true);
+    if (unseenIncoming.isNotEmpty) {
+      final seenBatch = firestore.batch();
+      for (final doc in unseenIncoming) {
+        seenBatch.update(doc.reference, {'seenByRecipient': true});
+      }
+      await seenBatch.commit();
+    }
+
     final acceptedSnap = await firestore
         .collection('match_requests')
         .where('fromUid', isEqualTo: uid)
@@ -608,6 +632,16 @@ class _HomeScreenState extends State<HomeScreen> {
     return results;
   }
 
+  /// HH:mm, same manual padLeft approach match_chat_screen.dart already
+  /// uses for message timestamps — no new date-formatting dependency.
+  String _formatNotificationTime(Timestamp? ts) {
+    if (ts == null) return '';
+    final dt = ts.toDate();
+    final hour = dt.hour.toString().padLeft(2, '0');
+    final minute = dt.minute.toString().padLeft(2, '0');
+    return '$hour:$minute';
+  }
+
   Widget _buildNotificationTile(_BellNotificationItem item, AppLocalizations loc) {
     IconData icon;
     Color color;
@@ -628,12 +662,23 @@ class _HomeScreenState extends State<HomeScreen> {
         color = Colors.blue;
         text = loc.notificationIncomingRequest(item.otherName);
     }
+    final timeText = _formatNotificationTime(item.timestamp);
     return Row(
       children: [
         Icon(icon, color: color, size: 20),
         const SizedBox(width: 8),
         Expanded(
-          child: Text(text, style: const TextStyle(fontSize: 13)),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(text, style: const TextStyle(fontSize: 13)),
+              if (timeText.isNotEmpty)
+                Text(
+                  timeText,
+                  style: TextStyle(fontSize: 11, color: Colors.grey[600]),
+                ),
+            ],
+          ),
         ),
       ],
     );
@@ -676,11 +721,15 @@ class _HomeScreenState extends State<HomeScreen> {
         _bellKey.currentContext!.findRenderObject() as RenderBox;
     final RenderBox overlay =
         Overlay.of(context).context.findRenderObject() as RenderBox;
+    // Anchor on the icon's bottom-right corner only (a zero-size rect), not
+    // its full bounds — using the icon's own top edge as the menu's top
+    // made the dropdown open at the icon's vertical position (mid-app-bar),
+    // overlapping the title next to it, instead of opening below the app
+    // bar entirely.
+    final buttonBottomRight =
+        button.localToGlobal(button.size.bottomRight(Offset.zero), ancestor: overlay);
     final position = RelativeRect.fromRect(
-      Rect.fromPoints(
-        button.localToGlobal(Offset.zero, ancestor: overlay),
-        button.localToGlobal(button.size.bottomRight(Offset.zero), ancestor: overlay),
-      ),
+      Rect.fromPoints(buttonBottomRight, buttonBottomRight),
       Offset.zero & overlay.size,
     );
 
