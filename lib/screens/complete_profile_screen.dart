@@ -28,6 +28,10 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
   DateTime? birthdate;
   String? name; // collected here as safety net if Google doesn't provide it
   String? city;
+  // Defaults to Colombia since that's the only country the app currently
+  // operates in — still fully changeable via the picker below for anyone
+  // outside it. Set in initState (see below) alongside the matching phone
+  // calling-code prefill, same as if the user had picked it themselves.
   String? country;
   String? countryCode;
   String? tennisLevel;
@@ -36,6 +40,10 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
 
   bool isSaving = false;
   bool termsAccepted = false;
+  // True once the user has tapped Save at least once — drives the
+  // required-field error styling (red ListTile border/text) below,
+  // mirroring edit_profile_screen.dart's identical pattern.
+  bool _attemptedSave = false;
 
   final List<String> levels = ['Beginner', 'Intermediate', 'Advanced'];
   final List<String> days = [
@@ -97,15 +105,20 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
   Future<void> saveProfile() async {
     final loc = AppLocalizations.of(context)!;
 
-    if (!_formKey.currentState!.validate() ||
-        birthdate == null ||
-        tennisLevel == null) {
-      return;
-    }
+    setState(() => _attemptedSave = true);
 
-    if (country == null) {
+    // Run all field validations together so the user sees every problem
+    // at once instead of one snackbar at a time — same pattern as
+    // edit_profile_screen.dart. Previously birthdate/tennisLevel being
+    // empty just silently returned here with no feedback at all.
+    final isFormValid = _formKey.currentState!.validate();
+    final isDateValid = birthdate != null;
+    final isCountryValid = country != null && country!.isNotEmpty;
+    final isLevelValid = tennisLevel != null;
+
+    if (!isFormValid || !isDateValid || !isCountryValid || !isLevelValid) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(loc.requiredField)),
+        SnackBar(content: Text(loc.completeRequiredFields)),
       );
       return;
     }
@@ -334,6 +347,18 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
       _nameController.text = googleName;
       name = googleName;
     }
+
+    // Default the country to Colombia — the app currently only operates
+    // there, so most users would just pick this anyway. Still fully
+    // editable via the country picker below. Mirrors the same phone
+    // calling-code prefill the picker's onSelect already does.
+    country = 'Colombia';
+    countryCode = 'CO';
+    final prefix = _phoneCodePrefix('CO');
+    if (prefix != null) {
+      _phoneController.text = prefix;
+      phoneNumber = prefix;
+    }
   }
 
   @override
@@ -389,6 +414,10 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context)!;
 
+    final showDateError = _attemptedSave && birthdate == null;
+    final showCountryError =
+        _attemptedSave && (country == null || country!.isEmpty);
+
     return Scaffold(
       appBar: AppBar(title: Text(loc.completeProfile)),
       body: Padding(
@@ -417,10 +446,30 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                   birthdate == null
                       ? loc.selectBirthdate
                       : "${birthdate!.toLocal()}".split(' ')[0],
+                  style: TextStyle(
+                    color: showDateError ? Colors.red : null,
+                  ),
                 ),
-                trailing: const Icon(Icons.calendar_today),
+                trailing: Icon(
+                  Icons.calendar_today,
+                  color: showDateError ? Colors.red : null,
+                ),
+                shape: showDateError
+                    ? RoundedRectangleBorder(
+                        side: const BorderSide(color: Colors.red),
+                        borderRadius: BorderRadius.circular(4),
+                      )
+                    : null,
                 onTap: pickBirthdate,
               ),
+              if (showDateError)
+                Padding(
+                  padding: const EdgeInsets.only(top: 4, left: 12),
+                  child: Text(
+                    loc.requiredField,
+                    style: const TextStyle(color: Colors.red, fontSize: 12),
+                  ),
+                ),
 
               const SizedBox(height: 12),
 
@@ -448,15 +497,24 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                     Text(
                       country ?? loc.selectCountry,
                       style: TextStyle(
-                        color: country == null
-                            ? Colors.grey
-                            : Colors.black,
+                        color: showCountryError
+                            ? Colors.red
+                            : (country == null ? Colors.grey : Colors.black),
                         fontSize: 16,
                       ),
                     ),
                   ],
                 ),
-                trailing: const Icon(Icons.arrow_drop_down),
+                trailing: Icon(
+                  Icons.arrow_drop_down,
+                  color: showCountryError ? Colors.red : null,
+                ),
+                shape: showCountryError
+                    ? RoundedRectangleBorder(
+                        side: const BorderSide(color: Colors.red),
+                        borderRadius: BorderRadius.circular(4),
+                      )
+                    : null,
                 onTap: () {
                   showCountryPicker(
                     context: context,
@@ -485,6 +543,14 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                   );
                 },
               ),
+              if (showCountryError)
+                Padding(
+                  padding: const EdgeInsets.only(top: 4, left: 12),
+                  child: Text(
+                    loc.requiredField,
+                    style: const TextStyle(color: Colors.red, fontSize: 12),
+                  ),
+                ),
 
               const SizedBox(height: 12),
 
