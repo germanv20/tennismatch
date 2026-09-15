@@ -8,6 +8,7 @@ import 'incoming_requests_screen.dart';
 import '../widgets/empty_state.dart';
 import '../widgets/error_state.dart';
 import '../utils/city_utils.dart';
+import '../utils/name_utils.dart';
 
 const weekOrder = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
@@ -585,7 +586,9 @@ class _AvailablePlayersScreenState extends State<AvailablePlayersScreen> {
               ],
             ),
             title: Text(
-              data['name'] ?? loc.unknown,
+              (data['name'] as String?)?.isNotEmpty == true
+                  ? formatNameDisplay(data['name'] as String)
+                  : loc.unknown,
               style: const TextStyle(fontWeight: FontWeight.bold),
             ),
             subtitle: Column(
