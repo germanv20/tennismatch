@@ -24,6 +24,16 @@ class AddMatchResultScreen extends StatefulWidget {
 class _AddMatchResultScreenState extends State<AddMatchResultScreen> {
 
   final List<GlobalKey<SetScoreRowState>> _setKeys = [];
+  // Parent-owned mirror of each row's latest SetScoreData, kept in sync via
+  // each SetScoreRow's onChanged callback (fires on every keystroke).
+  // Validation/save reads from THIS list rather than reaching back into
+  // _setKeys[i].currentState?.currentData at save time — a real-world bug
+  // report (scores for 2 of 3 sets disappearing right when Save was tapped)
+  // traced to that read pattern depending on the child widgets' live state
+  // still being exactly correct at that one instant. Always kept the same
+  // length as _setKeys (see _addSet/_removeSet/_setScoringMode and the
+  // officialSuperTiebreakEnabled checkbox below).
+  final List<SetScoreData?> _liveSetData = [];
 
   final durationController = TextEditingController();
   final locationController = TextEditingController();
@@ -51,6 +61,7 @@ class _AddMatchResultScreenState extends State<AddMatchResultScreen> {
     if (_setKeys.length >= _maxEntriesForCurrentMode) return;
     setState(() {
       _setKeys.add(GlobalKey<SetScoreRowState>());
+      _liveSetData.add(null);
     });
   }
 
@@ -58,6 +69,7 @@ class _AddMatchResultScreenState extends State<AddMatchResultScreen> {
     if (_setKeys.length == 1) return;
     setState(() {
       _setKeys.removeAt(index);
+      _liveSetData.removeAt(index);
     });
   }
 
@@ -67,6 +79,7 @@ class _AddMatchResultScreenState extends State<AddMatchResultScreen> {
       final maxEntries = _maxEntriesForCurrentMode;
       if (_setKeys.length > maxEntries) {
         _setKeys.removeRange(maxEntries, _setKeys.length);
+        _liveSetData.removeRange(maxEntries, _liveSetData.length);
       }
     });
   }
@@ -163,9 +176,9 @@ class _AddMatchResultScreenState extends State<AddMatchResultScreen> {
   /// 1-1. Drives both the live "Super Tie-break" label and its validation.
   bool _isShortSetDecider(int index) {
     if (scoringMode != ScoringMode.shortSet || index != 2) return false;
-    if (_setKeys.length < 2) return false;
-    final s0 = _setKeys[0].currentState?.currentData;
-    final s1 = _setKeys[1].currentState?.currentData;
+    if (_liveSetData.length < 2) return false;
+    final s0 = _liveSetData[0];
+    final s1 = _liveSetData[1];
     if (s0?.p1 == null || s0?.p2 == null || s1?.p1 == null || s1?.p2 == null) {
       return false;
     }
@@ -183,9 +196,9 @@ class _AddMatchResultScreenState extends State<AddMatchResultScreen> {
         index != 2) {
       return false;
     }
-    if (_setKeys.length < 2) return false;
-    final s0 = _setKeys[0].currentState?.currentData;
-    final s1 = _setKeys[1].currentState?.currentData;
+    if (_liveSetData.length < 2) return false;
+    final s0 = _liveSetData[0];
+    final s1 = _liveSetData[1];
     if (s0?.p1 == null || s0?.p2 == null || s1?.p1 == null || s1?.p2 == null) {
       return false;
     }
@@ -240,8 +253,8 @@ class _AddMatchResultScreenState extends State<AddMatchResultScreen> {
     // doesn't guarantee the match ever reached a 1-1 split that needed one.
     bool officialDeciderReached = false;
 
-    for (int i = 0; i < _setKeys.length; i++) {
-      final data = _setKeys[i].currentState?.currentData;
+    for (int i = 0; i < _liveSetData.length; i++) {
+      final data = _liveSetData[i];
 
       if (data == null || data.p1 == null || data.p2 == null) {
         showError(loc.addAtLeastOneSet);
@@ -456,6 +469,10 @@ class _AddMatchResultScreenState extends State<AddMatchResultScreen> {
 
   Future<void> handleSave() async {
     if (!mounted) return;
+    // Dismiss the keyboard/focus before reading anything, so any pending
+    // IME commit happens deterministically here rather than interleaving
+    // with the validation read right below.
+    FocusScope.of(context).unfocus();
     setState(() => isSaving = true);
     try {
       await saveResult();
@@ -480,6 +497,19 @@ class _AddMatchResultScreenState extends State<AddMatchResultScreen> {
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: ListView(
+          // A large cacheExtent keeps every child (including the
+          // SetScoreRow widgets and their TextEditingControllers) mounted
+          // regardless of scroll position. Without this, ListView's normal
+          // Sliver-based virtualization disposes elements that scroll far
+          // enough outside the viewport (default cache extent ~250px) —
+          // and the keyboard opening (which shrinks/reflows the viewport)
+          // plus scrolling down to the Save button and back up was enough
+          // to push earlier set rows past that threshold, permanently
+          // destroying their State (and the score the user had just
+          // typed) well before Save was ever tapped. This form is small
+          // and bounded (a handful of fields + up to kMaxMatchEntries sets),
+          // so there's no real virtualization benefit being given up here.
+          cacheExtent: 5000,
           children: [
             Text(loc.sets, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 4),
@@ -590,8 +620,9 @@ class _AddMatchResultScreenState extends State<AddMatchResultScreen> {
                 isSaving: isSaving,
                 scoringMode: scoringMode,
                 isSuperTiebreak: _isMatchDecider(index),
+                initialData: _liveSetData[index],
                 onRemove: () => _removeSet(index),
-                onChanged: (_) => setState(() {}),
+                onChanged: (data) => setState(() => _liveSetData[index] = data),
               );
             }),
             if (scoringMode != ScoringMode.proSet &&
@@ -617,6 +648,8 @@ class _AddMatchResultScreenState extends State<AddMatchResultScreen> {
                                   _setKeys.length > kMaxShortSetEntries) {
                                 _setKeys.removeRange(
                                     kMaxShortSetEntries, _setKeys.length);
+                                _liveSetData.removeRange(
+                                    kMaxShortSetEntries, _liveSetData.length);
                               }
                             }),
                   ),
@@ -631,6 +664,8 @@ class _AddMatchResultScreenState extends State<AddMatchResultScreen> {
                                     _setKeys.length > kMaxShortSetEntries) {
                                   _setKeys.removeRange(
                                       kMaxShortSetEntries, _setKeys.length);
+                                  _liveSetData.removeRange(
+                                      kMaxShortSetEntries, _liveSetData.length);
                                 }
                               }),
                       child: Column(

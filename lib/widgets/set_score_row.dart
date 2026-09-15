@@ -44,6 +44,22 @@ class SetScoreRow extends StatefulWidget {
   /// first-to-10 score, not a "best of 4 games" set.
   final bool isSuperTiebreak;
 
+  /// Optional starting values, sourced from the parent screen's own
+  /// `_liveSetData[index]` (see log_guest_match_screen.dart's CLAUDE.md
+  /// notes). Normally unnecessary — this widget owns its own
+  /// TextEditingControllers, which already hold whatever the user typed.
+  /// But a `GlobalKey`'d widget deep inside a `ListView` can still have its
+  /// State destroyed and recreated from scratch if it's ever scrolled far
+  /// enough outside the sliver's cache extent (a real bug this app hit:
+  /// the keyboard resizing the viewport plus scrolling down to the Save
+  /// button and back up was enough to trigger it before `cacheExtent` was
+  /// widened to prevent it). If that ever happens again for any other
+  /// reason, seeding from the parent's already-tracked value here means
+  /// the row redisplays what was actually entered instead of coming back
+  /// blank — belt-and-suspenders on top of the `cacheExtent` fix, not a
+  /// replacement for it.
+  final SetScoreData? initialData;
+
   const SetScoreRow({
     super.key,
     required this.index,
@@ -55,6 +71,7 @@ class SetScoreRow extends StatefulWidget {
     required this.onChanged,
     this.scoringMode = ScoringMode.official,
     this.isSuperTiebreak = false,
+    this.initialData,
   });
 
   @override
@@ -72,6 +89,14 @@ class SetScoreRowState extends State<SetScoreRow> {
   @override
   void initState() {
     super.initState();
+    final initial = widget.initialData;
+    if (initial != null) {
+      if (initial.p1 != null) p1Controller.text = initial.p1.toString();
+      if (initial.p2 != null) p2Controller.text = initial.p2.toString();
+      if (initial.tb1 != null) tb1Controller.text = initial.tb1.toString();
+      if (initial.tb2 != null) tb2Controller.text = initial.tb2.toString();
+      _showTiebreak = initial.isTiebreak;
+    }
     p1Controller.addListener(_onScoreChanged);
     p2Controller.addListener(_onScoreChanged);
     tb1Controller.addListener(_onScoreChanged);

@@ -21,6 +21,18 @@ class _LogGuestMatchScreenState extends State<LogGuestMatchScreen> {
 
   // Sets
   final List<GlobalKey<SetScoreRowState>> _setKeys = [];
+  // Parent-owned mirror of each row's latest SetScoreData, kept in sync via
+  // each SetScoreRow's onChanged callback (fires on every keystroke).
+  // Validation/save reads from THIS list rather than reaching back into
+  // _setKeys[i].currentState?.currentData at save time — a real-world bug
+  // report (scores for 2 of 3 sets disappearing right when Save was tapped,
+  // reproduced for both singles and doubles, across multiple users) traced
+  // to that read pattern depending on the child widgets' live state still
+  // being exactly correct at that one instant, including right as the
+  // on-screen keyboard dismisses and several fields lose focus together.
+  // Always kept the same length as _setKeys (see addSet/removeSet/
+  // _setScoringMode and the officialSuperTiebreakEnabled checkbox below).
+  final List<SetScoreData?> _liveSetData = [];
 
   // Match info
   final durationController = TextEditingController();
@@ -97,6 +109,7 @@ class _LogGuestMatchScreenState extends State<LogGuestMatchScreen> {
     if (_setKeys.length >= _maxEntriesForCurrentMode) return;
     setState(() {
       _setKeys.add(GlobalKey<SetScoreRowState>());
+      _liveSetData.add(null);
     });
   }
 
@@ -104,6 +117,7 @@ class _LogGuestMatchScreenState extends State<LogGuestMatchScreen> {
     if (_setKeys.length == 1) return;
     setState(() {
       _setKeys.removeAt(index);
+      _liveSetData.removeAt(index);
     });
   }
 
@@ -120,6 +134,7 @@ class _LogGuestMatchScreenState extends State<LogGuestMatchScreen> {
       final maxEntries = _maxEntriesForCurrentMode;
       if (_setKeys.length > maxEntries) {
         _setKeys.removeRange(maxEntries, _setKeys.length);
+        _liveSetData.removeRange(maxEntries, _liveSetData.length);
       }
     });
   }
@@ -173,8 +188,7 @@ class _LogGuestMatchScreenState extends State<LogGuestMatchScreen> {
     if (locationController.text.trim().isNotEmpty) return true;
     if (durationController.text.trim().isNotEmpty) return true;
     if (notesController.text.trim().isNotEmpty) return true;
-    for (final key in _setKeys) {
-      final data = key.currentState?.currentData;
+    for (final data in _liveSetData) {
       if (data != null && (data.p1 != null || data.p2 != null)) return true;
     }
     return false;
@@ -266,9 +280,9 @@ class _LogGuestMatchScreenState extends State<LogGuestMatchScreen> {
   /// 1-1. Drives both the live "Super Tie-break" label and its validation.
   bool _isShortSetDecider(int index) {
     if (scoringMode != ScoringMode.shortSet || index != 2) return false;
-    if (_setKeys.length < 2) return false;
-    final s0 = _setKeys[0].currentState?.currentData;
-    final s1 = _setKeys[1].currentState?.currentData;
+    if (_liveSetData.length < 2) return false;
+    final s0 = _liveSetData[0];
+    final s1 = _liveSetData[1];
     if (s0?.p1 == null || s0?.p2 == null || s1?.p1 == null || s1?.p2 == null) {
       return false;
     }
@@ -286,9 +300,9 @@ class _LogGuestMatchScreenState extends State<LogGuestMatchScreen> {
         index != 2) {
       return false;
     }
-    if (_setKeys.length < 2) return false;
-    final s0 = _setKeys[0].currentState?.currentData;
-    final s1 = _setKeys[1].currentState?.currentData;
+    if (_liveSetData.length < 2) return false;
+    final s0 = _liveSetData[0];
+    final s1 = _liveSetData[1];
     if (s0?.p1 == null || s0?.p2 == null || s1?.p1 == null || s1?.p2 == null) {
       return false;
     }
@@ -404,6 +418,10 @@ class _LogGuestMatchScreenState extends State<LogGuestMatchScreen> {
 
   Future<void> _handleSave() async {
     if (isSaving) return;
+    // Dismiss the keyboard/focus before reading anything, so any pending
+    // IME commit happens deterministically here rather than interleaving
+    // with the validation read right below.
+    FocusScope.of(context).unfocus();
     setState(() => isSaving = true);
 
     try {
@@ -438,8 +456,8 @@ class _LogGuestMatchScreenState extends State<LogGuestMatchScreen> {
     // doesn't guarantee the match ever reached a 1-1 split that needed one.
     bool officialDeciderReached = false;
 
-    for (int i = 0; i < _setKeys.length; i++) {
-      final data = _setKeys[i].currentState?.currentData;
+    for (int i = 0; i < _liveSetData.length; i++) {
+      final data = _liveSetData[i];
 
       if (data == null || data.p1 == null || data.p2 == null) {
         showError(loc.addAtLeastOneSet);
@@ -739,6 +757,10 @@ class _LogGuestMatchScreenState extends State<LogGuestMatchScreen> {
         body: Padding(
           padding: const EdgeInsets.all(16),
           child: ListView(
+            // See add_match_result_screen.dart's identical cacheExtent
+            // comment — same fix for the same scroll/keyboard-triggered
+            // SetScoreRow state-loss bug, here too.
+            cacheExtent: 5000,
             children: [
 
               // ── Section: Opponent Info ──
@@ -932,8 +954,9 @@ class _LogGuestMatchScreenState extends State<LogGuestMatchScreen> {
                 isSaving: isSaving,
                 scoringMode: scoringMode,
                 isSuperTiebreak: _isMatchDecider(index),
+                initialData: _liveSetData[index],
                 onRemove: () => removeSet(index),
-                onChanged: (_) => setState(() {}),
+                onChanged: (data) => setState(() => _liveSetData[index] = data),
               );
             }),
 
@@ -999,6 +1022,8 @@ class _LogGuestMatchScreenState extends State<LogGuestMatchScreen> {
                                   _setKeys.length > kMaxShortSetEntries) {
                                 _setKeys.removeRange(
                                     kMaxShortSetEntries, _setKeys.length);
+                                _liveSetData.removeRange(
+                                    kMaxShortSetEntries, _liveSetData.length);
                               }
                             }),
                   ),
@@ -1013,6 +1038,8 @@ class _LogGuestMatchScreenState extends State<LogGuestMatchScreen> {
                                     _setKeys.length > kMaxShortSetEntries) {
                                   _setKeys.removeRange(
                                       kMaxShortSetEntries, _setKeys.length);
+                                  _liveSetData.removeRange(
+                                      kMaxShortSetEntries, _liveSetData.length);
                                 }
                               }),
                       child: Column(
