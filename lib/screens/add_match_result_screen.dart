@@ -223,6 +223,7 @@ class _AddMatchResultScreenState extends State<AddMatchResultScreen> {
     if (scoringMode == ScoringMode.official && officialSuperTiebreakEnabled) {
       return kMaxShortSetEntries;
     }
+    if (scoringMode == ScoringMode.official) return kMaxOfficialEntries;
     return kMaxMatchEntries;
   }
 

@@ -328,6 +328,7 @@ class _LogGuestMatchScreenState extends State<LogGuestMatchScreen> {
     if (scoringMode == ScoringMode.official && officialSuperTiebreakEnabled) {
       return kMaxShortSetEntries;
     }
+    if (scoringMode == ScoringMode.official) return kMaxOfficialEntries;
     return kMaxMatchEntries;
   }
 

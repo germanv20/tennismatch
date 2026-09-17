@@ -287,6 +287,7 @@ class _LogDoublesMatchScreenState extends State<LogDoublesMatchScreen> {
     if (scoringMode == ScoringMode.official && officialSuperTiebreakEnabled) {
       return kMaxShortSetEntries;
     }
+    if (scoringMode == ScoringMode.official) return kMaxOfficialEntries;
     return kMaxMatchEntries;
   }
 

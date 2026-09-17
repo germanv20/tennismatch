@@ -28,6 +28,15 @@ const int kMaxMatchEntries = 9;
 /// 3rd entry (the super tie-break decider) is played, the match is over.
 const int kMaxShortSetEntries = 3;
 
+/// `ScoringMode.official` represents a real tennis match — best-of-5 sets
+/// is the maximum ever played (Grand Slam men's singles), so no realistic
+/// Official-mode match needs more than 5 entries. Caps it well below the
+/// generic `kMaxMatchEntries`, which still applies to `open`/`tiebreakOnly`
+/// (formats with no such real-world ceiling). Doesn't apply when Official's
+/// own optional super-tiebreak toggle is on — that's already capped lower,
+/// at `kMaxShortSetEntries`.
+const int kMaxOfficialEntries = 5;
+
 class SetScoreRow extends StatefulWidget {
   final int index;
   final String player1Name;
