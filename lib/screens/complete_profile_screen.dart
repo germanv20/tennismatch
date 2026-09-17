@@ -641,15 +641,20 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                   prefixIcon: const Icon(Icons.phone_outlined),
                 ),
                 onChanged: (value) => phoneNumber = value,
-                validator: (value) {
-                  // Optional field — only validate format if filled
-                  if (value == null || value.isEmpty) return null;
-                  final normalised = _normalisePhone(value);
-                  if (normalised == null) {
-                    return loc.invalidPhoneNumber;
-                  }
-                  return null;
-                },
+                // Always optional — this field only matters if the player
+                // has an existing guest match to claim (see
+                // _claimGuestMatches), so it must never block Save. It used
+                // to reject an unparseable value with loc.invalidPhoneNumber,
+                // but that became a de facto "required" field the moment
+                // initState started pre-filling it with the country's
+                // calling-code prefix (e.g. "+57 ") — the field is then
+                // never truly empty, so a user who never touches it was
+                // hitting this validator's format-failure branch on Save.
+                // saveProfile() already tolerates an unnormalisable phone
+                // gracefully (just skips saving it / skips the claim
+                // mechanic), so the validator does the same here instead of
+                // blocking the whole form over an optional field.
+                validator: (value) => null,
               ),
 
               const SizedBox(height: 24),
