@@ -55,6 +55,21 @@ class AppLocalizationsEs extends AppLocalizations {
   String get outgoingRequests => 'Solicitudes enviadas';
 
   @override
+  String get matchRequestsTile => 'Solicitudes de partido';
+
+  @override
+  String get matchRequestsIncomingTab => 'Recibidas';
+
+  @override
+  String get matchRequestsOutgoingTab => 'Enviadas';
+
+  @override
+  String get logMatchTile => 'Registrar partido';
+
+  @override
+  String get logMatchChooserTitle => '¿Qué tipo de partido?';
+
+  @override
   String get myProfile => 'Mi perfil';
 
   @override

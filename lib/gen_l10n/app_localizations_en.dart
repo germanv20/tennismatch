@@ -54,6 +54,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get outgoingRequests => 'Outgoing Requests';
 
   @override
+  String get matchRequestsTile => 'Match Requests';
+
+  @override
+  String get matchRequestsIncomingTab => 'Incoming';
+
+  @override
+  String get matchRequestsOutgoingTab => 'Outgoing';
+
+  @override
+  String get logMatchTile => 'Log Match';
+
+  @override
+  String get logMatchChooserTitle => 'What kind of match?';
+
+  @override
   String get myProfile => 'My Profile';
 
   @override

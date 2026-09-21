@@ -10,12 +10,12 @@ import 'available_players_screen.dart';
 import 'match_history_screen.dart';
 import 'my_matches_screen.dart';
 import 'incoming_requests_screen.dart';
-import 'outgoing_requests_screen.dart';
 import 'player_statistics_screen.dart';
 import 'my_profile_screen.dart';
 import 'log_guest_match_screen.dart'; // NEW
 import 'log_doubles_match_screen.dart'; // NEW
 import 'ranking_screen.dart';
+import 'match_requests_screen.dart';
 import '../widgets/home_card.dart';
 import '../widgets/recent_activity_card.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -385,6 +385,76 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
  
+  /// Bottom-sheet chooser opened by the combined "Log Match" Home tile
+  /// (replaces the previous separate Singles/Doubles tiles — see CLAUDE.md).
+  /// Both options push the same unchanged screens/snackbars the old tiles
+  /// did; only the extra tap to pick one is new.
+  void _showLogMatchChooser(BuildContext context, AppLocalizations loc) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (sheetContext) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(24, 20, 24, 8),
+                child: Text(
+                  loc.logMatchChooserTitle,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              ListTile(
+                leading: const Icon(Icons.person_outline),
+                title: Text(loc.logMatchCard),
+                onTap: () async {
+                  Navigator.pop(sheetContext);
+                  final result = await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const LogGuestMatchScreen(),
+                    ),
+                  );
+                  if (result == true && mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(loc.guestMatchSaved)),
+                    );
+                  }
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.group_outlined),
+                title: Text(loc.logDoubles),
+                onTap: () async {
+                  Navigator.pop(sheetContext);
+                  final result = await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const LogDoublesMatchScreen(),
+                    ),
+                  );
+                  if (result == true && mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(loc.doublesMatchSaved)),
+                    );
+                  }
+                },
+              ),
+              const SizedBox(height: 8),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   void _showThemeSelector(BuildContext context) {
     final themeNotifier = context.read<ThemeNotifier>();
     final loc = AppLocalizations.of(context)!;
@@ -855,6 +925,47 @@ class _HomeScreenState extends State<HomeScreen> {
             tooltip: loc.themeSelector,
             onPressed: () => _showThemeSelector(context),
           ),
+          // Overflow menu — My Profile / Send Feedback moved here out of
+          // the grid (see CLAUDE.md): lower-frequency, more "settings"-like
+          // than the daily-use actions the grid now focuses on. Same
+          // destinations as before, just reached from the app bar instead.
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.more_vert),
+            tooltip: MaterialLocalizations.of(context).showMenuTooltip,
+            onSelected: (value) {
+              switch (value) {
+                case 'profile':
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const MyProfileScreen(),
+                    ),
+                  );
+                  break;
+                case 'feedback':
+                  openFeedbackForm(context);
+                  break;
+              }
+            },
+            itemBuilder: (context) => [
+              PopupMenuItem(
+                value: 'profile',
+                child: ListTile(
+                  leading: const Icon(Icons.person_outline),
+                  title: Text(loc.myProfile),
+                  contentPadding: EdgeInsets.zero,
+                ),
+              ),
+              PopupMenuItem(
+                value: 'feedback',
+                child: ListTile(
+                  leading: const Icon(Icons.feedback_outlined),
+                  title: Text(loc.sendFeedback),
+                  contentPadding: EdgeInsets.zero,
+                ),
+              ),
+            ],
+          ),
           IconButton(
             icon: const Icon(Icons.logout),
             tooltip: loc.signOut,
@@ -1072,50 +1183,21 @@ class _HomeScreenState extends State<HomeScreen> {
                   mainAxisSpacing: 12,
                   children: [
  
-                    // ── Log Singles Match card ──
+                    // ── Log Match card — combines the former separate
+                    // Singles/Doubles tiles into one, opening a lightweight
+                    // bottom-sheet chooser first (see _showLogMatchChooser)
+                    // rather than adding a new screen; part of decluttering
+                    // the Home grid (see CLAUDE.md). Both destination
+                    // screens/snackbars below are unchanged.
                     AspectRatio(
                       aspectRatio: 1,
                       child: HomeCard(
-                        title: loc.logMatchCard,
-                        icon: Icons.person_outline,
-                        onTap: () async {
-                          final result = await Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => const LogGuestMatchScreen(),
-                            ),
-                          );
-                          if (result == true && mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text(loc.guestMatchSaved)),
-                            );
-                          }
-                        },
+                        title: loc.logMatchTile,
+                        icon: Icons.sports_score,
+                        onTap: () => _showLogMatchChooser(context, loc),
                       ),
                     ),
- 
-                    // ── Log Doubles Match card ──
-                    AspectRatio(
-                      aspectRatio: 1,
-                      child: HomeCard(
-                        title: loc.logDoubles,
-                        icon: Icons.group_outlined,
-                        onTap: () async {
-                          final result = await Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => const LogDoublesMatchScreen(),
-                            ),
-                          );
-                          if (result == true && mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text(loc.doublesMatchSaved)),
-                            );
-                          }
-                        },
-                      ),
-                    ),
- 
+
                     AspectRatio(
                       aspectRatio: 1,
                       child: HomeCard(
@@ -1213,90 +1295,64 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ),
 
+                    // ── Match Requests card — combines the former
+                    // separate Incoming/Outgoing tiles into one tile
+                    // opening MatchRequestsScreen's tabbed view (see
+                    // CLAUDE.md). The badge is the sum of both counts, so
+                    // "something needs my attention" is still visible from
+                    // the grid without opening either tab.
                     StreamBuilder<int>(
                       stream: getIncomingRequestsCount(
                           widget.currentUser.uid),
-                      builder: (context, snapshot) {
-                        final count = snapshot.data ?? 0;
-                        return AspectRatio(
-                          aspectRatio: 1,
-                          child: NotificationBadge(
-                            count: count,
-                            child: HomeCard(
-                              title: loc.incomingRequests,
-                              icon: Icons.move_to_inbox,
-                              onTap: () => Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) =>
-                                      const IncomingRequestsScreen(),
+                      builder: (context, incomingSnapshot) {
+                        final incomingCount = incomingSnapshot.data ?? 0;
+                        return StreamBuilder<int>(
+                          stream: getOutgoingRequestsCount(
+                              widget.currentUser.uid),
+                          builder: (context, outgoingSnapshot) {
+                            final firestoreOutgoingCount =
+                                outgoingSnapshot.data ?? 0;
+                            if (outgoingOverrideCount != null &&
+                                outgoingOverrideCount! > 0 &&
+                                firestoreOutgoingCount >
+                                    outgoingOverrideCount!) {
+                              outgoingOverrideCount = null;
+                            }
+                            final displayOutgoingCount =
+                                outgoingOverrideCount ??
+                                    firestoreOutgoingCount;
+                            return AspectRatio(
+                              aspectRatio: 1,
+                              child: NotificationBadge(
+                                count: incomingCount + displayOutgoingCount,
+                                child: HomeCard(
+                                  title: loc.matchRequestsTile,
+                                  icon: Icons.swap_horiz,
+                                  onTap: () async {
+                                    await Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) => MatchRequestsScreen(
+                                          currentUser: widget.currentUser,
+                                        ),
+                                      ),
+                                    );
+                                    // Same "hide the badge now, let it
+                                    // self-correct once Firestore's real
+                                    // count changes" trick the old
+                                    // standalone Outgoing tile used —
+                                    // there's no per-item "seen" flag for
+                                    // outgoing requests, unlike incoming.
+                                    setState(() {
+                                      outgoingOverrideCount = 0;
+                                    });
+                                  },
                                 ),
                               ),
-                            ),
-                          ),
+                            );
+                          },
                         );
                       },
-                    ),
- 
-                    StreamBuilder<int>(
-                      stream: getOutgoingRequestsCount(
-                          widget.currentUser.uid),
-                      builder: (context, snapshot) {
-                        final firestoreCount = snapshot.data ?? 0;
-                        if (outgoingOverrideCount != null &&
-                            outgoingOverrideCount! > 0 &&
-                            firestoreCount > outgoingOverrideCount!) {
-                          outgoingOverrideCount = null;
-                        }
-                        final displayCount =
-                            outgoingOverrideCount ?? firestoreCount;
-                        return AspectRatio(
-                          aspectRatio: 1,
-                          child: NotificationBadge(
-                            count: displayCount,
-                            child: HomeCard(
-                              title: loc.outgoingRequests,
-                              icon: Icons.outbox,
-                              onTap: () async {
-                                await Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => OutgoingRequestsScreen(
-                                      currentUser: widget.currentUser,
-                                    ),
-                                  ),
-                                );
-                                setState(() {
-                                  outgoingOverrideCount = 0;
-                                });
-                              },
-                            ),
-                          ),
-                        );
-                      },
-                    ),
- 
-                    AspectRatio(
-                      aspectRatio: 1,
-                      child: HomeCard(
-                        title: loc.myProfile,
-                        icon: Icons.person,
-                        onTap: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => const MyProfileScreen(),
-                          ),
-                        ),
-                      ),
-                    ),
- 
-                    AspectRatio(
-                      aspectRatio: 1,
-                      child: HomeCard(
-                        title: loc.sendFeedback,
-                        icon: Icons.feedback,
-                        onTap: () => openFeedbackForm(context),
-                      ),
                     ),
                   ],
                 ),

@@ -188,6 +188,36 @@ abstract class AppLocalizations {
   /// **'Outgoing Requests'**
   String get outgoingRequests;
 
+  /// No description provided for @matchRequestsTile.
+  ///
+  /// In en, this message translates to:
+  /// **'Match Requests'**
+  String get matchRequestsTile;
+
+  /// No description provided for @matchRequestsIncomingTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Incoming'**
+  String get matchRequestsIncomingTab;
+
+  /// No description provided for @matchRequestsOutgoingTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Outgoing'**
+  String get matchRequestsOutgoingTab;
+
+  /// No description provided for @logMatchTile.
+  ///
+  /// In en, this message translates to:
+  /// **'Log Match'**
+  String get logMatchTile;
+
+  /// No description provided for @logMatchChooserTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'What kind of match?'**
+  String get logMatchChooserTitle;
+
   /// No description provided for @myProfile.
   ///
   /// In en, this message translates to:
