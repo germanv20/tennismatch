@@ -128,6 +128,7 @@ class _PlayerProfileViewScreenState extends State<PlayerProfileViewScreen> {
     final String city =
         rawCity.isNotEmpty ? formatCityDisplay(rawCity) : loc.notSet;
     final String country = userData['country'] ?? loc.notSet;
+    final int? age = userData['age'] as int?;
 
     return Scaffold(
       appBar: AppBar(
@@ -379,6 +380,14 @@ class _PlayerProfileViewScreenState extends State<PlayerProfileViewScreen> {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
+
+                  if (age != null) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      "🎂 ${loc.age}: $age",
+                      style: const TextStyle(fontSize: 15),
+                    ),
+                  ],
 
                   const SizedBox(height: 8),
 

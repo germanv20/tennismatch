@@ -513,6 +513,7 @@ class _AvailablePlayersScreenState extends State<AvailablePlayersScreen> {
     final hasIncomingRequest = incomingRequestUids.contains(playerUid);
     final playerCity =
         formatCityDisplay((data['city'] as String? ?? '').trim());
+    final int? age = data['age'] as int?;
 
     // Online if their presence heartbeat (lib/main.dart) wrote lastActive
     // within the last 2 minutes — no boolean flag needed, self-expires.
@@ -616,9 +617,15 @@ class _AvailablePlayersScreenState extends State<AvailablePlayersScreen> {
                       ],
                     ),
                   ),
-                if ((data['tennisLevel'] as String?)?.isNotEmpty == true)
+                if ((data['tennisLevel'] as String?)?.isNotEmpty == true ||
+                    age != null)
                   Text(
-                    translateLevel(data['tennisLevel'] as String, loc),
+                    [
+                      if ((data['tennisLevel'] as String?)?.isNotEmpty ==
+                          true)
+                        translateLevel(data['tennisLevel'] as String, loc),
+                      if (age != null) '${loc.age}: $age',
+                    ].join(' · '),
                     style: const TextStyle(
                       color: Colors.green,
                       fontWeight: FontWeight.w600,

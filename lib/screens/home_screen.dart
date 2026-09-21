@@ -988,14 +988,17 @@ class _HomeScreenState extends State<HomeScreen> {
             tooltip: loc.themeSelector,
             onPressed: () => _showThemeSelector(context),
           ),
-          // Overflow menu — My Profile / Send Feedback moved here out of
-          // the grid (see CLAUDE.md): lower-frequency, more "settings"-like
-          // than the daily-use actions the grid now focuses on. Same
-          // destinations as before, just reached from the app bar instead.
+          // Overflow menu — My Profile / Send Feedback / Sign Out, all
+          // moved here out of the grid / app bar (see CLAUDE.md):
+          // lower-frequency, more "settings"-like than the daily-use
+          // actions the grid now focuses on, leaving only 3 action
+          // widgets in the app bar (bell, theme selector, this menu).
+          // Same destinations/behavior as before, just reached from the
+          // overflow menu instead of a dedicated icon.
           PopupMenuButton<String>(
             icon: const Icon(Icons.more_vert),
             tooltip: MaterialLocalizations.of(context).showMenuTooltip,
-            onSelected: (value) {
+            onSelected: (value) async {
               switch (value) {
                 case 'profile':
                   Navigator.push(
@@ -1007,6 +1010,28 @@ class _HomeScreenState extends State<HomeScreen> {
                   break;
                 case 'feedback':
                   openFeedbackForm(context);
+                  break;
+                case 'logout':
+                  final confirm = await showDialog(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      title: Text(loc.signOut),
+                      content: Text(loc.signOutConfirmation),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context, false),
+                          child: Text(loc.cancel),
+                        ),
+                        TextButton(
+                          onPressed: () => Navigator.pop(context, true),
+                          child: Text(loc.signOut),
+                        ),
+                      ],
+                    ),
+                  );
+                  if (confirm == true && context.mounted) {
+                    await signOut(context);
+                  }
                   break;
               }
             },
@@ -1027,31 +1052,15 @@ class _HomeScreenState extends State<HomeScreen> {
                   contentPadding: EdgeInsets.zero,
                 ),
               ),
-            ],
-          ),
-          IconButton(
-            icon: const Icon(Icons.logout),
-            tooltip: loc.signOut,
-            onPressed: () async {
-              final confirm = await showDialog(
-                context: context,
-                builder: (context) => AlertDialog(
+              PopupMenuItem(
+                value: 'logout',
+                child: ListTile(
+                  leading: const Icon(Icons.logout),
                   title: Text(loc.signOut),
-                  content: Text(loc.signOutConfirmation),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(context, false),
-                      child: Text(loc.cancel),
-                    ),
-                    TextButton(
-                      onPressed: () => Navigator.pop(context, true),
-                      child: Text(loc.signOut),
-                    ),
-                  ],
+                  contentPadding: EdgeInsets.zero,
                 ),
-              );
-              if (confirm == true) await signOut(context);
-            },
+              ),
+            ],
           ),
         ],
       ),
@@ -1256,7 +1265,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       aspectRatio: 1,
                       child: HomeCard(
                         title: loc.logMatchTile,
-                        icon: Icons.sports_score,
+                        icon: Icons.assignment,
                         onTap: () => _showLogMatchChooser(context, loc),
                       ),
                     ),
@@ -1274,83 +1283,16 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       ),
                     ),
- 
-                    StreamBuilder<int>(
-                      stream: getNewMatchesCount(widget.currentUser.uid),
-                      builder: (context, snapshot) {
-                        final count = snapshot.data ?? 0;
-                        return AspectRatio(
-                          aspectRatio: 1,
-                          child: NotificationBadge(
-                            count: count,
-                            child: HomeCard(
-                              title: loc.myMatches,
-                              icon: Icons.calendar_today,
-                              onTap: () async {
-                                await Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => MyMatchesScreen(
-                                      currentUser: widget.currentUser,
-                                    ),
-                                  ),
-                                );
-                                setState(() {});
-                              },
-                            ),
-                          ),
-                        );
-                      },
-                    ),
- 
-                    // ── My Activity card — combines the former separate
-                    // Match History/My Stats tiles into one, opening a
-                    // bottom-sheet chooser first (see
-                    // _showMyActivityChooser), same pattern as the Log
-                    // Match tile above (see CLAUDE.md). The badge (pending
-                    // mutual-consent match-deletion requests) carries over
-                    // unchanged from the old standalone Match History tile.
-                    StreamBuilder<int>(
-                      stream: getPendingDeletionRequestsCount(
-                          widget.currentUser.uid),
-                      builder: (context, snapshot) {
-                        final count = snapshot.data ?? 0;
-                        return AspectRatio(
-                          aspectRatio: 1,
-                          child: NotificationBadge(
-                            count: count,
-                            child: HomeCard(
-                              title: loc.myActivityTile,
-                              icon: Icons.insights,
-                              onTap: () =>
-                                  _showMyActivityChooser(context, loc),
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-
-                    // ── Ranking card — Phase 3, city-scoped Elo leaderboard ──
-                    AspectRatio(
-                      aspectRatio: 1,
-                      child: HomeCard(
-                        title: loc.rankingTitle,
-                        icon: Icons.emoji_events,
-                        onTap: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => const RankingScreen(),
-                          ),
-                        ),
-                      ),
-                    ),
 
                     // ── Match Requests card — combines the former
                     // separate Incoming/Outgoing tiles into one tile
                     // opening MatchRequestsScreen's tabbed view (see
                     // CLAUDE.md). The badge is the sum of both counts, so
                     // "something needs my attention" is still visible from
-                    // the grid without opening either tab.
+                    // the grid without opening either tab. Positioned
+                    // right after Log Match per the grid reorder (see
+                    // CLAUDE.md) — row 1 is now the two most action-driven
+                    // tiles.
                     StreamBuilder<int>(
                       stream: getIncomingRequestsCount(
                           widget.currentUser.uid),
@@ -1403,6 +1345,76 @@ class _HomeScreenState extends State<HomeScreen> {
                           },
                         );
                       },
+                    ),
+
+                    StreamBuilder<int>(
+                      stream: getNewMatchesCount(widget.currentUser.uid),
+                      builder: (context, snapshot) {
+                        final count = snapshot.data ?? 0;
+                        return AspectRatio(
+                          aspectRatio: 1,
+                          child: NotificationBadge(
+                            count: count,
+                            child: HomeCard(
+                              title: loc.myMatches,
+                              icon: Icons.calendar_today,
+                              onTap: () async {
+                                await Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => MyMatchesScreen(
+                                      currentUser: widget.currentUser,
+                                    ),
+                                  ),
+                                );
+                                setState(() {});
+                              },
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+
+                    // ── My Activity card — combines the former separate
+                    // Match History/My Stats tiles into one, opening a
+                    // bottom-sheet chooser first (see
+                    // _showMyActivityChooser), same pattern as the Log
+                    // Match tile above (see CLAUDE.md). The badge (pending
+                    // mutual-consent match-deletion requests) carries over
+                    // unchanged from the old standalone Match History tile.
+                    StreamBuilder<int>(
+                      stream: getPendingDeletionRequestsCount(
+                          widget.currentUser.uid),
+                      builder: (context, snapshot) {
+                        final count = snapshot.data ?? 0;
+                        return AspectRatio(
+                          aspectRatio: 1,
+                          child: NotificationBadge(
+                            count: count,
+                            child: HomeCard(
+                              title: loc.myActivityTile,
+                              icon: Icons.insights,
+                              onTap: () =>
+                                  _showMyActivityChooser(context, loc),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+
+                    // ── Ranking card — Phase 3, city-scoped Elo leaderboard ──
+                    AspectRatio(
+                      aspectRatio: 1,
+                      child: HomeCard(
+                        title: loc.rankingTitle,
+                        icon: Icons.emoji_events,
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const RankingScreen(),
+                          ),
+                        ),
+                      ),
                     ),
                   ],
                 ),
