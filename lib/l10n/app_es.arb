@@ -22,6 +22,8 @@
   "matchRequestsOutgoingTab": "Enviadas",
   "logMatchTile": "Registrar partido",
   "logMatchChooserTitle": "¿Qué tipo de partido?",
+  "myActivityTile": "Mi Actividad",
+  "myActivityChooserTitle": "¿Qué te gustaría ver?",
   "myProfile": "Mi perfil",
   "sendFeedback": "Enviar comentarios",
   "loggedOutSuccessfully": "Sesión cerrada correctamente",

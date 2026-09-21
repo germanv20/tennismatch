@@ -455,6 +455,69 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  /// Bottom-sheet chooser opened by the combined "My Activity" Home tile
+  /// (replaces the previous separate Match History/My Stats tiles — see
+  /// CLAUDE.md). Both options push the same unchanged screens as before;
+  /// only the extra tap to pick one is new. Mirrors
+  /// _showLogMatchChooser()'s structure.
+  void _showMyActivityChooser(BuildContext context, AppLocalizations loc) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (sheetContext) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(24, 20, 24, 8),
+                child: Text(
+                  loc.myActivityChooserTitle,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              ListTile(
+                leading: const Icon(Icons.history),
+                title: Text(loc.matchHistory),
+                onTap: () {
+                  Navigator.pop(sheetContext);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const MatchHistoryScreen(),
+                    ),
+                  );
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.bar_chart),
+                title: Text(loc.myStats),
+                onTap: () {
+                  Navigator.pop(sheetContext);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => PlayerStatisticsScreen(
+                        userId: widget.currentUser.uid,
+                      ),
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: 8),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   void _showThemeSelector(BuildContext context) {
     final themeNotifier = context.read<ThemeNotifier>();
     final loc = AppLocalizations.of(context)!;
@@ -1240,6 +1303,13 @@ class _HomeScreenState extends State<HomeScreen> {
                       },
                     ),
  
+                    // ── My Activity card — combines the former separate
+                    // Match History/My Stats tiles into one, opening a
+                    // bottom-sheet chooser first (see
+                    // _showMyActivityChooser), same pattern as the Log
+                    // Match tile above (see CLAUDE.md). The badge (pending
+                    // mutual-consent match-deletion requests) carries over
+                    // unchanged from the old standalone Match History tile.
                     StreamBuilder<int>(
                       stream: getPendingDeletionRequestsCount(
                           widget.currentUser.uid),
@@ -1250,34 +1320,14 @@ class _HomeScreenState extends State<HomeScreen> {
                           child: NotificationBadge(
                             count: count,
                             child: HomeCard(
-                              title: loc.matchHistory,
-                              icon: Icons.history,
-                              onTap: () => Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => const MatchHistoryScreen(),
-                                ),
-                              ),
+                              title: loc.myActivityTile,
+                              icon: Icons.insights,
+                              onTap: () =>
+                                  _showMyActivityChooser(context, loc),
                             ),
                           ),
                         );
                       },
-                    ),
- 
-                    AspectRatio(
-                      aspectRatio: 1,
-                      child: HomeCard(
-                        title: loc.myStats,
-                        icon: Icons.bar_chart,
-                        onTap: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => PlayerStatisticsScreen(
-                              userId: widget.currentUser.uid,
-                            ),
-                          ),
-                        ),
-                      ),
                     ),
 
                     // ── Ranking card — Phase 3, city-scoped Elo leaderboard ──

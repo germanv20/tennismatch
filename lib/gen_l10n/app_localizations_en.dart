@@ -69,6 +69,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get logMatchChooserTitle => 'What kind of match?';
 
   @override
+  String get myActivityTile => 'My Activity';
+
+  @override
+  String get myActivityChooserTitle => 'What would you like to see?';
+
+  @override
   String get myProfile => 'My Profile';
 
   @override

@@ -218,6 +218,18 @@ abstract class AppLocalizations {
   /// **'What kind of match?'**
   String get logMatchChooserTitle;
 
+  /// No description provided for @myActivityTile.
+  ///
+  /// In en, this message translates to:
+  /// **'My Activity'**
+  String get myActivityTile;
+
+  /// No description provided for @myActivityChooserTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'What would you like to see?'**
+  String get myActivityChooserTitle;
+
   /// No description provided for @myProfile.
   ///
   /// In en, this message translates to:
