@@ -4,6 +4,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:tennismatch/gen_l10n/app_localizations.dart';
 import 'package:country_picker/country_picker.dart';
 import '../utils/city_utils.dart';
+import '../utils/ranking_utils.dart';
+import '../widgets/profile_stat_grid.dart';
 
 const weekOrder = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
@@ -105,6 +107,112 @@ class _PlayerProfileViewScreenState extends State<PlayerProfileViewScreen> {
     return fallbackName;
   }
 
+  /// Builds the Duolingo-style stat grid (Sept 2026 redesign, see
+  /// CLAUDE.md) for the *viewed* player, mirroring `my_profile_screen.dart`'s
+  /// identically-ordered helper but keyed off [viewedUid] instead of the
+  /// signed-in user's own uid, and with no birth date/email cells (this
+  /// screen never shows either). Cell order is fixed by explicit request:
+  /// age, level / matches, rating / ranking position, ranking score /
+  /// country (flag + name), city — built up sequentially so the list order
+  /// *is* the grid order. Age/rating/ranking are hidden individually when
+  /// absent/zero; level, matches, country and city are always shown.
+  Widget _buildStatGrid(
+    BuildContext context,
+    Map<String, dynamic> userData,
+    AppLocalizations loc,
+    String rawCity,
+    String city,
+    String level,
+    String country,
+    String viewedUid,
+    int? age,
+  ) {
+    final matchesPlayed = (userData['matchesPlayed'] as int?) ?? 0;
+    final eloMatchesPlayed = (userData['eloMatchesPlayed'] as int?) ?? 0;
+    final eloRating = (userData['eloRating'] as int?) ?? 1200;
+    final ratingCount = (userData['reputationRatingCount'] as int?) ?? 0;
+    final ratingSum = (userData['reputationRatingSum'] as int?) ?? 0;
+    final flagEmoji = getCountryFlag(country);
+    final countryLabel = getLocalizedCountryName(
+        context, userData['countryCode'] as String?, country);
+
+    final headCells = <ProfileStatCell>[
+      if (age != null)
+        ProfileStatCell(
+          icon: Icons.cake_outlined,
+          value: '$age',
+          label: loc.age,
+          color: Colors.pink.shade400,
+        ),
+      ProfileStatCell(
+        icon: Icons.military_tech,
+        value: level,
+        label: loc.level,
+        color: Colors.teal.shade700,
+      ),
+      ProfileStatCell(
+        icon: Icons.sports_tennis,
+        value: '$matchesPlayed',
+        label: loc.matchesPlayed,
+        color: Colors.green.shade700,
+      ),
+      if (ratingCount > 0)
+        ProfileStatCell(
+          icon: Icons.star,
+          value: (ratingSum / ratingCount).toStringAsFixed(1),
+          label: loc.ratingLabel,
+          color: Colors.amber.shade800,
+        ),
+    ];
+
+    List<ProfileStatCell> withTail(List<ProfileStatCell> cells) {
+      if (eloMatchesPlayed > 0) {
+        cells.add(ProfileStatCell(
+          icon: Icons.trending_up,
+          value: '$eloRating',
+          label: loc.eloRatingLabel,
+          color: Colors.indigo.shade700,
+        ));
+      }
+      cells.add(ProfileStatCell(value: flagEmoji, label: countryLabel));
+      cells.add(ProfileStatCell(
+        icon: Icons.location_on,
+        value: city,
+        label: loc.city,
+        color: Colors.blueGrey.shade600,
+      ));
+      return cells;
+    }
+
+    final showRanking =
+        eloMatchesPlayed >= eloRankingMinMatches && rawCity.isNotEmpty;
+    if (!showRanking) {
+      return ProfileStatGrid(
+          cells: withTail(List<ProfileStatCell>.from(headCells)));
+    }
+
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance.collection('users').snapshots(),
+      builder: (context, snapshot) {
+        final cells = List<ProfileStatCell>.from(headCells);
+        if (snapshot.hasData) {
+          final ranking = buildCityRanking(snapshot.data!.docs, rawCity);
+          final playerIndex =
+              ranking.indexWhere((doc) => doc.id == viewedUid);
+          if (playerIndex != -1) {
+            cells.add(ProfileStatCell(
+              icon: Icons.emoji_events,
+              value: '#${playerIndex + 1}',
+              label: loc.rankingCityHeader(city),
+              color: Colors.orange.shade700,
+            ));
+          }
+        }
+        return ProfileStatGrid(cells: withTail(cells));
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context)!;
@@ -168,228 +276,17 @@ class _PlayerProfileViewScreenState extends State<PlayerProfileViewScreen> {
 
                   const SizedBox(height: 8),
 
-                  // ── Match count badge — builds trust/confidence ──
-                  // Uses the matchesPlayed counter already stored on the
-                  // user document (incremented when matches are logged),
-                  // avoiding any extra Firestore reads or permission issues.
-                  Builder(
-                    builder: (context) {
-                      final count =
-                          (userData['matchesPlayed'] as int?) ?? 0;
-                      return Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: Colors.green.shade50,
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: Colors.green.shade200),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.sports_tennis,
-                                size: 16, color: Colors.green.shade700),
-                            const SizedBox(width: 6),
-                            Text(
-                              loc.matchesPlayedCount(count),
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.green.shade800,
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
-                  ),
-
-                  // ── Elo rating badge — Phase 2, regular matches only ──
-                  // eloRating/eloMatchesPlayed are only ever written by
-                  // applyEloRatings() in functions/index.js (Admin SDK),
-                  // never by the client. Hidden until the player has at
-                  // least one rated regular match, so nobody sees a
-                  // meaningless flat 1200 before they've actually played.
-                  Builder(
-                    builder: (context) {
-                      final eloMatchesPlayed =
-                          (userData['eloMatchesPlayed'] as int?) ?? 0;
-                      if (eloMatchesPlayed == 0) {
-                        return const SizedBox.shrink();
-                      }
-                      final eloRating =
-                          (userData['eloRating'] as int?) ?? 1200;
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 8),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 6),
-                          decoration: BoxDecoration(
-                            color: Colors.indigo.shade50,
-                            borderRadius: BorderRadius.circular(20),
-                            border:
-                                Border.all(color: Colors.indigo.shade200),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(Icons.trending_up,
-                                  size: 16, color: Colors.indigo.shade700),
-                              const SizedBox(width: 6),
-                              Text(
-                                '${loc.eloRatingLabel}: $eloRating',
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.indigo.shade900,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-
-                  // ── Reputation badges — from opponent ratings ──
-                  // reputationRatingSum/Count and noShowCount are only
-                  // ever written by the Cloud Function that rolls up
-                  // matches/{id}/ratings/{raterUid} docs (Phase 1,
-                  // regular matches only). Hidden entirely for players
-                  // with no ratings yet, to keep new profiles clean.
-                  Builder(
-                    builder: (context) {
-                      final ratingCount =
-                          (userData['reputationRatingCount'] as int?) ?? 0;
-                      final ratingSum =
-                          (userData['reputationRatingSum'] as int?) ?? 0;
-                      final noShowCount =
-                          (userData['noShowCount'] as int?) ?? 0;
-
-                      if (ratingCount == 0 && noShowCount == 0) {
-                        return const SizedBox.shrink();
-                      }
-
-                      final double average =
-                          ratingCount > 0 ? ratingSum / ratingCount : 0;
-
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 8),
-                        child: Wrap(
-                          alignment: WrapAlignment.center,
-                          spacing: 8,
-                          runSpacing: 6,
-                          children: [
-                            if (ratingCount > 0)
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 12, vertical: 6),
-                                decoration: BoxDecoration(
-                                  color: Colors.amber.shade50,
-                                  borderRadius: BorderRadius.circular(20),
-                                  border: Border.all(
-                                      color: Colors.amber.shade200),
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(Icons.star,
-                                        size: 16,
-                                        color: Colors.amber.shade800),
-                                    const SizedBox(width: 6),
-                                    Text(
-                                      '${average.toStringAsFixed(1)} '
-                                      '(${loc.ratingsCount(ratingCount)})',
-                                      style: TextStyle(
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.w600,
-                                        color: Colors.amber.shade900,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            if (noShowCount > 0)
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 12, vertical: 6),
-                                decoration: BoxDecoration(
-                                  color: Colors.red.shade50,
-                                  borderRadius: BorderRadius.circular(20),
-                                  border:
-                                      Border.all(color: Colors.red.shade200),
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(Icons.warning_amber_rounded,
-                                        size: 16,
-                                        color: Colors.red.shade700),
-                                    const SizedBox(width: 6),
-                                    Text(
-                                      loc.noShowsReported(noShowCount),
-                                      style: TextStyle(
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.w600,
-                                        color: Colors.red.shade800,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                          ],
-                        ),
-                      );
-                    },
-                  ),
+                  // ── Stat grid (Sept 2026 redesign, see CLAUDE.md) ──
+                  // Fixed cell order per explicit request: age, level /
+                  // matches, rating / ranking position, ranking score /
+                  // country, city. Replaces the old separate city/country/
+                  // level text lines below, which are now grid cells. Note:
+                  // birth date is intentionally NOT shown here for privacy
+                  // — only the user sees their own birth date in My Profile.
+                  _buildStatGrid(context, userData, loc, rawCity, city, level,
+                      country, viewedUid, age),
 
                   const SizedBox(height: 16),
-
-                  Text(
-                    "📍 ${loc.city}: $city",
-                    style: const TextStyle(fontSize: 15),
-                  ),
-
-                  const SizedBox(height: 8),
-
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        "🌍 ${loc.country}: ${getLocalizedCountryName(context, userData['countryCode'] as String?, country)}",
-                        style: const TextStyle(fontSize: 15),
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        getCountryFlag(country),
-                        style: const TextStyle(fontSize: 18),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 8),
-
-                  // Note: birth date intentionally NOT shown here for
-                  // privacy/security — only the user sees their own
-                  // birth date in My Profile / Edit Profile.
-
-                  Text(
-                    "🎾 ${loc.level}: $level",
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-
-                  if (age != null) ...[
-                    const SizedBox(height: 8),
-                    Text(
-                      "🎂 ${loc.age}: $age",
-                      style: const TextStyle(fontSize: 15),
-                    ),
-                  ],
-
-                  const SizedBox(height: 8),
 
                   Text(
                     "📅 ${loc.availability}: $availabilityText",

@@ -7,10 +7,13 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:country_picker/country_picker.dart';
+import 'package:provider/provider.dart';
 import 'dart:io';
+import '../services/theme_service.dart';
 import '../utils/day_utils.dart';
 import '../utils/city_utils.dart';
 import '../utils/ranking_utils.dart';
+import '../widgets/profile_stat_grid.dart';
 import 'edit_profile_screen.dart';
 
 class MyProfileScreen extends StatefulWidget {
@@ -55,6 +58,114 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
     } catch (_) {
       return '';
     }
+  }
+
+  /// Builds the Duolingo-style stat grid (Sept 2026 redesign, see
+  /// CLAUDE.md). Cell order is fixed by explicit user request: age, level /
+  /// matches played, rating / ranking position, ranking score / country
+  /// (flag + name), city — built up sequentially below so the list order
+  /// *is* the grid order (row-major, 2 columns), rather than inserting at
+  /// a hard-coded index. Age/rating/ranking are hidden individually when
+  /// absent/zero (same "hide if not meaningful yet" convention as before);
+  /// level, matches, country and city are always shown. Ranking position
+  /// needs its own live `users` query (same `buildCityRanking()` helper
+  /// the full Ranking screen uses), so only that part of the grid is built
+  /// inside a conditional `StreamBuilder`.
+  Widget _buildStatGrid(
+    BuildContext context,
+    Map<String, dynamic> userData,
+    AppLocalizations loc,
+    String rawCity,
+    String city,
+    String tennisLevel,
+    String country,
+    int? age,
+  ) {
+    final matchesPlayed = (userData['matchesPlayed'] as int?) ?? 0;
+    final eloMatchesPlayed = (userData['eloMatchesPlayed'] as int?) ?? 0;
+    final eloRating = (userData['eloRating'] as int?) ?? 1200;
+    final ratingCount = (userData['reputationRatingCount'] as int?) ?? 0;
+    final ratingSum = (userData['reputationRatingSum'] as int?) ?? 0;
+    final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
+    final flagEmoji = getFlagEmoji(country);
+
+    final headCells = <ProfileStatCell>[
+      if (age != null)
+        ProfileStatCell(
+          icon: Icons.cake_outlined,
+          value: '$age',
+          label: loc.age,
+          color: Colors.pink.shade400,
+        ),
+      ProfileStatCell(
+        icon: Icons.military_tech,
+        value: tennisLevel,
+        label: loc.level,
+        color: Colors.teal.shade700,
+      ),
+      ProfileStatCell(
+        icon: Icons.sports_tennis,
+        value: '$matchesPlayed',
+        label: loc.matchesPlayed,
+        color: Colors.green.shade700,
+      ),
+      if (ratingCount > 0)
+        ProfileStatCell(
+          icon: Icons.star,
+          value: (ratingSum / ratingCount).toStringAsFixed(1),
+          label: loc.ratingLabel,
+          color: Colors.amber.shade800,
+        ),
+    ];
+
+    // Ranking score, country (flag + name), city — appended after ranking
+    // position (if any), so the final order is always ...rating, position,
+    // score, country, city.
+    List<ProfileStatCell> withTail(List<ProfileStatCell> cells) {
+      if (eloMatchesPlayed > 0) {
+        cells.add(ProfileStatCell(
+          icon: Icons.trending_up,
+          value: '$eloRating',
+          label: loc.eloRatingLabel,
+          color: Colors.indigo.shade700,
+        ));
+      }
+      cells.add(ProfileStatCell(value: flagEmoji, label: country));
+      cells.add(ProfileStatCell(
+        icon: Icons.location_on,
+        value: city,
+        label: loc.city,
+        color: Colors.blueGrey.shade600,
+      ));
+      return cells;
+    }
+
+    final showRanking =
+        eloMatchesPlayed >= eloRankingMinMatches && rawCity.isNotEmpty;
+    if (!showRanking) {
+      return ProfileStatGrid(
+          cells: withTail(List<ProfileStatCell>.from(headCells)));
+    }
+
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance.collection('users').snapshots(),
+      builder: (context, snapshot) {
+        final cells = List<ProfileStatCell>.from(headCells);
+        if (snapshot.hasData) {
+          final ranking = buildCityRanking(snapshot.data!.docs, rawCity);
+          final myIndex = ranking.indexWhere((doc) => doc.id == uid);
+          if (myIndex != -1) {
+            cells.add(ProfileStatCell(
+              icon: Icons.emoji_events,
+              value: '#${myIndex + 1}',
+              label: loc.rankingCityHeader(city),
+              color: Colors.orange.shade700,
+            ));
+          }
+        }
+        return ProfileStatGrid(cells: withTail(cells));
+      },
+    );
   }
 
   Future<void> _pickAndUploadPhoto(AppLocalizations loc) async {
@@ -413,146 +524,71 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
                     ),
                     const SizedBox(height: 8),
                     Text(email),
-                    const SizedBox(height: 24),
-
-                    if (age != null) ...[
-                      Text('🎂 ${loc.age}: $age',
-                          style: const TextStyle(fontSize: 15)),
-                      const SizedBox(height: 12),
-                    ],
-
-                    Text('📍 ${loc.city}: $city',
-                        style: const TextStyle(fontSize: 15)),
-
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        if (country != loc.notSet)
-                          Text(getFlagEmoji(country),
-                              style: const TextStyle(fontSize: 18)),
-                        if (country != loc.notSet)
-                          const SizedBox(width: 6),
-                        Text('${loc.country}: $country',
-                            style: const TextStyle(fontSize: 15)),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
 
                     if (birthTimestamp != null) ...[
+                      const SizedBox(height: 8),
                       Text(
                         '📅 ${loc.birthDate}: ${formatDate(birthTimestamp.toDate())}',
-                        style: const TextStyle(fontSize: 15),
+                        style: TextStyle(fontSize: 13, color: Colors.grey[600]),
                       ),
-                      const SizedBox(height: 24),
                     ],
 
-                    Text(
-                      '🎾 ${loc.level}: $tennisLevel',
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 24),
 
-                    // ── Elo rating badge — Phase 2, regular matches only.
-                    // eloRating/eloMatchesPlayed are only ever written by
-                    // applyEloRatings() in functions/index.js (Admin SDK),
-                    // never by the client. Hidden until this user has at
-                    // least one rated regular match, so a brand-new
-                    // player doesn't see a meaningless flat 1200.
+                    // ── Stat grid (Sept 2026 redesign, see CLAUDE.md) ──
+                    // Fixed cell order per explicit request: age, level /
+                    // matches, rating / ranking position, ranking score /
+                    // country, city. Replaces the old separate city/country/
+                    // level text lines below, which are now grid cells.
+                    _buildStatGrid(context, userData, loc, rawCity, city,
+                        tennisLevel, country, age),
+
+                    const SizedBox(height: 24),
+
+                    // ── Availability chips — colored with the user's
+                    // selected theme (same selectionColor Home screen's own
+                    // Level/Availability chips use), with a small caption
+                    // underneath matching the stat grid's icon+label
+                    // convention above.
                     Builder(
                       builder: (context) {
-                        final eloMatchesPlayed =
-                            (userData['eloMatchesPlayed'] as int?) ?? 0;
-                        if (eloMatchesPlayed == 0) {
-                          return const SizedBox.shrink();
-                        }
-                        final eloRating =
-                            (userData['eloRating'] as int?) ?? 1200;
-                        return Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 6),
-                          decoration: BoxDecoration(
-                            color: Colors.indigo.shade50,
-                            borderRadius: BorderRadius.circular(20),
-                            border:
-                                Border.all(color: Colors.indigo.shade200),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(Icons.trending_up,
-                                  size: 16, color: Colors.indigo.shade700),
-                              const SizedBox(width: 6),
-                              Text(
-                                '${loc.eloRatingLabel}: $eloRating',
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.indigo.shade900,
-                                ),
-                              ),
-                            ],
-                          ),
+                        final selectionColor = context
+                            .watch<ThemeNotifier>()
+                            .current
+                            .selectionColor;
+                        return Column(
+                          children: [
+                            availability.isEmpty
+                                ? Text(loc.noAvailability,
+                                    style:
+                                        const TextStyle(color: Colors.grey))
+                                : Wrap(
+                                    spacing: 8,
+                                    runSpacing: 8,
+                                    alignment: WrapAlignment.center,
+                                    children: availability.map<Widget>((day) {
+                                      return Chip(
+                                        label: Text(
+                                          translateDay(day.toString(), loc),
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                        backgroundColor: selectionColor,
+                                      );
+                                    }).toList(),
+                                  ),
+                            const SizedBox(height: 4),
+                            Text(
+                              loc.availability,
+                              style: TextStyle(
+                                  fontSize: 12, color: Colors.grey.shade600),
+                            ),
+                          ],
                         );
                       },
                     ),
-
-                    // ── Ranking position — Phase 3. Only meaningful once
-                    // this user has cleared the same eloRankingMinMatches
-                    // threshold the Ranking screen itself uses, and only
-                    // once they have a city set. Computed client-side via
-                    // the same buildCityRanking() helper the full Ranking
-                    // screen uses, over a fresh users snapshot, so the two
-                    // screens can never disagree about someone's position.
-                    if ((userData['eloMatchesPlayed'] as int? ?? 0) >=
-                            eloRankingMinMatches &&
-                        rawCity.isNotEmpty)
-                      StreamBuilder<QuerySnapshot>(
-                        stream: FirebaseFirestore.instance
-                            .collection('users')
-                            .snapshots(),
-                        builder: (context, snapshot) {
-                          if (!snapshot.hasData) {
-                            return const SizedBox.shrink();
-                          }
-                          final ranking = buildCityRanking(
-                              snapshot.data!.docs, rawCity);
-                          final myIndex = ranking.indexWhere(
-                              (doc) => doc.id == FirebaseAuth.instance
-                                  .currentUser?.uid);
-                          if (myIndex == -1) return const SizedBox.shrink();
-
-                          return Padding(
-                            padding: const EdgeInsets.only(top: 6),
-                            child: Text(
-                              loc.rankingPositionLabel(
-                                  myIndex + 1, city),
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.grey.shade700,
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-
-                    const SizedBox(height: 24),
-
-                    availability.isEmpty
-                        ? Text(loc.noAvailability,
-                            style: const TextStyle(color: Colors.grey))
-                        : Wrap(
-                            spacing: 8,
-                            children: availability.map<Widget>((day) {
-                              return Chip(
-                                label: Text(
-                                    translateDay(day.toString(), loc)),
-                              );
-                            }).toList(),
-                          ),
 
                     const SizedBox(height: 32),
 

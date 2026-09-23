@@ -2148,8 +2148,20 @@ abstract class AppLocalizations {
   /// No description provided for @eloRatingLabel.
   ///
   /// In en, this message translates to:
-  /// **'ELO Rating'**
+  /// **'Ranking score'**
   String get eloRatingLabel;
+
+  /// No description provided for @ratingLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Rating'**
+  String get ratingLabel;
+
+  /// No description provided for @noShowsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'No-shows'**
+  String get noShowsLabel;
 
   /// No description provided for @you.
   ///

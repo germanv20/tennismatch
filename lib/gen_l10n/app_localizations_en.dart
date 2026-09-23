@@ -1120,7 +1120,13 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get eloRatingLabel => 'ELO Rating';
+  String get eloRatingLabel => 'Ranking score';
+
+  @override
+  String get ratingLabel => 'Rating';
+
+  @override
+  String get noShowsLabel => 'No-shows';
 
   @override
   String get you => 'You';

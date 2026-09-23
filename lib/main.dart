@@ -653,7 +653,7 @@ class _AuthTestState extends State<AuthTest> with WidgetsBindingObserver {
                           child: Column(
                             children: [
                               _featureItem(
-                                icon: Icons.add_circle_outline,
+                                icon: Icons.assignment_outlined,
                                 text: loc.featureRecord,
                               ),
                               const SizedBox(height: 16),
