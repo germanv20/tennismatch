@@ -9,7 +9,7 @@ class AppLocalizationsEs extends AppLocalizations {
   AppLocalizationsEs([String locale = 'es']) : super(locale);
 
   @override
-  String get appTitle => 'TennisMatch';
+  String get appTitle => 'Tennis Match';
 
   @override
   String get loginSubtitle => 'Registra cada partido. Mejora cada día.';
@@ -707,7 +707,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get shareMatchSubtitle =>
-      'Envía este resultado por WhatsApp e invita a tu oponente a unirse a TennisMatch';
+      'Envía este resultado por WhatsApp e invita a tu oponente a unirse a Tennis Match';
 
   @override
   String get whatsappNotInstalled =>
@@ -758,7 +758,7 @@ class AppLocalizationsEs extends AppLocalizations {
     Object date,
     Object appLink,
   ) {
-    return '¡Hola $opponentName! 🎾 Acabamos de jugar un partido de tenis y registré el resultado en TennisMatch:\n\n$playerName vs $opponentName\nMarcador: $score\nUbicación: $location\nFecha: $date\n\n¡Descarga TennisMatch para guardar tus estadísticas y llevar el registro de tus partidos!\n$appLink\n\n¡Hasta la próxima en la cancha! 🎾';
+    return '¡Hola $opponentName! 🎾 Acabamos de jugar un partido de tenis y registré el resultado en Tennis Match:\n\n$playerName vs $opponentName\nMarcador: $score\nUbicación: $location\nFecha: $date\n\n¡Descarga Tennis Match para guardar tus estadísticas y llevar el registro de tus partidos!\n$appLink\n\n¡Hasta la próxima en la cancha! 🎾';
   }
 
   @override
@@ -1191,7 +1191,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get doublesShareMatchSubtitle =>
-      'Envía este resultado por WhatsApp e invita a tus compañeros de dobles a unirse a TennisMatch';
+      'Envía este resultado por WhatsApp e invita a tus compañeros de dobles a unirse a Tennis Match';
 
   @override
   String doublesWhatsappMessageTemplate(
@@ -1204,7 +1204,7 @@ class AppLocalizationsEs extends AppLocalizations {
     Object date,
     Object appLink,
   ) {
-    return '¡Hola! 🎾 Acabamos de jugar un partido de dobles y registramos el resultado en TennisMatch:\n\n$team1Player1 y $team1Player2\nvs\n$team2Player1 y $team2Player2\n\nMarcador: $score\nLugar: $location\nFecha: $date\n\n¡Descarga TennisMatch para guardar tus estadísticas y llevar el registro de tus partidos!\n$appLink\n\n¡Nos vemos en la cancha! 🎾';
+    return '¡Hola! 🎾 Acabamos de jugar un partido de dobles y registramos el resultado en Tennis Match:\n\n$team1Player1 y $team1Player2\nvs\n$team2Player1 y $team2Player2\n\nMarcador: $score\nLugar: $location\nFecha: $date\n\n¡Descarga Tennis Match para guardar tus estadísticas y llevar el registro de tus partidos!\n$appLink\n\n¡Nos vemos en la cancha! 🎾';
   }
 
   @override
@@ -1218,7 +1218,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get deleteAccountWarning =>
-      'Esto elimina tu perfil y estadísticas de forma permanente, y cerrará tu sesión — esta acción no se puede deshacer. Los partidos que ya jugaste seguirán visibles en el historial de los demás jugadores, ya que esa información también les pertenece a ellos, pero no podrás recuperar tu propia cuenta ni tus datos. Si vuelves a usar TennisMatch más adelante, empezarás desde cero.';
+      'Esto elimina tu perfil y estadísticas de forma permanente, y cerrará tu sesión — esta acción no se puede deshacer. Los partidos que ya jugaste seguirán visibles en el historial de los demás jugadores, ya que esa información también les pertenece a ellos, pero no podrás recuperar tu propia cuenta ni tus datos. Si vuelves a usar Tennis Match más adelante, empezarás desde cero.';
 
   @override
   String get deleteAccountConfirmWord => 'ELIMINAR';

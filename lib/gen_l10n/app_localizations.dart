@@ -101,7 +101,7 @@ abstract class AppLocalizations {
   /// No description provided for @appTitle.
   ///
   /// In en, this message translates to:
-  /// **'TennisMatch'**
+  /// **'Tennis Match'**
   String get appTitle;
 
   /// No description provided for @loginSubtitle.
@@ -131,7 +131,7 @@ abstract class AppLocalizations {
   /// No description provided for @loginTitle.
   ///
   /// In en, this message translates to:
-  /// **'TennisMatch Login'**
+  /// **'Tennis Match Login'**
   String get loginTitle;
 
   /// No description provided for @signInWithGoogle.
@@ -1421,7 +1421,7 @@ abstract class AppLocalizations {
   /// No description provided for @shareMatchSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Send this result via WhatsApp and invite your opponent to join TennisMatch'**
+  /// **'Send this result via WhatsApp and invite your opponent to join Tennis Match'**
   String get shareMatchSubtitle;
 
   /// No description provided for @whatsappNotInstalled.
@@ -1499,7 +1499,7 @@ abstract class AppLocalizations {
   /// No description provided for @whatsappMessageTemplate.
   ///
   /// In en, this message translates to:
-  /// **'Hi {opponentName}! 🎾 We just played a tennis match and I recorded the result on TennisMatch:\n\n{playerName} vs {opponentName}\nScore: {score}\nLocation: {location}\nDate: {date}\n\nDownload TennisMatch to save your stats and track your matches too!\n{appLink}\n\nSee you on the court! 🎾'**
+  /// **'Hi {opponentName}! 🎾 We just played a tennis match and I recorded the result on Tennis Match:\n\n{playerName} vs {opponentName}\nScore: {score}\nLocation: {location}\nDate: {date}\n\nDownload Tennis Match to save your stats and track your matches too!\n{appLink}\n\nSee you on the court! 🎾'**
   String whatsappMessageTemplate(
     Object opponentName,
     Object playerName,
@@ -2226,13 +2226,13 @@ abstract class AppLocalizations {
   /// No description provided for @doublesShareMatchSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Send this result via WhatsApp and invite your doubles partners to join TennisMatch'**
+  /// **'Send this result via WhatsApp and invite your doubles partners to join Tennis Match'**
   String get doublesShareMatchSubtitle;
 
   /// No description provided for @doublesWhatsappMessageTemplate.
   ///
   /// In en, this message translates to:
-  /// **'Hi! 🎾 We just played a doubles tennis match and recorded the result on TennisMatch:\n\n{team1Player1} & {team1Player2}\nvs\n{team2Player1} & {team2Player2}\n\nScore: {score}\nLocation: {location}\nDate: {date}\n\nDownload TennisMatch to save your stats and track your matches too!\n{appLink}\n\nSee you on the court! 🎾'**
+  /// **'Hi! 🎾 We just played a doubles tennis match and recorded the result on Tennis Match:\n\n{team1Player1} & {team1Player2}\nvs\n{team2Player1} & {team2Player2}\n\nScore: {score}\nLocation: {location}\nDate: {date}\n\nDownload Tennis Match to save your stats and track your matches too!\n{appLink}\n\nSee you on the court! 🎾'**
   String doublesWhatsappMessageTemplate(
     Object team1Player1,
     Object team1Player2,
@@ -2265,7 +2265,7 @@ abstract class AppLocalizations {
   /// No description provided for @deleteAccountWarning.
   ///
   /// In en, this message translates to:
-  /// **'This permanently deletes your profile, stats, and sign you out — this cannot be undone. Matches you\'ve already played will remain visible in other players\' history, since that information belongs to them too, but you won\'t be able to recover your own account or data. If you use TennisMatch again later, you\'ll start from zero.'**
+  /// **'This permanently deletes your profile, stats, and sign you out — this cannot be undone. Matches you\'ve already played will remain visible in other players\' history, since that information belongs to them too, but you won\'t be able to recover your own account or data. If you use Tennis Match again later, you\'ll start from zero.'**
   String get deleteAccountWarning;
 
   /// No description provided for @deleteAccountConfirmWord.

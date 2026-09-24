@@ -9,7 +9,7 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
-  String get appTitle => 'TennisMatch';
+  String get appTitle => 'Tennis Match';
 
   @override
   String get loginSubtitle => 'Track every match. Improve every day.';
@@ -24,7 +24,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get featureChat => 'Chat and coordinate with your opponents';
 
   @override
-  String get loginTitle => 'TennisMatch Login';
+  String get loginTitle => 'Tennis Match Login';
 
   @override
   String get signInWithGoogle => 'Sign in with Google';
@@ -702,7 +702,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get shareMatchSubtitle =>
-      'Send this result via WhatsApp and invite your opponent to join TennisMatch';
+      'Send this result via WhatsApp and invite your opponent to join Tennis Match';
 
   @override
   String get whatsappNotInstalled => 'WhatsApp is not installed on this device';
@@ -751,7 +751,7 @@ class AppLocalizationsEn extends AppLocalizations {
     Object date,
     Object appLink,
   ) {
-    return 'Hi $opponentName! 🎾 We just played a tennis match and I recorded the result on TennisMatch:\n\n$playerName vs $opponentName\nScore: $score\nLocation: $location\nDate: $date\n\nDownload TennisMatch to save your stats and track your matches too!\n$appLink\n\nSee you on the court! 🎾';
+    return 'Hi $opponentName! 🎾 We just played a tennis match and I recorded the result on Tennis Match:\n\n$playerName vs $opponentName\nScore: $score\nLocation: $location\nDate: $date\n\nDownload Tennis Match to save your stats and track your matches too!\n$appLink\n\nSee you on the court! 🎾';
   }
 
   @override
@@ -1174,7 +1174,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get doublesShareMatchSubtitle =>
-      'Send this result via WhatsApp and invite your doubles partners to join TennisMatch';
+      'Send this result via WhatsApp and invite your doubles partners to join Tennis Match';
 
   @override
   String doublesWhatsappMessageTemplate(
@@ -1187,7 +1187,7 @@ class AppLocalizationsEn extends AppLocalizations {
     Object date,
     Object appLink,
   ) {
-    return 'Hi! 🎾 We just played a doubles tennis match and recorded the result on TennisMatch:\n\n$team1Player1 & $team1Player2\nvs\n$team2Player1 & $team2Player2\n\nScore: $score\nLocation: $location\nDate: $date\n\nDownload TennisMatch to save your stats and track your matches too!\n$appLink\n\nSee you on the court! 🎾';
+    return 'Hi! 🎾 We just played a doubles tennis match and recorded the result on Tennis Match:\n\n$team1Player1 & $team1Player2\nvs\n$team2Player1 & $team2Player2\n\nScore: $score\nLocation: $location\nDate: $date\n\nDownload Tennis Match to save your stats and track your matches too!\n$appLink\n\nSee you on the court! 🎾';
   }
 
   @override
@@ -1201,7 +1201,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get deleteAccountWarning =>
-      'This permanently deletes your profile, stats, and sign you out — this cannot be undone. Matches you\'ve already played will remain visible in other players\' history, since that information belongs to them too, but you won\'t be able to recover your own account or data. If you use TennisMatch again later, you\'ll start from zero.';
+      'This permanently deletes your profile, stats, and sign you out — this cannot be undone. Matches you\'ve already played will remain visible in other players\' history, since that information belongs to them too, but you won\'t be able to recover your own account or data. If you use Tennis Match again later, you\'ll start from zero.';
 
   @override
   String get deleteAccountConfirmWord => 'DELETE';

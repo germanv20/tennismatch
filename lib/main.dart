@@ -610,7 +610,7 @@ class _AuthTestState extends State<AuthTest> with WidgetsBindingObserver {
                             ),
                             const SizedBox(height: 20),
                             const Text(
-                              "TennisMatch",
+                              "Tennis Match",
                               style: TextStyle(
                                 fontSize: 36,
                                 fontWeight: FontWeight.w800,
