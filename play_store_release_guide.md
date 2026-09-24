@@ -11,7 +11,7 @@ A repeatable checklist for pushing an update: beta (closed testing) first, then 
 - [ ] You've manually tested the changes on your phone and/or the emulator.
 - [ ] Version bumped in `pubspec.yaml` — **both parts**:
   - `version: X.Y.Z+N` — bump `X.Y.Z` (semantic version, shown to users) and always increment `N` (the build number — Play Store rejects an upload whose build number isn't strictly higher than the last one, even if you didn't bump `X.Y.Z`).
-  - Current version after this update: **1.3.5+10**.
+  - Current version after this update: **1.4.6+17**.
 
 ## 1. Build the release App Bundle
 
@@ -64,15 +64,63 @@ Only move to production once you're confident nothing regressed.
 - [ ] Watch the **Reviews** tab for any user-reported issues tied to the new version.
 - [ ] Optional: tag the release in git for your own reference:
   ```bash
-  git tag v1.3.5+10
+  git tag v1.4.6+17
   git push --tags
   ```
 
 ---
 
-## Release notes — this update (v1.3.5+10)
+## Release notes — this update (v1.4.6+17)
 
-Play Console lets you set release notes per language (matches the app's own `en`/`es` locales). Paste these into the **Release notes** field for both the closed-testing and production releases (500-character limit per language — both of these fit).
+Play Console lets you set release notes per language (matches the app's own `en`/`es` locales). Paste these into the **Release notes** field for both the closed-testing and production releases (500-character limit per language — both of these fit). This build bundles everything since v1.4.2+13 (the ranking-score rename, ranking position on other players' profiles, the redesigned profile-screen stat grid, and the availability-section styling pass) — none of it shipped to testers/production yet, so all of it is new from their perspective.
+
+**English (en-US):**
+```
+What's new:
+• "ELO Rating" renamed to "Ranking score" for clarity
+• You can now see a player's ranking position on their profile, not just your own
+• Redesigned profile screens with a cleaner layout showing age, level, matches, rating, ranking, country and city at a glance
+• Your availability days are now clearly labeled and colored to match your chosen theme
+```
+
+**Spanish (es-419 / es-CO):**
+```
+Novedades:
+• Renombramos "ELO Rating" a "Puntuación de ranking" para mayor claridad
+• Ahora puedes ver la posición en el ranking de otros jugadores en su perfil, no solo en el tuyo
+• Rediseñamos las pantallas de perfil con un diseño más claro que muestra edad, nivel, partidos, calificación, ranking, país y ciudad de un vistazo
+• Tus días de disponibilidad ahora tienen una etiqueta clara y se colorean según el tema que elegiste
+```
+
+---
+
+## Previous release notes (v1.4.2+13, already shipped)
+
+**English (en-US):**
+```
+What's new:
+• Redesigned Home screen with a cleaner, simpler layout
+• Log Match now lets you pick singles or doubles from one button
+• Match requests (incoming & outgoing) combined into one place
+• Match History and My Stats combined into one "My Activity" section
+• Player age now shown on profiles and the Available Players list
+• Profile, Feedback, and Sign Out moved into one menu for a tidier toolbar
+```
+
+**Spanish (es-419 / es-CO):**
+```
+Novedades:
+• Rediseñamos la pantalla de Inicio con un diseño más simple
+• "Registrar partido" ahora te deja elegir individuales o dobles desde un solo botón
+• Las solicitudes de partido (recibidas y enviadas) ahora están en un solo lugar
+• "Historial" y "Mis Estadísticas" se combinaron en la sección "Mi Actividad"
+• Ahora se muestra la edad del jugador en los perfiles y en Jugadores Disponibles
+• Perfil, Comentarios y Cerrar sesión se movieron a un solo menú para una barra más ordenada
+```
+
+---
+
+## Previous release notes (v1.3.5+10, already shipped)
 
 **English (en-US):**
 ```
