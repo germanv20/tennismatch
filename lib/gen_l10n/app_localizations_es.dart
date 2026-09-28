@@ -521,7 +521,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get losses => 'Derrotas';
 
   @override
-  String get winRate => 'Porcentaje de victoria';
+  String get winRate => 'Victorias';
 
   @override
   String get totalSetsWon => 'Sets ganados';
@@ -536,7 +536,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get totalTiebreaksLost => 'Tiebreaks perdidos';
 
   @override
-  String get averageMatchDuration => 'Duración promedio';
+  String get averageMatchDuration => 'Tiempo promedio por partido';
 
   @override
   String get failedToLoadStats => 'Error al cargar estadísticas';
@@ -882,7 +882,50 @@ class AppLocalizationsEs extends AppLocalizations {
   String get doublesTiebreaksLost => 'Tiebreaks perdidos';
 
   @override
-  String get doublesAvgDuration => 'Duración promedio';
+  String get doublesAvgDuration => 'Tiempo promedio por partido';
+
+  @override
+  String get statsResultsTitle => 'Resultados';
+
+  @override
+  String get statsSetsTitle => 'Sets';
+
+  @override
+  String get statsTiebreaksTitle => 'Tiebreaks';
+
+  @override
+  String get statsActivityTitle => 'Partidos jugados al mes';
+
+  @override
+  String get statsMatchesPerMonthSubtitle => 'Últimos 6 meses';
+
+  @override
+  String get currentStreakTitle => 'Racha actual';
+
+  @override
+  String winStreakLabel(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Racha de $count victorias',
+      one: 'Racha de 1 victoria',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String lossStreakLabel(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Racha de $count derrotas',
+      one: 'Racha de 1 derrota',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get noActiveStreak => 'Sin racha activa';
 
   @override
   String get featureRecord => 'Registra partidos individuales y de dobles';

@@ -874,6 +874,49 @@ class AppLocalizationsEn extends AppLocalizations {
   String get doublesAvgDuration => 'Average Duration';
 
   @override
+  String get statsResultsTitle => 'Results';
+
+  @override
+  String get statsSetsTitle => 'Sets';
+
+  @override
+  String get statsTiebreaksTitle => 'Tiebreaks';
+
+  @override
+  String get statsActivityTitle => 'Matches per month';
+
+  @override
+  String get statsMatchesPerMonthSubtitle => 'Last 6 months';
+
+  @override
+  String get currentStreakTitle => 'Current Streak';
+
+  @override
+  String winStreakLabel(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count-match win streak',
+      one: '1-match win streak',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String lossStreakLabel(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count-match losing streak',
+      one: '1-match losing streak',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get noActiveStreak => 'No active streak';
+
+  @override
   String get featureRecord => 'Record singles and doubles matches';
 
   @override

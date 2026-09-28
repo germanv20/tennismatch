@@ -1737,6 +1737,60 @@ abstract class AppLocalizations {
   /// **'Average Duration'**
   String get doublesAvgDuration;
 
+  /// No description provided for @statsResultsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Results'**
+  String get statsResultsTitle;
+
+  /// No description provided for @statsSetsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sets'**
+  String get statsSetsTitle;
+
+  /// No description provided for @statsTiebreaksTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Tiebreaks'**
+  String get statsTiebreaksTitle;
+
+  /// No description provided for @statsActivityTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Matches per month'**
+  String get statsActivityTitle;
+
+  /// No description provided for @statsMatchesPerMonthSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Last 6 months'**
+  String get statsMatchesPerMonthSubtitle;
+
+  /// No description provided for @currentStreakTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Current Streak'**
+  String get currentStreakTitle;
+
+  /// No description provided for @winStreakLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1-match win streak} other{{count}-match win streak}}'**
+  String winStreakLabel(int count);
+
+  /// No description provided for @lossStreakLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1-match losing streak} other{{count}-match losing streak}}'**
+  String lossStreakLabel(int count);
+
+  /// No description provided for @noActiveStreak.
+  ///
+  /// In en, this message translates to:
+  /// **'No active streak'**
+  String get noActiveStreak;
+
   /// No description provided for @featureRecord.
   ///
   /// In en, this message translates to:
