@@ -2169,6 +2169,12 @@ abstract class AppLocalizations {
   /// **'No-shows'**
   String get noShowsLabel;
 
+  /// No description provided for @notRatedYetBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Not rated yet'**
+  String get notRatedYetBadge;
+
   /// No description provided for @you.
   ///
   /// In en, this message translates to:

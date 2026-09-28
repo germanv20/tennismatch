@@ -1132,6 +1132,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noShowsLabel => 'No-shows';
 
   @override
+  String get notRatedYetBadge => 'Not rated yet';
+
+  @override
   String get you => 'You';
 
   @override

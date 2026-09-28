@@ -433,6 +433,7 @@
   "eloRatingLabel": "Ranking score",
   "ratingLabel": "Rating",
   "noShowsLabel": "No-shows",
+  "notRatedYetBadge": "Not rated yet",
   "you": "You",
   "rankingTitle": "Ranking",
   "rankingCityHeader": "Ranking in {city}",

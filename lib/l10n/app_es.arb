@@ -433,6 +433,7 @@
   "eloRatingLabel": "Puntuación de ranking",
   "ratingLabel": "Calificación",
   "noShowsLabel": "Inasistencias",
+  "notRatedYetBadge": "Sin calificar",
   "you": "Tú",
   "rankingTitle": "Clasificación",
   "rankingCityHeader": "Clasificación en {city}",

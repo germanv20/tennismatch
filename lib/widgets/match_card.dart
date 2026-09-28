@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../screens/match_details_screen.dart';
 import 'package:tennismatch/gen_l10n/app_localizations.dart';
 import '../utils/scoring_mode_utils.dart';
@@ -88,6 +89,58 @@ class MatchCard extends StatelessWidget {
           fontSize: 13,
         ),
       ),
+    );
+  }
+
+  /// A small "Not rated yet" pill shown while the signed-in viewer hasn't
+  /// yet submitted a `matches/{matchId}/ratings/{currentUserUid}` doc for
+  /// this (regular, completed) match — the History-screen counterpart to
+  /// the one-shot rate-opponent push notification, so the reminder doesn't
+  /// disappear if that notification is missed or dismissed. Live
+  /// `StreamBuilder` (not a one-off fetch) so the pill disappears on its
+  /// own the moment a rating is submitted from the detail screen and the
+  /// user navigates back here, with no manual refresh. Every match this
+  /// card renders is already a completed regular match (see
+  /// match_history_screen.dart's `_buildRegularMatchCard`, the only call
+  /// site), so no extra type/status gating is needed here.
+  Widget _buildNotRatedBadge(BuildContext context) {
+    final loc = AppLocalizations.of(context)!;
+    return StreamBuilder<DocumentSnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('matches')
+          .doc(matchId)
+          .collection('ratings')
+          .doc(currentUserUid)
+          .snapshots(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData || snapshot.data!.exists) {
+          return const SizedBox.shrink();
+        }
+        return Container(
+          margin: const EdgeInsets.only(top: 6),
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+          decoration: BoxDecoration(
+            color: Colors.amber.shade50,
+            borderRadius: BorderRadius.circular(6),
+            border: Border.all(color: Colors.amber.shade300),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.star_border, size: 14, color: Colors.amber.shade800),
+              const SizedBox(width: 4),
+              Text(
+                loc.notRatedYetBadge,
+                style: TextStyle(
+                  color: Colors.amber.shade900,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 
@@ -285,6 +338,8 @@ class MatchCard extends StatelessWidget {
                       fontStyle: FontStyle.italic,
                     ),
                   ),
+
+                  _buildNotRatedBadge(context),
 
                   if (buildDeletionStatus(context) != null)
                     buildDeletionStatus(context)!,

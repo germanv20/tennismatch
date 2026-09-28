@@ -1148,6 +1148,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get noShowsLabel => 'Inasistencias';
 
   @override
+  String get notRatedYetBadge => 'Sin calificar';
+
+  @override
   String get you => 'Tú';
 
   @override
