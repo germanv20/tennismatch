@@ -1082,6 +1082,7 @@ class _LogDoublesMatchScreenState extends State<LogDoublesMatchScreen> {
               textCapitalization: TextCapitalization.words,
               decoration: InputDecoration(
                 labelText: loc.location,
+                hintText: loc.locationHint,
                 border: const OutlineInputBorder(),
                 prefixIcon: const Icon(Icons.location_on_outlined),
               ),

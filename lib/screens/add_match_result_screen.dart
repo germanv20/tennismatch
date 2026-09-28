@@ -743,7 +743,7 @@ class _AddMatchResultScreenState extends State<AddMatchResultScreen> {
             TextField(
               controller: locationController,
               textCapitalization: TextCapitalization.words,
-              decoration: InputDecoration(labelText: loc.location, border: const OutlineInputBorder(), prefixIcon: const Icon(Icons.location_on_outlined)),
+              decoration: InputDecoration(labelText: loc.location, hintText: loc.locationHint, border: const OutlineInputBorder(), prefixIcon: const Icon(Icons.location_on_outlined)),
             ),
             const SizedBox(height: 12),
             TextField(

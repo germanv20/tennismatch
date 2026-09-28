@@ -159,7 +159,7 @@
   "openChat": "Abrir chat",
   "addMatchResult": "Agregar resultado",
   "matchResult": "Resultado del partido",
-  "locationLabel": "Ubicación",
+  "locationLabel": "Cancha de tenis",
   "durationLabel": "Duración",
   "minutesShort": "min",
 
@@ -185,7 +185,8 @@
     }
   },
   "durationMinutes": "Duración (minutos)",
-  "location": "Ubicación",
+  "location": "Cancha de tenis",
+  "locationHint": "ej. Club Los Cerezos",
   "saveResult": "Guardar resultado",
   "profileUpdatedSuccessfully": "Perfil actualizado exitosamente",
 

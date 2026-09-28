@@ -179,6 +179,12 @@ class _ActivityCard extends StatelessWidget {
     return loc.daysAgoCount(diff);
   }
 
+  String _formattedTime() {
+    final hour = match.completedAt.hour.toString().padLeft(2, '0');
+    final minute = match.completedAt.minute.toString().padLeft(2, '0');
+    return '$hour:$minute';
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDoubles = match.type == 'doubles_guest';
@@ -244,7 +250,7 @@ class _ActivityCard extends StatelessWidget {
           ),
           const SizedBox(width: 8),
           Text(
-            _relativeDate(),
+            '${_relativeDate()} · ${_formattedTime()}',
             style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
           ),
         ],

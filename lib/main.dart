@@ -270,6 +270,14 @@ class _AuthTestState extends State<AuthTest> with WidgetsBindingObserver {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   bool _fcmInitialized = false;
 
+  // Prevents double-tapping the Google Sign-In button while the account
+  // picker + Firebase credential exchange + ensureUserDocument() write are
+  // in flight — that round trip can take a few seconds with no other
+  // visual feedback, which led users to tap again thinking it hadn't
+  // registered. Drives both disabling the button and swapping its content
+  // for a spinner.
+  bool _isSigningIn = false;
+
   // ── Presence heartbeat ──
   // Keeps users/{uid}.lastActive fresh while the app is in the foreground
   // so other screens (e.g. Available Players) can derive an "online" dot
@@ -360,6 +368,8 @@ class _AuthTestState extends State<AuthTest> with WidgetsBindingObserver {
   }
 
   Future<void> signInWithGoogle() async {
+    if (_isSigningIn) return;
+    setState(() => _isSigningIn = true);
     try {
       // The serverClientId (web client ID) is required for Firebase Auth
       // to correctly identify the OAuth client when using Google Sign-In
@@ -392,6 +402,8 @@ class _AuthTestState extends State<AuthTest> with WidgetsBindingObserver {
       }
     } catch (e) {
       debugPrint('❌ Google sign-in failed: $e');
+    } finally {
+      if (mounted) setState(() => _isSigningIn = false);
     }
   }
 
@@ -692,33 +704,46 @@ class _AuthTestState extends State<AuthTest> with WidgetsBindingObserver {
                           child: SizedBox(
                             width: double.infinity,
                             child: ElevatedButton(
-                              onPressed: signInWithGoogle,
+                              onPressed:
+                                  _isSigningIn ? null : signInWithGoogle,
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.white,
                                 foregroundColor: Colors.black87,
+                                disabledBackgroundColor: Colors.white,
                                 padding: const EdgeInsets.symmetric(vertical: 16),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(14),
                                 ),
                                 elevation: 0,
                               ),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Image.network(
-                                    "https://developers.google.com/identity/images/g-logo.png",
-                                    height: 22,
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Text(
-                                    loc.signInWithGoogle,
-                                    style: const TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w600,
+                              child: _isSigningIn
+                                  ? const SizedBox(
+                                      height: 22,
+                                      width: 22,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2.5,
+                                        valueColor: AlwaysStoppedAnimation<Color>(
+                                          Colors.black54,
+                                        ),
+                                      ),
+                                    )
+                                  : Row(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        Image.network(
+                                          "https://developers.google.com/identity/images/g-logo.png",
+                                          height: 22,
+                                        ),
+                                        const SizedBox(width: 12),
+                                        Text(
+                                          loc.signInWithGoogle,
+                                          style: const TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                      ],
                                     ),
-                                  ),
-                                ],
-                              ),
                             ),
                           ),
                         ),

@@ -159,7 +159,7 @@
   "openChat": "Open Chat",
   "addMatchResult": "Add Match Result",
   "matchResult": "Match Result",
-  "locationLabel": "Location",
+  "locationLabel": "Tennis court",
   "durationLabel": "Duration",
   "minutesShort": "min",
 
@@ -185,7 +185,8 @@
     }
   },
   "durationMinutes": "Duration (minutes)",
-  "location": "Location",
+  "location": "Tennis court",
+  "locationHint": "e.g. Club Los Cerezos",
   "saveResult": "Save Result",
   "profileUpdatedSuccessfully": "Profile updated successfully",
 

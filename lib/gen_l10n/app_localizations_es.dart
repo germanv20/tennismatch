@@ -420,7 +420,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get matchResult => 'Resultado del partido';
 
   @override
-  String get locationLabel => 'Ubicación';
+  String get locationLabel => 'Cancha de tenis';
 
   @override
   String get durationLabel => 'Duración';
@@ -466,7 +466,10 @@ class AppLocalizationsEs extends AppLocalizations {
   String get durationMinutes => 'Duración (minutos)';
 
   @override
-  String get location => 'Ubicación';
+  String get location => 'Cancha de tenis';
+
+  @override
+  String get locationHint => 'ej. Club Los Cerezos';
 
   @override
   String get saveResult => 'Guardar resultado';

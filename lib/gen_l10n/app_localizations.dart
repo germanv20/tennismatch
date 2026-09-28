@@ -893,7 +893,7 @@ abstract class AppLocalizations {
   /// No description provided for @locationLabel.
   ///
   /// In en, this message translates to:
-  /// **'Location'**
+  /// **'Tennis court'**
   String get locationLabel;
 
   /// No description provided for @durationLabel.
@@ -977,8 +977,14 @@ abstract class AppLocalizations {
   /// No description provided for @location.
   ///
   /// In en, this message translates to:
-  /// **'Location'**
+  /// **'Tennis court'**
   String get location;
+
+  /// No description provided for @locationHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Club Los Cerezos'**
+  String get locationHint;
 
   /// No description provided for @saveResult.
   ///
