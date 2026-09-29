@@ -223,12 +223,22 @@ class _LogGuestMatchScreenState extends State<LogGuestMatchScreen> {
     );
   }
 
+  // Official mode always resolves a set via a tiebreak at 6-6 (see
+  // ScoringMode.official's own doc comment), so a normal set can never
+  // legitimately run past 7-6. There used to be a fourth branch here
+  // accepting long "advantage set" scores like 12-10 (no tiebreak played)
+  // — that's a real rule in some tennis formats, but not this one, and it
+  // let a normal (non-decider) Official set register a two-digit score,
+  // which is exactly the kind of nonsense the 2-digit input cap was meant
+  // to prevent further up the pipeline. The only Official entry that's
+  // ever allowed to be two digits is the Super Tie-break decider, which is
+  // validated separately via isValidSuperTiebreak() before this function
+  // is ever called (see the isOfficialDecider branch in the save handler).
   bool isValidTennisSet(int p1, int p2) {
     if (p1 < 6 && p2 < 6) return false;
     if ((p1 == 6 && p2 <= 4) || (p2 == 6 && p1 <= 4)) return true;
     if ((p1 == 7 && p2 == 5) || (p2 == 7 && p1 == 5)) return true;
     if ((p1 == 7 && p2 == 6) || (p2 == 7 && p1 == 6)) return true;
-    if ((p1 >= 10 || p2 >= 10) && (p1 - p2).abs() >= 2) return true;
     return false;
   }
 
@@ -239,12 +249,16 @@ class _LogGuestMatchScreenState extends State<LogGuestMatchScreen> {
   }
 
   /// Pro-set: single set to 8 games, win by 2, tiebreak at 7-7 (won 9-7 in the
-  /// breaker, recorded as an 8-7 set score)
+  /// breaker, recorded as an 8-7 set score). Like Official above, Pro-Set
+  /// always resolves via a tiebreak at 7-7, so a real Pro-Set entry can
+  /// never legitimately exceed 8-7 — the old "advantage set past 8-7"
+  /// branch here was likewise dead weight that let a two-digit score slip
+  /// through, and Pro-Set has no decider/Super-Tie-break concept at all to
+  /// justify allowing one.
   bool isValidProSet(int p1, int p2) {
     if (p1 < 8 && p2 < 8) return false;
     if ((p1 == 8 && p2 <= 6) || (p2 == 8 && p1 <= 6)) return true;
     if ((p1 == 8 && p2 == 7) || (p2 == 8 && p1 == 7)) return true;
-    if ((p1 >= 9 || p2 >= 9) && (p1 - p2).abs() >= 2) return true;
     return false;
   }
 
