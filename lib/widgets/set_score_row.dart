@@ -210,13 +210,18 @@ class SetScoreRowState extends State<SetScoreRow> {
         : widget.scoringMode == ScoringMode.tiebreakOnly
             ? loc.tiebreakEntryLabel(widget.index + 1)
             : loc.setLabel(widget.index + 1);
-    // Free/open scoring has no built-in range validation, and a standalone
-    // tiebreak's points (including a super tie-break decider) are also
-    // unbounded by any win-by-2-from-N rule — cap all three at 2 digits,
-    // since a real score is never that long. Just guards fat-fingered input.
-    final capScoreDigits = widget.scoringMode == ScoringMode.open ||
-        widget.scoringMode == ScoringMode.tiebreakOnly ||
-        widget.isSuperTiebreak;
+    // Every score field in this widget — the main set/game score for every
+    // mode, and the nested tiebreak-within-a-set fields below — is capped
+    // at 2 digits. This used to only apply to open/tiebreakOnly/super
+    // tie-break (the modes with no upper-bound validation rule), leaving
+    // Official/Pro-Set/Short Set's main fields, and the nested tb1/tb2
+    // fields in every mode, completely uncapped — a real user could type
+    // e.g. "150" games in a set, which is exactly what produced garbled
+    // History match cards. 2 digits (not 1) is deliberate: Official's own
+    // isValidTennisSet() and Pro-Set's isValidProSet() both legitimately
+    // allow long advantage-set scores past 9 games (e.g. "10-8", "12-10"),
+    // and a long tiebreak or Super Tie-break can likewise run past 9
+    // points (e.g. "15-13") — a 1-digit cap would make those unrecordable.
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
@@ -232,9 +237,7 @@ class SetScoreRowState extends State<SetScoreRow> {
                   controller: p1Controller,
                   keyboardType: TextInputType.number,
                   textAlign: TextAlign.center,
-                  inputFormatters: capScoreDigits
-                      ? [LengthLimitingTextInputFormatter(2)]
-                      : null,
+                  inputFormatters: [LengthLimitingTextInputFormatter(2)],
                   decoration: InputDecoration(
                     labelText: entryLabel,
                     border: const OutlineInputBorder(),
@@ -256,9 +259,7 @@ class SetScoreRowState extends State<SetScoreRow> {
                   controller: p2Controller,
                   keyboardType: TextInputType.number,
                   textAlign: TextAlign.center,
-                  inputFormatters: capScoreDigits
-                      ? [LengthLimitingTextInputFormatter(2)]
-                      : null,
+                  inputFormatters: [LengthLimitingTextInputFormatter(2)],
                   decoration: InputDecoration(
                     labelText: entryLabel,
                     border: const OutlineInputBorder(),
@@ -300,6 +301,7 @@ class SetScoreRowState extends State<SetScoreRow> {
                     controller: tb1Controller,
                     keyboardType: TextInputType.number,
                     textAlign: TextAlign.center,
+                    inputFormatters: [LengthLimitingTextInputFormatter(2)],
                     style: const TextStyle(fontSize: 13),
                     decoration: InputDecoration(
                       labelText: loc.tiebreakPointsLabel,
@@ -332,6 +334,7 @@ class SetScoreRowState extends State<SetScoreRow> {
                     controller: tb2Controller,
                     keyboardType: TextInputType.number,
                     textAlign: TextAlign.center,
+                    inputFormatters: [LengthLimitingTextInputFormatter(2)],
                     style: const TextStyle(fontSize: 13),
                     decoration: InputDecoration(
                       labelText: loc.tiebreakPointsLabel,
