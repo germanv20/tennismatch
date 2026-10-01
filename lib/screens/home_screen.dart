@@ -12,6 +12,7 @@ import 'my_matches_screen.dart';
 import 'incoming_requests_screen.dart';
 import 'player_statistics_screen.dart';
 import 'my_profile_screen.dart';
+import 'about_screen.dart';
 import 'log_guest_match_screen.dart'; // NEW
 import 'log_doubles_match_screen.dart'; // NEW
 import 'ranking_screen.dart';
@@ -1011,6 +1012,14 @@ class _HomeScreenState extends State<HomeScreen> {
                 case 'feedback':
                   openFeedbackForm(context);
                   break;
+                case 'about':
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const AboutScreen(),
+                    ),
+                  );
+                  break;
                 case 'logout':
                   final confirm = await showDialog(
                     context: context,
@@ -1049,6 +1058,14 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: ListTile(
                   leading: const Icon(Icons.feedback_outlined),
                   title: Text(loc.sendFeedback),
+                  contentPadding: EdgeInsets.zero,
+                ),
+              ),
+              PopupMenuItem(
+                value: 'about',
+                child: ListTile(
+                  leading: const Icon(Icons.info_outline),
+                  title: Text(loc.aboutApp),
                   contentPadding: EdgeInsets.zero,
                 ),
               ),

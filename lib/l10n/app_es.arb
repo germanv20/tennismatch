@@ -26,6 +26,10 @@
   "myActivityChooserTitle": "¿Qué te gustaría ver?",
   "myProfile": "Mi perfil",
   "sendFeedback": "Enviar comentarios",
+  "aboutApp": "Acerca de la app",
+  "aboutVersionLabel": "Versión {version} ({buildNumber})",
+  "@aboutVersionLabel": {"placeholders": {"version": {"type": "String"}, "buildNumber": {"type": "String"}}},
+  "rateUsOnGooglePlay": "Califícanos en Google Play",
   "loggedOutSuccessfully": "Sesión cerrada correctamente",
   "loginDisclaimer": "Nunca publicaremos nada sin tu permiso.",
 
@@ -276,6 +280,7 @@
   "completeProfile": "Completar perfil",
   "selectBirthdate": "Seleccionar fecha de nacimiento",
   "city": "Ciudad",
+  "cityOfResidence": "Ciudad de residencia",
   "country": "País",
   "requiredField": "Este campo es obligatorio",
   "selectAvailability": "Selecciona tu disponibilidad",

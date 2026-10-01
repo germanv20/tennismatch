@@ -26,6 +26,10 @@
   "myActivityChooserTitle": "What would you like to see?",
   "myProfile": "My Profile",
   "sendFeedback": "Send Feedback",
+  "aboutApp": "About the app",
+  "aboutVersionLabel": "Version {version} ({buildNumber})",
+  "@aboutVersionLabel": {"placeholders": {"version": {"type": "String"}, "buildNumber": {"type": "String"}}},
+  "rateUsOnGooglePlay": "Rate us on Google Play",
   "loggedOutSuccessfully": "Logged out successfully",
   "loginDisclaimer": "We never post anything without your permission.",
 
@@ -276,6 +280,7 @@
   "completeProfile": "Complete Profile",
   "selectBirthdate": "Select birthdate",
   "city": "City",
+  "cityOfResidence": "City of residence",
   "country": "Country",
   "requiredField": "This field is required",
   "selectAvailability": "Select your availability",

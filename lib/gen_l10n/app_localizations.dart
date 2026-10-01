@@ -242,6 +242,24 @@ abstract class AppLocalizations {
   /// **'Send Feedback'**
   String get sendFeedback;
 
+  /// No description provided for @aboutApp.
+  ///
+  /// In en, this message translates to:
+  /// **'About the app'**
+  String get aboutApp;
+
+  /// No description provided for @aboutVersionLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Version {version} ({buildNumber})'**
+  String aboutVersionLabel(String version, String buildNumber);
+
+  /// No description provided for @rateUsOnGooglePlay.
+  ///
+  /// In en, this message translates to:
+  /// **'Rate us on Google Play'**
+  String get rateUsOnGooglePlay;
+
   /// No description provided for @loggedOutSuccessfully.
   ///
   /// In en, this message translates to:
@@ -1333,6 +1351,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'City'**
   String get city;
+
+  /// No description provided for @cityOfResidence.
+  ///
+  /// In en, this message translates to:
+  /// **'City of residence'**
+  String get cityOfResidence;
 
   /// No description provided for @country.
   ///

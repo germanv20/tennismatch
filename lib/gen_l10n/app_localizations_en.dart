@@ -81,6 +81,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sendFeedback => 'Send Feedback';
 
   @override
+  String get aboutApp => 'About the app';
+
+  @override
+  String aboutVersionLabel(String version, String buildNumber) {
+    return 'Version $version ($buildNumber)';
+  }
+
+  @override
+  String get rateUsOnGooglePlay => 'Rate us on Google Play';
+
+  @override
   String get loggedOutSuccessfully => 'Logged out successfully';
 
   @override
@@ -657,6 +668,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get city => 'City';
+
+  @override
+  String get cityOfResidence => 'City of residence';
 
   @override
   String get country => 'Country';
