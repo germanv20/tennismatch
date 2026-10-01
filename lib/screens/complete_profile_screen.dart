@@ -554,9 +554,15 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
 
               const SizedBox(height: 12),
 
-              // City
+              // City — labeled "City of residence" instead of the plain
+              // "City" label (loc.city), since real users were typing
+              // their city of birth here. This doesn't rename the global
+              // loc.city key reused elsewhere
+              // (Edit Profile field, profile stat grid labels) since
+              // those aren't the data-entry point users were getting
+              // wrong — see CLAUDE.md.
               TextFormField(
-                decoration: InputDecoration(labelText: loc.city),
+                decoration: InputDecoration(labelText: loc.cityOfResidence),
                 onChanged: (value) => city = value,
                 validator: (value) => value == null || value.isEmpty
                     ? loc.requiredField

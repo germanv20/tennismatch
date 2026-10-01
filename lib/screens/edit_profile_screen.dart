@@ -15,9 +15,11 @@ class EditProfileScreen extends StatefulWidget {
 
 class _EditProfileScreenState extends State<EditProfileScreen> {
   final _formKey = GlobalKey<FormState>();
+  final TextEditingController _nameController = TextEditingController();
   final TextEditingController _cityController = TextEditingController();
 
   DateTime? birthdate;
+  String? name;
   String? city;
   String? country;
   String? countryCode;
@@ -73,16 +75,19 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       birthdate = (data['birthDate'] as Timestamp).toDate();
     }
 
+    name = data['name'];
     city = data['city'];
     country = data['country'];
     countryCode = data['countryCode'];
     tennisLevel = data['tennisLevel'];
     availability = List<String>.from(data['availability'] ?? []);
+    _nameController.text = name ?? '';
     _cityController.text = city ?? '';
   }
 
   @override
   void dispose() {
+    _nameController.dispose();
     _cityController.dispose();
     super.dispose();
   }
@@ -112,11 +117,13 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     final isDateValid = birthdate != null;
     final isCountryValid = country != null && country!.isNotEmpty;
     final isLevelValid = tennisLevel != null;
+    final isNameValid = name != null && name!.trim().isNotEmpty;
 
     if (!isFormValid ||
         !isDateValid ||
         !isCountryValid ||
-        !isLevelValid) {
+        !isLevelValid ||
+        !isNameValid) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(loc.completeRequiredFields)),
       );
@@ -129,6 +136,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       final uid = FirebaseAuth.instance.currentUser!.uid;
 
       final updateData = {
+        'name': name!.trim(),
         'city': _formatCity(city ?? ''),
         'country': country,
         'countryCode': countryCode,
@@ -278,6 +286,24 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     style: const TextStyle(color: Colors.red, fontSize: 12),
                   ),
                 ),
+
+              const SizedBox(height: 12),
+
+              // ── Name — required ──
+              TextFormField(
+                controller: _nameController,
+                decoration: InputDecoration(
+                  labelText: loc.nameLabel,
+                  border: const OutlineInputBorder(),
+                ),
+                onChanged: (value) => name = value,
+                validator: (value) {
+                  if (value == null || value.trim().isEmpty) {
+                    return loc.requiredField;
+                  }
+                  return null;
+                },
+              ),
 
               const SizedBox(height: 12),
 

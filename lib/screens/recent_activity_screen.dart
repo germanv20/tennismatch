@@ -5,6 +5,7 @@ import 'package:tennismatch/gen_l10n/app_localizations.dart';
 import '../utils/city_utils.dart';
 import '../utils/city_activity_utils.dart';
 import '../utils/scoring_mode_utils.dart';
+import '../utils/name_utils.dart';
 import '../widgets/empty_state.dart';
 
 /// City-scoped "recent activity" feed (Idea 1): every completed match from
@@ -188,19 +189,22 @@ class _ActivityCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDoubles = match.type == 'doubles_guest';
+    // Display-time name title-casing, same fix already applied to
+    // available_players_screen.dart's cards (names are stored exactly as
+    // typed, so some accounts are all-caps) — works unchanged on doubles'
+    // "Name1 / Name2" team labels too, since formatNameDisplay just
+    // capitalizes each whitespace-separated word.
+    final p1Label = formatNameDisplay(match.player1Label);
+    final p2Label = formatNameDisplay(match.player2Label);
     final resultLine = match.isTie
-        ? loc.recentActivityTieLine(match.player1Label, match.player2Label)
+        ? loc.recentActivityTieLine(p1Label, p2Label)
         : (match.player1Won
             ? (isDoubles
-                ? loc.recentActivityWinnerLineDoubles(
-                    match.player1Label, match.player2Label)
-                : loc.recentActivityWinnerLine(
-                    match.player1Label, match.player2Label))
+                ? loc.recentActivityWinnerLineDoubles(p1Label, p2Label)
+                : loc.recentActivityWinnerLine(p1Label, p2Label))
             : (isDoubles
-                ? loc.recentActivityWinnerLineDoubles(
-                    match.player2Label, match.player1Label)
-                : loc.recentActivityWinnerLine(
-                    match.player2Label, match.player1Label)));
+                ? loc.recentActivityWinnerLineDoubles(p2Label, p1Label)
+                : loc.recentActivityWinnerLine(p2Label, p1Label)));
 
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
