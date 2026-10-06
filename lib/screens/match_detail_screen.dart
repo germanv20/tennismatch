@@ -7,6 +7,7 @@ import 'add_match_result_screen.dart';
 import 'package:tennismatch/services/h2h_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../widgets/rate_opponent_dialog.dart';
+import '../widgets/head_to_head_card.dart';
 import '../utils/scoring_mode_utils.dart';
 
 class MatchDetailScreen extends StatefulWidget {
@@ -311,6 +312,16 @@ class _MatchDetailScreenState extends State<MatchDetailScreen> {
                     ),
                   ],
                 ),
+
+                // Head-to-head vs. this opponent, for matches still being
+                // arranged (completed matches have the full card in
+                // match_details_screen.dart). Hidden if no history yet.
+                if (data['status'] != 'completed' &&
+                    data['status'] != 'cancelled')
+                  HeadToHeadCard(
+                    opponentUid: otherPlayerUid,
+                    opponentName: otherPlayerName,
+                  ),
 
                 const SizedBox(height: 24),
 

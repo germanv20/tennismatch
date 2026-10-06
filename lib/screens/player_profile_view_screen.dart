@@ -6,6 +6,7 @@ import 'package:country_picker/country_picker.dart';
 import '../utils/city_utils.dart';
 import '../utils/ranking_utils.dart';
 import '../widgets/profile_stat_grid.dart';
+import '../widgets/head_to_head_card.dart';
 
 const weekOrder = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
@@ -292,6 +293,11 @@ class _PlayerProfileViewScreenState extends State<PlayerProfileViewScreen> {
                     "📅 ${loc.availability}: $availabilityText",
                     style: const TextStyle(fontSize: 15),
                   ),
+
+                  // Head-to-head vs. the signed-in user — shown here, where
+                  // the decision to request/accept a match is made. Hidden
+                  // when they've never completed a match together.
+                  HeadToHeadCard(opponentUid: viewedUid, opponentName: name),
 
                   const SizedBox(height: 24),
 
