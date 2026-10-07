@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../screens/match_details_screen.dart';
 import 'package:tennismatch/gen_l10n/app_localizations.dart';
 import '../utils/scoring_mode_utils.dart';
+import 'play_again_button.dart';
 
 class MatchCard extends StatelessWidget {
 
@@ -340,6 +341,18 @@ class MatchCard extends StatelessWidget {
                   ),
 
                   _buildNotRatedBadge(context),
+
+                  // One-tap rematch request to the same opponent.
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: 4),
+                      child: PlayAgainButton(
+                        opponentUid: opponentUid,
+                        compact: true,
+                      ),
+                    ),
+                  ),
 
                   if (buildDeletionStatus(context) != null)
                     buildDeletionStatus(context)!,

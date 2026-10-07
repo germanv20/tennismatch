@@ -208,6 +208,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get requestAlreadySent => 'Match request already sent';
 
   @override
+  String get playAgain => 'Play again';
+
+  @override
+  String get rematchIncomingPending =>
+      'This player already sent you a request. Check Match Requests to respond.';
+
+  @override
+  String get rematchAlreadyScheduled =>
+      'You already have a scheduled match with this player.';
+
+  @override
   String get matchRequestAccepted => 'Match request accepted';
 
   @override

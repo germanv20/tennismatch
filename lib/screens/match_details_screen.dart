@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:tennismatch/gen_l10n/app_localizations.dart';
 import 'package:tennismatch/services/h2h_service.dart';
 import '../widgets/rate_opponent_dialog.dart';
+import '../widgets/play_again_button.dart';
 import '../utils/scoring_mode_utils.dart';
 
 class MatchDetailsScreen extends StatefulWidget {
@@ -531,7 +532,15 @@ class _MatchDetailsScreenState extends State<MatchDetailsScreen> {
                           ),
                         ),
 
-                    const SizedBox(height: 30),
+                    const SizedBox(height: 20),
+
+                    // One-tap rematch request to this opponent.
+                    SizedBox(
+                      width: double.infinity,
+                      child: PlayAgainButton(opponentUid: widget.opponentUid),
+                    ),
+
+                    const SizedBox(height: 20),
 
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,

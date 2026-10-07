@@ -488,6 +488,24 @@ abstract class AppLocalizations {
   /// **'Match request already sent'**
   String get requestAlreadySent;
 
+  /// No description provided for @playAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Play again'**
+  String get playAgain;
+
+  /// No description provided for @rematchIncomingPending.
+  ///
+  /// In en, this message translates to:
+  /// **'This player already sent you a request. Check Match Requests to respond.'**
+  String get rematchIncomingPending;
+
+  /// No description provided for @rematchAlreadyScheduled.
+  ///
+  /// In en, this message translates to:
+  /// **'You already have a scheduled match with this player.'**
+  String get rematchAlreadyScheduled;
+
   /// No description provided for @matchRequestAccepted.
   ///
   /// In en, this message translates to:
