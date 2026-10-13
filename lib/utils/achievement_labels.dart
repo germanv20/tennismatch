@@ -107,3 +107,36 @@ String badgeGroupTitle(BadgeGroup g, AppLocalizations loc) {
       return loc.badgeGroupReputation;
   }
 }
+
+/// Visual for a badge: the "N matches played" tiers show their own number
+/// inside a ring (so 5/10/25/50 each look different); every other badge
+/// uses its [badgeIcon]. [size] is the overall diameter/icon size.
+Widget badgeVisual(AchievementBadge b, {required double size, required Color color}) {
+  if (b.kind != 'matches') {
+    return Icon(badgeIcon(b), size: size, color: color);
+  }
+  final text = '${b.target}';
+  return Container(
+    width: size,
+    height: size,
+    alignment: Alignment.center,
+    decoration: BoxDecoration(
+      shape: BoxShape.circle,
+      border: Border.all(color: color, width: size * 0.08),
+    ),
+    child: FittedBox(
+      fit: BoxFit.scaleDown,
+      child: Padding(
+        padding: EdgeInsets.all(size * 0.14),
+        child: Text(
+          text,
+          style: TextStyle(
+            color: color,
+            fontWeight: FontWeight.w900,
+            fontSize: size * (text.length > 1 ? 0.46 : 0.55),
+          ),
+        ),
+      ),
+    ),
+  );
+}

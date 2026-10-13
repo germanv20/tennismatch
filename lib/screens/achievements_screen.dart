@@ -193,7 +193,7 @@ class _BadgeTile extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(badgeIcon(badge), size: 34, color: color),
+              badgeVisual(badge, size: 38, color: color),
               const SizedBox(height: 6),
               Text(
                 badgeTitle(badge, loc),
@@ -227,8 +227,8 @@ class _BadgeTile extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(badgeIcon(badge),
-                  size: 56,
+              badgeVisual(badge,
+                  size: 64,
                   color: badge.unlocked ? Colors.amber.shade700 : Colors.grey),
               const SizedBox(height: 12),
               Text(badgeTitle(badge, loc),

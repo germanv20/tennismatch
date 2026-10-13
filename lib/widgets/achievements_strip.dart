@@ -111,7 +111,7 @@ class _AchievementsStripState extends State<AchievementsStrip> {
                   padding: const EdgeInsets.symmetric(vertical: 6),
                   child: Row(
                     children: [
-                      Icon(badgeIcon(b), size: 40, color: Colors.amber.shade700),
+                      badgeVisual(b, size: 44, color: Colors.amber.shade700),
                       const SizedBox(width: 14),
                       Expanded(
                         child: Column(
