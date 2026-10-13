@@ -13,6 +13,8 @@ import 'incoming_requests_screen.dart';
 import 'player_statistics_screen.dart';
 import 'my_profile_screen.dart';
 import 'about_screen.dart';
+import 'achievements_screen.dart';
+import '../widgets/achievements_strip.dart';
 import 'log_guest_match_screen.dart'; // NEW
 import 'log_doubles_match_screen.dart'; // NEW
 import 'ranking_screen.dart';
@@ -507,6 +509,19 @@ class _HomeScreenState extends State<HomeScreen> {
                       builder: (_) => PlayerStatisticsScreen(
                         userId: widget.currentUser.uid,
                       ),
+                    ),
+                  );
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.emoji_events_outlined),
+                title: Text(loc.achievementsTitle),
+                onTap: () {
+                  Navigator.pop(sheetContext);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const AchievementsScreen(),
                     ),
                   );
                 },
@@ -1094,6 +1109,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
                 // ── Recent Activity teaser — Idea 1, city activity feed ──
                 const RecentActivityCard(),
+
+                // ── Weekly streak + monthly goal strip (achievements) ──
+                const SizedBox(height: 8),
+                const AchievementsStrip(),
 
                 const SizedBox(height: spaceL),
 

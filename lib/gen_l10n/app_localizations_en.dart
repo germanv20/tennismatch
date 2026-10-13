@@ -214,6 +214,148 @@ class AppLocalizationsEn extends AppLocalizations {
   String get recentOpponents => 'Recent opponents';
 
   @override
+  String get achievementsTitle => 'Achievements';
+
+  @override
+  String achievementsUnlockedCount(int unlocked, int total) {
+    return '$unlocked of $total unlocked';
+  }
+
+  @override
+  String get badgeGroupPlaying => 'Playing';
+
+  @override
+  String get badgeGroupSocial => 'Social';
+
+  @override
+  String get badgeGroupPerformance => 'Performance';
+
+  @override
+  String get badgeGroupReputation => 'Reputation';
+
+  @override
+  String get badgeFirstMatchTitle => 'First match';
+
+  @override
+  String get badgeFirstMatchDesc => 'Play and record your first match.';
+
+  @override
+  String badgeMatchesTitle(int n) {
+    return '$n matches played';
+  }
+
+  @override
+  String badgeMatchesDesc(int n) {
+    return 'Play $n matches.';
+  }
+
+  @override
+  String badgeWeekStreakTitle(int n) {
+    return '$n-week streak';
+  }
+
+  @override
+  String badgeWeekStreakDesc(int n) {
+    return 'Play at least one match for $n weeks in a row.';
+  }
+
+  @override
+  String badgeOpponentsTitle(int n) {
+    return '$n different opponents';
+  }
+
+  @override
+  String badgeOpponentsDesc(int n) {
+    return 'Play against $n different players.';
+  }
+
+  @override
+  String get badgeRivalryTitle => 'Rivalry';
+
+  @override
+  String badgeRivalryDesc(int n) {
+    return 'Play $n matches against the same player.';
+  }
+
+  @override
+  String get badgeFirstRatingTitle => 'Fair play';
+
+  @override
+  String get badgeFirstRatingDesc => 'Rate an opponent after a match.';
+
+  @override
+  String get badgeFirstWinTitle => 'First win';
+
+  @override
+  String get badgeFirstWinDesc => 'Win your first match.';
+
+  @override
+  String badgeWinStreakTitle(int n) {
+    return '$n wins in a row';
+  }
+
+  @override
+  String badgeWinStreakDesc(int n) {
+    return 'Win $n matches in a row.';
+  }
+
+  @override
+  String get badgeBagelTitle => 'Bagel';
+
+  @override
+  String get badgeBagelDesc => 'Win a set 6-0.';
+
+  @override
+  String get badgeTiebreakTitle => 'Clutch';
+
+  @override
+  String get badgeTiebreakDesc => 'Win a set in a tiebreak.';
+
+  @override
+  String get badgeGiantTitle => 'Giant killer';
+
+  @override
+  String get badgeGiantDesc =>
+      'Beat a player whose ranking score is well above yours.';
+
+  @override
+  String get badgeReputationTitle => 'Great sport';
+
+  @override
+  String get badgeReputationDesc =>
+      'Keep a 4.5+ average rating after at least 5 ratings.';
+
+  @override
+  String weekStreakChip(int weeks) {
+    return 'Weekly streak: $weeks';
+  }
+
+  @override
+  String get weekStreakStart => 'Play this week to start a streak';
+
+  @override
+  String get weekStreakKeepAlive => 'Play this week to keep your streak';
+
+  @override
+  String monthGoalProgress(int done, int goal) {
+    return '$done/$goal this month';
+  }
+
+  @override
+  String bestWeekStreak(int n) {
+    return 'Best streak: $n';
+  }
+
+  @override
+  String get achievementUnlockedTitle => 'Achievement unlocked!';
+
+  @override
+  String get achievementNice => 'Nice!';
+
+  @override
+  String get achievementViewAll => 'View all achievements';
+
+  @override
   String get rematchIncomingPending =>
       'This player already sent you a request. Check Match Requests to respond.';
 

@@ -500,6 +500,234 @@ abstract class AppLocalizations {
   /// **'Recent opponents'**
   String get recentOpponents;
 
+  /// No description provided for @achievementsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Achievements'**
+  String get achievementsTitle;
+
+  /// No description provided for @achievementsUnlockedCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{unlocked} of {total} unlocked'**
+  String achievementsUnlockedCount(int unlocked, int total);
+
+  /// No description provided for @badgeGroupPlaying.
+  ///
+  /// In en, this message translates to:
+  /// **'Playing'**
+  String get badgeGroupPlaying;
+
+  /// No description provided for @badgeGroupSocial.
+  ///
+  /// In en, this message translates to:
+  /// **'Social'**
+  String get badgeGroupSocial;
+
+  /// No description provided for @badgeGroupPerformance.
+  ///
+  /// In en, this message translates to:
+  /// **'Performance'**
+  String get badgeGroupPerformance;
+
+  /// No description provided for @badgeGroupReputation.
+  ///
+  /// In en, this message translates to:
+  /// **'Reputation'**
+  String get badgeGroupReputation;
+
+  /// No description provided for @badgeFirstMatchTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'First match'**
+  String get badgeFirstMatchTitle;
+
+  /// No description provided for @badgeFirstMatchDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Play and record your first match.'**
+  String get badgeFirstMatchDesc;
+
+  /// No description provided for @badgeMatchesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{n} matches played'**
+  String badgeMatchesTitle(int n);
+
+  /// No description provided for @badgeMatchesDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Play {n} matches.'**
+  String badgeMatchesDesc(int n);
+
+  /// No description provided for @badgeWeekStreakTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{n}-week streak'**
+  String badgeWeekStreakTitle(int n);
+
+  /// No description provided for @badgeWeekStreakDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Play at least one match for {n} weeks in a row.'**
+  String badgeWeekStreakDesc(int n);
+
+  /// No description provided for @badgeOpponentsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{n} different opponents'**
+  String badgeOpponentsTitle(int n);
+
+  /// No description provided for @badgeOpponentsDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Play against {n} different players.'**
+  String badgeOpponentsDesc(int n);
+
+  /// No description provided for @badgeRivalryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Rivalry'**
+  String get badgeRivalryTitle;
+
+  /// No description provided for @badgeRivalryDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Play {n} matches against the same player.'**
+  String badgeRivalryDesc(int n);
+
+  /// No description provided for @badgeFirstRatingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Fair play'**
+  String get badgeFirstRatingTitle;
+
+  /// No description provided for @badgeFirstRatingDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Rate an opponent after a match.'**
+  String get badgeFirstRatingDesc;
+
+  /// No description provided for @badgeFirstWinTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'First win'**
+  String get badgeFirstWinTitle;
+
+  /// No description provided for @badgeFirstWinDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Win your first match.'**
+  String get badgeFirstWinDesc;
+
+  /// No description provided for @badgeWinStreakTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{n} wins in a row'**
+  String badgeWinStreakTitle(int n);
+
+  /// No description provided for @badgeWinStreakDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Win {n} matches in a row.'**
+  String badgeWinStreakDesc(int n);
+
+  /// No description provided for @badgeBagelTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Bagel'**
+  String get badgeBagelTitle;
+
+  /// No description provided for @badgeBagelDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Win a set 6-0.'**
+  String get badgeBagelDesc;
+
+  /// No description provided for @badgeTiebreakTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Clutch'**
+  String get badgeTiebreakTitle;
+
+  /// No description provided for @badgeTiebreakDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Win a set in a tiebreak.'**
+  String get badgeTiebreakDesc;
+
+  /// No description provided for @badgeGiantTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Giant killer'**
+  String get badgeGiantTitle;
+
+  /// No description provided for @badgeGiantDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Beat a player whose ranking score is well above yours.'**
+  String get badgeGiantDesc;
+
+  /// No description provided for @badgeReputationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Great sport'**
+  String get badgeReputationTitle;
+
+  /// No description provided for @badgeReputationDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep a 4.5+ average rating after at least 5 ratings.'**
+  String get badgeReputationDesc;
+
+  /// No description provided for @weekStreakChip.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly streak: {weeks}'**
+  String weekStreakChip(int weeks);
+
+  /// No description provided for @weekStreakStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Play this week to start a streak'**
+  String get weekStreakStart;
+
+  /// No description provided for @weekStreakKeepAlive.
+  ///
+  /// In en, this message translates to:
+  /// **'Play this week to keep your streak'**
+  String get weekStreakKeepAlive;
+
+  /// No description provided for @monthGoalProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'{done}/{goal} this month'**
+  String monthGoalProgress(int done, int goal);
+
+  /// No description provided for @bestWeekStreak.
+  ///
+  /// In en, this message translates to:
+  /// **'Best streak: {n}'**
+  String bestWeekStreak(int n);
+
+  /// No description provided for @achievementUnlockedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Achievement unlocked!'**
+  String get achievementUnlockedTitle;
+
+  /// No description provided for @achievementNice.
+  ///
+  /// In en, this message translates to:
+  /// **'Nice!'**
+  String get achievementNice;
+
+  /// No description provided for @achievementViewAll.
+  ///
+  /// In en, this message translates to:
+  /// **'View all achievements'**
+  String get achievementViewAll;
+
   /// No description provided for @rematchIncomingPending.
   ///
   /// In en, this message translates to:
