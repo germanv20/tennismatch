@@ -449,22 +449,30 @@ class _MatchChatScreenState extends State<MatchChatScreen>
           Padding(
             padding: const EdgeInsets.all(8),
             child: Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Expanded(
+                  // Multiline like WhatsApp: long text wraps onto new lines
+                  // (the field grows up to 5 lines, then scrolls) instead of
+                  // scrolling sideways; Enter inserts a newline and the send
+                  // button sends.
                   child: TextField(
                     controller: _messageController,
-                    textInputAction: TextInputAction.send,
+                    keyboardType: TextInputType.multiline,
+                    textInputAction: TextInputAction.newline,
+                    textCapitalization: TextCapitalization.sentences,
+                    minLines: 1,
+                    maxLines: 5,
                     onChanged: handleTyping,
-                    onSubmitted: (_) async {
-                      await setTyping(false);
-                      sendMessage();
-                    },
                     decoration: InputDecoration(hintText: loc.typeMessage),
                   ),
                 ),
                 IconButton(
                   icon: const Icon(Icons.send),
-                  onPressed: sendMessage,
+                  onPressed: () async {
+                    await setTyping(false);
+                    sendMessage();
+                  },
                 ),
               ],
             ),

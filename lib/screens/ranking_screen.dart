@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:tennismatch/gen_l10n/app_localizations.dart';
 import '../utils/city_utils.dart';
+import '../utils/name_utils.dart';
 import '../utils/ranking_utils.dart';
 import '../widgets/empty_state.dart';
 import 'player_profile_view_screen.dart';
@@ -128,8 +129,11 @@ class RankingScreen extends StatelessWidget {
                                 final data =
                                     doc.data() as Map<String, dynamic>;
                                 final isMe = doc.id == currentUser.uid;
-                                final name =
-                                    data['name'] as String? ?? loc.unknown;
+                                final rawName = data['name'] as String?;
+                                final name = (rawName == null ||
+                                        rawName.trim().isEmpty)
+                                    ? loc.unknown
+                                    : formatNameDisplay(rawName);
                                 final photoUrl = data['photoUrl'] as String?;
                                 final eloRating =
                                     (data['eloRating'] as int?) ?? 1200;

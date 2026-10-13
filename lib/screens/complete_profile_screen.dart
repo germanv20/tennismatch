@@ -440,26 +440,51 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
 
               const SizedBox(height: 12),
 
-              // Birthdate
+              // Birthdate — styled as an always-visible outlined field with
+              // a leading calendar icon and a bold primary-color prompt, so
+              // new users don't skip it (it used to look like plain text).
+              Padding(
+                padding: const EdgeInsets.only(bottom: 6),
+                child: Text(
+                  '${loc.birthDate} *',
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
               ListTile(
+                leading: Icon(
+                  Icons.calendar_today,
+                  color: showDateError
+                      ? Colors.red
+                      : Theme.of(context).colorScheme.primary,
+                ),
                 title: Text(
                   birthdate == null
                       ? loc.selectBirthdate
                       : "${birthdate!.toLocal()}".split(' ')[0],
                   style: TextStyle(
-                    color: showDateError ? Colors.red : null,
+                    fontWeight: birthdate == null ? FontWeight.bold : null,
+                    color: showDateError
+                        ? Colors.red
+                        : (birthdate == null
+                            ? Theme.of(context).colorScheme.primary
+                            : null),
                   ),
                 ),
-                trailing: Icon(
-                  Icons.calendar_today,
-                  color: showDateError ? Colors.red : null,
+                trailing: const Icon(Icons.arrow_drop_down),
+                shape: RoundedRectangleBorder(
+                  side: BorderSide(
+                    color: showDateError
+                        ? Colors.red
+                        : (birthdate == null
+                            ? Theme.of(context).colorScheme.primary
+                            : Colors.grey),
+                    width: birthdate == null ? 1.5 : 1,
+                  ),
+                  borderRadius: BorderRadius.circular(4),
                 ),
-                shape: showDateError
-                    ? RoundedRectangleBorder(
-                        side: const BorderSide(color: Colors.red),
-                        borderRadius: BorderRadius.circular(4),
-                      )
-                    : null,
                 onTap: pickBirthdate,
               ),
               if (showDateError)

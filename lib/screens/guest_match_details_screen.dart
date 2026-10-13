@@ -14,6 +14,7 @@ class GuestMatchDetailsScreen extends StatelessWidget {
   final int duration;
   final DateTime matchDate;
   final String winnerUid;
+  final bool isTie;
   final String currentUserUid;
   final String? notes;
   final String? scoringMode;
@@ -30,6 +31,7 @@ class GuestMatchDetailsScreen extends StatelessWidget {
     required this.duration,
     required this.matchDate,
     required this.winnerUid,
+    this.isTie = false,
     required this.currentUserUid,
     this.notes,
     this.scoringMode,
@@ -117,7 +119,8 @@ class GuestMatchDetailsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context)!;
-    final bool currentUserWon = winnerUid == currentUserUid;
+    final bool currentUserWon = !isTie && winnerUid == currentUserUid;
+    final bool opponentWon = !isTie && !currentUserWon;
 
     return Scaffold(
       appBar: AppBar(
@@ -184,22 +187,40 @@ class GuestMatchDetailsScreen extends StatelessWidget {
 
               const SizedBox(height: 8),
 
-              RichText(
-                text: TextSpan(
-                  style: const TextStyle(
-                    color: Colors.black,
-                    fontSize: 16,
+              if (isTie)
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[200],
+                    borderRadius: BorderRadius.circular(8),
                   ),
-                  children: [
-                    TextSpan(
-                      text: loc.matchResultSentence(
-                        currentUserWon ? playerName : opponentName,
-                        currentUserWon ? opponentName : playerName,
-                      ),
+                  child: Text(
+                    loc.matchEndedAsTie,
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.grey[700],
+                      fontWeight: FontWeight.w500,
                     ),
-                  ],
+                  ),
+                )
+              else
+                RichText(
+                  text: TextSpan(
+                    style: const TextStyle(
+                      color: Colors.black,
+                      fontSize: 16,
+                    ),
+                    children: [
+                      TextSpan(
+                        text: loc.matchResultSentence(
+                          currentUserWon ? playerName : opponentName,
+                          currentUserWon ? opponentName : playerName,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
 
               const SizedBox(height: 20),
 
@@ -251,14 +272,14 @@ class GuestMatchDetailsScreen extends StatelessWidget {
                                       textAlign: TextAlign.center,
                                       overflow: TextOverflow.ellipsis,
                                       style: TextStyle(
-                                        fontWeight: !currentUserWon
+                                        fontWeight: opponentWon
                                             ? FontWeight.bold
                                             : FontWeight.normal,
                                         fontSize: 13,
                                       ),
                                     ),
                                   ),
-                                  if (!currentUserWon) ...[
+                                  if (opponentWon) ...[
                                     const SizedBox(width: 4),
                                     const Text('🏆', style: TextStyle(fontSize: 11)),
                                   ],
