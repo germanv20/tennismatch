@@ -449,26 +449,37 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                 child: InputDecorator(
                   isEmpty: false, // keep the label floated like a filled field
                   decoration: InputDecoration(
-                    // labelText: loc.birthDate,
-                    prefixIcon: Icon(
-                      Icons.calendar_today,
-                      color: showDateError
-                          ? Colors.red
-                          : Theme.of(context).colorScheme.primary,
-                    ),
+                    labelText: loc.birthDate,
                     suffixIcon: const Icon(Icons.arrow_drop_down),
                     errorText: showDateError ? loc.requiredField : null,
                   ),
-                  child: Text(
-                    birthdate == null
-                        ? loc.selectBirthdate
-                        : "${birthdate!.toLocal()}".split(' ')[0],
-                    style: TextStyle(
-                      fontWeight: birthdate == null ? FontWeight.bold : null,
-                      color: birthdate == null
-                          ? Theme.of(context).colorScheme.primary
-                          : null,
-                    ),
+                  // Calendar icon sits inside the value row (not as a
+                  // prefixIcon), so the label stays at the field's left edge
+                  // above the icon, like "Tu nombre" above the name.
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.calendar_today,
+                        color: showDateError
+                            ? Colors.red
+                            : Theme.of(context).colorScheme.primary,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          birthdate == null
+                              ? loc.selectBirthdate
+                              : "${birthdate!.toLocal()}".split(' ')[0],
+                          style: TextStyle(
+                            fontWeight:
+                                birthdate == null ? FontWeight.bold : null,
+                            color: birthdate == null
+                                ? Theme.of(context).colorScheme.primary
+                                : null,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
