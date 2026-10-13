@@ -440,61 +440,38 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
 
               const SizedBox(height: 12),
 
-              // Birthdate — styled as an always-visible outlined field with
-              // a leading calendar icon and a bold primary-color prompt, so
-              // new users don't skip it (it used to look like plain text).
-              Padding(
-                padding: const EdgeInsets.only(bottom: 6),
-                child: Text(
-                  '${loc.birthDate} *',
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ),
-              ListTile(
-                leading: Icon(
-                  Icons.calendar_today,
-                  color: showDateError
-                      ? Colors.red
-                      : Theme.of(context).colorScheme.primary,
-                ),
-                title: Text(
-                  birthdate == null
-                      ? loc.selectBirthdate
-                      : "${birthdate!.toLocal()}".split(' ')[0],
-                  style: TextStyle(
-                    fontWeight: birthdate == null ? FontWeight.bold : null,
-                    color: showDateError
-                        ? Colors.red
-                        : (birthdate == null
-                            ? Theme.of(context).colorScheme.primary
-                            : null),
-                  ),
-                ),
-                trailing: const Icon(Icons.arrow_drop_down),
-                shape: RoundedRectangleBorder(
-                  side: BorderSide(
-                    color: showDateError
-                        ? Colors.red
-                        : (birthdate == null
-                            ? Theme.of(context).colorScheme.primary
-                            : Colors.grey),
-                    width: birthdate == null ? 1.5 : 1,
-                  ),
-                  borderRadius: BorderRadius.circular(4),
-                ),
+              // Birthdate — an InputDecorator (same look as the name field
+              // above, with its label), always visible with a leading
+              // calendar icon and a bold primary-colored prompt while empty,
+              // so new users don't skip it.
+              InkWell(
                 onTap: pickBirthdate,
-              ),
-              if (showDateError)
-                Padding(
-                  padding: const EdgeInsets.only(top: 4, left: 12),
+                child: InputDecorator(
+                  isEmpty: false, // keep the label floated like a filled field
+                  decoration: InputDecoration(
+                    // labelText: loc.birthDate,
+                    prefixIcon: Icon(
+                      Icons.calendar_today,
+                      color: showDateError
+                          ? Colors.red
+                          : Theme.of(context).colorScheme.primary,
+                    ),
+                    suffixIcon: const Icon(Icons.arrow_drop_down),
+                    errorText: showDateError ? loc.requiredField : null,
+                  ),
                   child: Text(
-                    loc.requiredField,
-                    style: const TextStyle(color: Colors.red, fontSize: 12),
+                    birthdate == null
+                        ? loc.selectBirthdate
+                        : "${birthdate!.toLocal()}".split(' ')[0],
+                    style: TextStyle(
+                      fontWeight: birthdate == null ? FontWeight.bold : null,
+                      color: birthdate == null
+                          ? Theme.of(context).colorScheme.primary
+                          : null,
+                    ),
                   ),
                 ),
+              ),
 
               const SizedBox(height: 12),
 
