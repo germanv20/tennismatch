@@ -4,6 +4,7 @@ import 'package:tennismatch/gen_l10n/app_localizations.dart';
 import '../services/achievements_service.dart';
 import '../utils/achievement_labels.dart';
 import '../utils/achievements_utils.dart';
+import 'monthly_recap_screen.dart';
 
 /// Badge grid (locked ones greyed out with progress) plus the weekly-streak /
 /// monthly-goal header. Data is computed on the device — see
@@ -51,6 +52,22 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
               children: [
                 _Header(data: data),
                 const SizedBox(height: 8),
+                ListTile(
+                  leading: const Icon(Icons.auto_awesome),
+                  title: Text(loc.recapSeeLastMonth),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () {
+                    final now = DateTime.now();
+                    final prev = DateTime(now.year, now.month - 1);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => MonthlyRecapScreen(
+                            year: prev.year, month: prev.month),
+                      ),
+                    );
+                  },
+                ),
                 for (final g in BadgeGroup.values)
                   ..._group(context, loc, g, data),
               ],

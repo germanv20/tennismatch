@@ -15,6 +15,7 @@ import 'my_profile_screen.dart';
 import 'about_screen.dart';
 import 'achievements_screen.dart';
 import '../widgets/achievements_strip.dart';
+import '../widgets/monthly_recap_card.dart';
 import 'log_guest_match_screen.dart'; // NEW
 import 'log_doubles_match_screen.dart'; // NEW
 import 'ranking_screen.dart';
@@ -1113,6 +1114,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 // ── Weekly streak + monthly goal strip (achievements) ──
                 const SizedBox(height: 8),
                 const AchievementsStrip(),
+                const MonthlyRecapCard(),
 
                 const SizedBox(height: spaceL),
 

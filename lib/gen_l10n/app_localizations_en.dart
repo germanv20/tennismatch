@@ -356,6 +356,110 @@ class AppLocalizationsEn extends AppLocalizations {
   String get achievementViewAll => 'View all achievements';
 
   @override
+  String recapTitle(String month) {
+    return 'Your $month in tennis';
+  }
+
+  @override
+  String recapHomeCardTitle(String month) {
+    return 'Your $month recap is ready';
+  }
+
+  @override
+  String get recapHomeCardSubtitle => 'Tap to see your month in tennis';
+
+  @override
+  String recapNudgeTitle(String month) {
+    return 'No matches in $month';
+  }
+
+  @override
+  String recapNudgeBody(String nextMonth) {
+    return 'Find a player and start $nextMonth on court.';
+  }
+
+  @override
+  String get recapNudgeButton => 'Find players';
+
+  @override
+  String recapVsPrevious(String diff) {
+    return '$diff vs previous month';
+  }
+
+  @override
+  String get recapSameAsPrevious => 'Same as the previous month';
+
+  @override
+  String recapRecord(int wins, int losses, int ties) {
+    return '${wins}W - ${losses}L - ${ties}T';
+  }
+
+  @override
+  String get recapTimeOnCourt => 'Time on court';
+
+  @override
+  String recapHoursMinutes(int hours, int minutes) {
+    return '${hours}h ${minutes}m';
+  }
+
+  @override
+  String recapNewOpponents(int n) {
+    return '$n new to you';
+  }
+
+  @override
+  String recapTopOpponent(String name, int n) {
+    return 'Most played: $name ($n)';
+  }
+
+  @override
+  String get recapHighlightTitle => 'Highlight of the month';
+
+  @override
+  String get recapHighlightBagel => 'You won a set 6-0!';
+
+  @override
+  String get recapHighlightTiebreak => 'You won a set in a tiebreak';
+
+  @override
+  String recapHighlightBigWin(String score) {
+    return 'Biggest win: $score';
+  }
+
+  @override
+  String get recapHighlightNone => 'Every match counts. Keep playing!';
+
+  @override
+  String get recapCourtTitle => 'Your favorite court';
+
+  @override
+  String recapCourtCount(int n) {
+    return '$n matches there';
+  }
+
+  @override
+  String get recapStreakTitle => 'Consistency';
+
+  @override
+  String recapBadgesCount(int n) {
+    return '$n achievements unlocked';
+  }
+
+  @override
+  String get recapShare => 'Share';
+
+  @override
+  String recapShareText(String link) {
+    return 'My month in tennis, tracked with Tennis Match: $link';
+  }
+
+  @override
+  String get recapSeeLastMonth => 'Last month\'s recap';
+
+  @override
+  String get recapShareFailed => 'Couldn\'t share the image';
+
+  @override
   String get rematchIncomingPending =>
       'This player already sent you a request. Check Match Requests to respond.';
 

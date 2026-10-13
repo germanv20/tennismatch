@@ -2,7 +2,7 @@ name: tennismatch
 description: "A new Flutter project."
 publish_to: 'none'
 
-version: 1.4.19+30
+version: 1.4.20+31
 
 environment:
   sdk: ^3.9.2
@@ -31,6 +31,8 @@ dependencies:
   provider: ^6.1.2
   fl_chart: ^0.69.0
   package_info_plus: ^8.1.1
+  share_plus: ^10.1.4
+  path_provider: ^2.1.4
 
 dev_dependencies:
   flutter_test:

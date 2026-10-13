@@ -728,6 +728,162 @@ abstract class AppLocalizations {
   /// **'View all achievements'**
   String get achievementViewAll;
 
+  /// No description provided for @recapTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your {month} in tennis'**
+  String recapTitle(String month);
+
+  /// No description provided for @recapHomeCardTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your {month} recap is ready'**
+  String recapHomeCardTitle(String month);
+
+  /// No description provided for @recapHomeCardSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to see your month in tennis'**
+  String get recapHomeCardSubtitle;
+
+  /// No description provided for @recapNudgeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No matches in {month}'**
+  String recapNudgeTitle(String month);
+
+  /// No description provided for @recapNudgeBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Find a player and start {nextMonth} on court.'**
+  String recapNudgeBody(String nextMonth);
+
+  /// No description provided for @recapNudgeButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Find players'**
+  String get recapNudgeButton;
+
+  /// No description provided for @recapVsPrevious.
+  ///
+  /// In en, this message translates to:
+  /// **'{diff} vs previous month'**
+  String recapVsPrevious(String diff);
+
+  /// No description provided for @recapSameAsPrevious.
+  ///
+  /// In en, this message translates to:
+  /// **'Same as the previous month'**
+  String get recapSameAsPrevious;
+
+  /// No description provided for @recapRecord.
+  ///
+  /// In en, this message translates to:
+  /// **'{wins}W - {losses}L - {ties}T'**
+  String recapRecord(int wins, int losses, int ties);
+
+  /// No description provided for @recapTimeOnCourt.
+  ///
+  /// In en, this message translates to:
+  /// **'Time on court'**
+  String get recapTimeOnCourt;
+
+  /// No description provided for @recapHoursMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'{hours}h {minutes}m'**
+  String recapHoursMinutes(int hours, int minutes);
+
+  /// No description provided for @recapNewOpponents.
+  ///
+  /// In en, this message translates to:
+  /// **'{n} new to you'**
+  String recapNewOpponents(int n);
+
+  /// No description provided for @recapTopOpponent.
+  ///
+  /// In en, this message translates to:
+  /// **'Most played: {name} ({n})'**
+  String recapTopOpponent(String name, int n);
+
+  /// No description provided for @recapHighlightTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Highlight of the month'**
+  String get recapHighlightTitle;
+
+  /// No description provided for @recapHighlightBagel.
+  ///
+  /// In en, this message translates to:
+  /// **'You won a set 6-0!'**
+  String get recapHighlightBagel;
+
+  /// No description provided for @recapHighlightTiebreak.
+  ///
+  /// In en, this message translates to:
+  /// **'You won a set in a tiebreak'**
+  String get recapHighlightTiebreak;
+
+  /// No description provided for @recapHighlightBigWin.
+  ///
+  /// In en, this message translates to:
+  /// **'Biggest win: {score}'**
+  String recapHighlightBigWin(String score);
+
+  /// No description provided for @recapHighlightNone.
+  ///
+  /// In en, this message translates to:
+  /// **'Every match counts. Keep playing!'**
+  String get recapHighlightNone;
+
+  /// No description provided for @recapCourtTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your favorite court'**
+  String get recapCourtTitle;
+
+  /// No description provided for @recapCourtCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{n} matches there'**
+  String recapCourtCount(int n);
+
+  /// No description provided for @recapStreakTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Consistency'**
+  String get recapStreakTitle;
+
+  /// No description provided for @recapBadgesCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{n} achievements unlocked'**
+  String recapBadgesCount(int n);
+
+  /// No description provided for @recapShare.
+  ///
+  /// In en, this message translates to:
+  /// **'Share'**
+  String get recapShare;
+
+  /// No description provided for @recapShareText.
+  ///
+  /// In en, this message translates to:
+  /// **'My month in tennis, tracked with Tennis Match: {link}'**
+  String recapShareText(String link);
+
+  /// No description provided for @recapSeeLastMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'Last month\'s recap'**
+  String get recapSeeLastMonth;
+
+  /// No description provided for @recapShareFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t share the image'**
+  String get recapShareFailed;
+
   /// No description provided for @rematchIncomingPending.
   ///
   /// In en, this message translates to:
