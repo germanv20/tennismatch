@@ -494,6 +494,12 @@ abstract class AppLocalizations {
   /// **'Play again'**
   String get playAgain;
 
+  /// No description provided for @recentOpponents.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent opponents'**
+  String get recentOpponents;
+
   /// No description provided for @rematchIncomingPending.
   ///
   /// In en, this message translates to:

@@ -211,6 +211,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get playAgain => 'Jugar de nuevo';
 
   @override
+  String get recentOpponents => 'Rivales recientes';
+
+  @override
   String get rematchIncomingPending =>
       'Este jugador ya te envió una solicitud. Revisa Solicitudes de partido para responder.';
 

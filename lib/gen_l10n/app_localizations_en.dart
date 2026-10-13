@@ -211,6 +211,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get playAgain => 'Play again';
 
   @override
+  String get recentOpponents => 'Recent opponents';
+
+  @override
   String get rematchIncomingPending =>
       'This player already sent you a request. Check Match Requests to respond.';
 

@@ -7,6 +7,7 @@ import 'player_profile_view_screen.dart';
 import 'incoming_requests_screen.dart';
 import '../widgets/empty_state.dart';
 import '../widgets/error_state.dart';
+import '../widgets/recent_opponents_row.dart';
 import '../utils/city_utils.dart';
 import '../utils/name_utils.dart';
 
@@ -457,6 +458,30 @@ class _AvailablePlayersScreenState extends State<AvailablePlayersScreen> {
                                   );
                                 }
 
+                                        // "Recent opponents" shortcut row on
+                                        // top; hidden while searching.
+                                        if (_searchQuery.trim().isEmpty) {
+                                          listItems.insert(
+                                            0,
+                                            RecentOpponentsRow(
+                                              key: const ValueKey(
+                                                  'recent_opponents'),
+                                              allUsers: docs,
+                                              blockedUserIds: blockedUserIds,
+                                              incomingRequestUids:
+                                                  incomingRequestUids,
+                                              onTap: (doc, data,
+                                                  hasIncomingRequest) {
+                                                _openPlayerFromShortcut(
+                                                    context,
+                                                    doc,
+                                                    data,
+                                                    hasIncomingRequest);
+                                              },
+                                            ),
+                                          );
+                                        }
+
                                         return ListView(children: listItems);
                                       },
                                     ); // innermost StreamBuilder (incoming requests)
@@ -469,6 +494,39 @@ class _AvailablePlayersScreenState extends State<AvailablePlayersScreen> {
                 );
               },
             );
+          },
+        ),
+      ),
+    );
+  }
+
+  /// Same destinations as tapping a player card, for the "Recent
+  /// opponents" shortcut row: a player who already asked me goes to
+  /// Incoming Requests, anyone else opens their profile with a request
+  /// button. (Blocked/pending opponents never reach here — the row greys
+  /// them out and disables their tap.)
+  void _openPlayerFromShortcut(
+    BuildContext context,
+    QueryDocumentSnapshot doc,
+    Map<String, dynamic> data,
+    bool hasIncomingRequest,
+  ) {
+    if (hasIncomingRequest) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const IncomingRequestsScreen()),
+      );
+      return;
+    }
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => PlayerProfileViewScreen(
+          userData: data,
+          onRequestMatch: () async {
+            await requestMatch(context, doc.id);
+            if (!context.mounted) return;
+            Navigator.pop(context);
           },
         ),
       ),

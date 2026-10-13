@@ -75,6 +75,7 @@
   "requestSent": "Solicitud enviada 🎾",
   "requestAlreadySent": "Solicitud ya enviada",
   "playAgain": "Jugar de nuevo",
+  "recentOpponents": "Rivales recientes",
   "rematchIncomingPending": "Este jugador ya te envió una solicitud. Revisa Solicitudes de partido para responder.",
   "rematchAlreadyScheduled": "Ya tienes un partido agendado con este jugador.",
   "matchRequestAccepted": "Solicitud de partido aceptada",
