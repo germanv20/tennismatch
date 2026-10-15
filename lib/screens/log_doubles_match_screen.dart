@@ -5,6 +5,8 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:tennismatch/gen_l10n/app_localizations.dart';
 import '../main.dart' show navigatorKey;
 import '../widgets/set_score_row.dart';
+import '../widgets/linkable_player_field.dart';
+import '../utils/doubles_utils.dart';
 
 class LogDoublesMatchScreen extends StatefulWidget {
   const LogDoublesMatchScreen({super.key});
@@ -53,6 +55,29 @@ class _LogDoublesMatchScreenState extends State<LogDoublesMatchScreen> {
   // Determined automatically from set wins
   String? currentUserName;
   String? currentUserUid;
+
+  // Registered players linked into the other three slots (slot → uid, using
+  // the slot names from utils/doubles_utils.dart). A slot not in this map is
+  // just a typed name. Linked players get the match in their own history.
+  final Map<String, String> _linked = {};
+
+  /// uids that can't be picked again (yourself + already-linked players).
+  Set<String> get _excludeUids => {
+        if (currentUserUid != null) currentUserUid!,
+        ..._linked.values,
+      };
+
+  void _setLink(String slot, TextEditingController c, PickedPlayer? p) {
+    setState(() {
+      if (p == null) {
+        _linked.remove(slot);
+        c.clear();
+      } else {
+        _linked[slot] = p.uid;
+        c.text = p.name;
+      }
+    });
+  }
 
   @override
   void initState() {
@@ -620,7 +645,9 @@ class _LogDoublesMatchScreenState extends State<LogDoublesMatchScreen> {
     final matchData = {
       'type': 'doubles_guest',
       'createdBy': uid,
-      'players': [uid],
+      // Creator first, then any linked registered players (see _linked).
+      'players': [uid, ..._linked.values],
+      'linkedPlayers': Map<String, String>.from(_linked),
       'status': 'completed',
       'winnerTeam': winnerTeam,
       if (isTie) 'isTie': true,
@@ -757,15 +784,13 @@ class _LogDoublesMatchScreenState extends State<LogDoublesMatchScreen> {
 
             const SizedBox(height: 10),
 
-            TextField(
+LinkablePlayerField(
               controller: partnerNameController,
-              textCapitalization: TextCapitalization.words,
-              onChanged: (_) => setState(() {}), // rebuild team label
-              decoration: InputDecoration(
-                labelText: loc.yourPartner,
-                border: const OutlineInputBorder(),
-                prefixIcon: const Icon(Icons.person_outline),
-              ),
+              label: loc.yourPartner,
+              linkedUid: _linked[slotTeam1Player2],
+              excludeUids: _excludeUids,
+              onLinked: (p) => _setLink(slotTeam1Player2, partnerNameController, p),
+              onTextChanged: () => setState(() {}),
             ),
 
             const SizedBox(height: 20),
@@ -777,27 +802,33 @@ class _LogDoublesMatchScreenState extends State<LogDoublesMatchScreen> {
             ),
             const SizedBox(height: 8),
 
-            TextField(
+LinkablePlayerField(
               controller: opponent1Controller,
-              textCapitalization: TextCapitalization.words,
-              onChanged: (_) => setState(() {}),
-              decoration: InputDecoration(
-                labelText: loc.opponent1,
-                border: const OutlineInputBorder(),
-                prefixIcon: const Icon(Icons.person_outline),
-              ),
+              label: loc.opponent1,
+              linkedUid: _linked[slotTeam2Player1],
+              excludeUids: _excludeUids,
+              onLinked: (p) => _setLink(slotTeam2Player1, opponent1Controller, p),
+              onTextChanged: () => setState(() {}),
             ),
 
             const SizedBox(height: 10),
 
-            TextField(
+LinkablePlayerField(
               controller: opponent2Controller,
-              textCapitalization: TextCapitalization.words,
-              onChanged: (_) => setState(() {}),
-              decoration: InputDecoration(
-                labelText: loc.opponent2,
-                border: const OutlineInputBorder(),
-                prefixIcon: const Icon(Icons.person_outline),
+              label: loc.opponent2,
+              linkedUid: _linked[slotTeam2Player2],
+              excludeUids: _excludeUids,
+              onLinked: (p) => _setLink(slotTeam2Player2, opponent2Controller, p),
+              onTextChanged: () => setState(() {}),
+            ),
+
+            // Helper: linking registered players puts the match in their
+            // history too, so it isn't registered four times.
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Text(
+                loc.linkPlayersHint,
+                style: TextStyle(fontSize: 12, color: Colors.grey[600]),
               ),
             ),
 

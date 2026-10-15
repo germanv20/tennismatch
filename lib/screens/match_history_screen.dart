@@ -1,3 +1,4 @@
+import '../utils/doubles_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -312,12 +313,19 @@ class _MatchHistoryScreenState extends State<MatchHistoryScreen> {
     AppLocalizations loc,
     String currentUid,
   ) {
-    final match = matchDoc.data() as Map<String, dynamic>;
+    // Linked doubles: show the match from the viewer's side (their team
+    // first) — see utils/doubles_utils.dart. A no-op for the creator.
+    final rawMatch = matchDoc.data() as Map<String, dynamic>;
+    final match = doublesForViewer(rawMatch, currentUid);
+    final bool isCreator = rawMatch['createdBy'] == currentUid;
+    final int linkedCount =
+        (rawMatch['linkedPlayers'] as Map?)?.length ?? 0;
     final team1 = match['team1'] as Map<String, dynamic>? ?? {};
     final team2 = match['team2'] as Map<String, dynamic>? ?? {};
     final isTie = match['isTie'] == true;
     final winnerTeam = match['winnerTeam'] as int? ?? 1;
     final bool team1Won = !isTie && winnerTeam == 1;
+    final bool team2Won = !isTie && winnerTeam == 2;
 
     final rawSets = match['result']?['sets'] ?? [];
     final location = match['result']?['location'] ?? '';
@@ -355,9 +363,20 @@ class _MatchHistoryScreenState extends State<MatchHistoryScreen> {
                 notes: doublesNotes,
                 scoringMode: scoringMode,
                 superTiebreakDecider: superTiebreakDecider,
+                isCreator: isCreator,
+                linkedCount: linkedCount,
               ),
             ),
           );
+          if (result == 'removed' && mounted) {
+            Future.delayed(const Duration(milliseconds: 300), () {
+              if (!mounted) return;
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(loc.doublesNotMeDone),
+                  duration: const Duration(seconds: 2)),
+              );
+            });
+          }
           if (result == true && mounted) {
             Future.delayed(const Duration(milliseconds: 300), () {
               if (!mounted) return;
@@ -427,10 +446,10 @@ class _MatchHistoryScreenState extends State<MatchHistoryScreen> {
                             children: [
                               Flexible(child: Text(team2Label,
                                 style: TextStyle(
-                                  fontWeight: !team1Won
+                                  fontWeight: team2Won
                                       ? FontWeight.bold : FontWeight.normal),
                                 overflow: TextOverflow.ellipsis)),
-                              if (!team1Won) ...[
+                              if (team2Won) ...[
                                 const SizedBox(width: 4),
                                 const Text('🏆'),
                               ],
@@ -760,13 +779,9 @@ class _MatchHistoryScreenState extends State<MatchHistoryScreen> {
         if (type == 'doubles_guest') {
           // Doubles: winnerTeam is top-level (1 or 2)
           // team1.player1 is the creator's name — creator is always in team1
-          final winnerTeam = match['winnerTeam'] as int? ?? 0;
-          // Creator is always team1 since they logged the match
-          final currentUserIsTeam1 =
-              match['createdBy'] == currentUid;
-          final currentUserWon =
-              (currentUserIsTeam1 && winnerTeam == 1) ||
-              (!currentUserIsTeam1 && winnerTeam == 2);
+          // Viewer's team comes from createdBy/linkedPlayers (the creator
+          // is team 1; a linked player may be on team 2).
+          final currentUserWon = doublesViewerWon(match, currentUid);
 
           if (filterResult == 'tie' && !isTie) return false;
           if (filterResult == 'win' &&

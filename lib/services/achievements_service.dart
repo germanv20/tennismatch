@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../utils/doubles_utils.dart';
 import '../utils/achievements_utils.dart';
 
 /// Loads the signed-in user's completed matches and turns them into
@@ -53,7 +54,7 @@ class AchievementsService {
       if (!isTie) {
         bool won;
         if (type == 'doubles_guest') {
-          won = (m['winnerTeam'] as int? ?? 0) == 1;
+          won = doublesViewerWon(m, uid);
         } else if (type == 'guest') {
           final createdBy = m['createdBy'] as String? ?? '';
           final creatorWon = m['winnerUid'] == createdBy;
@@ -84,7 +85,7 @@ class AchievementsService {
       // (claimant), so "my side" is p1 for creators / doubles, else p2.
       bool userIsP1;
       if (type == 'doubles_guest') {
-        userIsP1 = true;
+        userIsP1 = doublesViewerTeam(m, uid) == 1;
       } else if (type == 'guest') {
         userIsP1 = (m['createdBy'] as String? ?? '') == uid;
       } else {

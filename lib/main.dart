@@ -17,6 +17,7 @@ import 'screens/incoming_requests_screen.dart';
 import 'services/theme_service.dart';
 import 'screens/match_detail_screen.dart';
 import 'screens/home_screen.dart';
+import 'screens/match_history_screen.dart';
 import 'screens/complete_profile_screen.dart';
 import 'widgets/rate_opponent_dialog.dart';
 
@@ -212,6 +213,13 @@ Future<void> handleNotificationTap(Map<String, dynamic> data) async {
     // Navigate to Incoming Requests screen so user can accept/reject
     navigatorKey.currentState?.pushAndRemoveUntil(
       MaterialPageRoute(builder: (_) => const IncomingRequestsScreen()),
+      (route) => route.isFirst,
+    );
+  } else if (type == 'doubles_linked') {
+    // Someone added you to a doubles match → show it in History, where the
+    // "This wasn't me" option lives.
+    navigatorKey.currentState?.pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => const MatchHistoryScreen()),
       (route) => route.isFirst,
     );
   } else if (type == 'rate_opponent' && matchId != null) {

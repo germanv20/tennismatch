@@ -884,6 +884,66 @@ abstract class AppLocalizations {
   /// **'Couldn\'t share the image'**
   String get recapShareFailed;
 
+  /// No description provided for @linkPlayerSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Find a registered player'**
+  String get linkPlayerSearch;
+
+  /// No description provided for @linkPlayerHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search by name'**
+  String get linkPlayerHint;
+
+  /// No description provided for @linkPlayerNoResults.
+  ///
+  /// In en, this message translates to:
+  /// **'No players found'**
+  String get linkPlayerNoResults;
+
+  /// No description provided for @linkPlayerRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlink player'**
+  String get linkPlayerRemove;
+
+  /// No description provided for @linkPlayersHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Tip: link registered players so the match also appears in their history.'**
+  String get linkPlayersHint;
+
+  /// No description provided for @doublesNotMe.
+  ///
+  /// In en, this message translates to:
+  /// **'This wasn\'t me'**
+  String get doublesNotMe;
+
+  /// No description provided for @doublesNotMeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove yourself from this match?'**
+  String get doublesNotMeTitle;
+
+  /// No description provided for @doublesNotMeBody.
+  ///
+  /// In en, this message translates to:
+  /// **'It will disappear from your history and stats. The other players keep it.'**
+  String get doublesNotMeBody;
+
+  /// No description provided for @doublesNotMeDone.
+  ///
+  /// In en, this message translates to:
+  /// **'You were removed from this match'**
+  String get doublesNotMeDone;
+
+  /// No description provided for @deleteLinkedDoublesWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'This match is also in the history of players you linked. Deleting it removes it for everyone.'**
+  String get deleteLinkedDoublesWarning;
+
   /// No description provided for @rematchIncomingPending.
   ///
   /// In en, this message translates to:

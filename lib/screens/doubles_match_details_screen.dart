@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:tennismatch/gen_l10n/app_localizations.dart';
 import '../utils/scoring_mode_utils.dart';
 
@@ -19,6 +20,13 @@ class DoublesMatchDetailsScreen extends StatelessWidget {
   final String? scoringMode;
   final bool superTiebreakDecider;
 
+  /// Whether the viewer created the match (can delete it). Linked players
+  /// instead get a "This wasn't me" button.
+  final bool isCreator;
+
+  /// Number of linked registered players (used for the delete warning).
+  final int linkedCount;
+
   const DoublesMatchDetailsScreen({
     super.key,
     required this.matchId,
@@ -35,6 +43,8 @@ class DoublesMatchDetailsScreen extends StatelessWidget {
     this.notes,
     this.scoringMode,
     this.superTiebreakDecider = false,
+    this.isCreator = true,
+    this.linkedCount = 0,
   });
 
   Future<void> _deleteMatch(BuildContext context, AppLocalizations loc) async {
@@ -42,7 +52,9 @@ class DoublesMatchDetailsScreen extends StatelessWidget {
       context: context,
       builder: (_) => AlertDialog(
         title: Text(loc.deleteMatchQuestion),
-        content: Text(loc.deleteGuestMatchConfirmation),
+        content: Text(linkedCount > 0
+            ? '${loc.deleteGuestMatchConfirmation}\n\n${loc.deleteLinkedDoublesWarning}'
+            : loc.deleteGuestMatchConfirmation),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -68,6 +80,52 @@ class DoublesMatchDetailsScreen extends StatelessWidget {
 
     if (!context.mounted) return;
     Navigator.pop(context, true);
+  }
+
+  /// A linked player removes THEMSELVES from the match ("This wasn't me"):
+  /// their uid is dropped from `players` and from their `linkedPlayers` slot
+  /// (the typed name stays on the match). Allowed by a dedicated rule; the
+  /// Cloud Function reverses the stats it had credited to them.
+  Future<void> _removeMe(BuildContext context, AppLocalizations loc) async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return;
+
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: Text(loc.doublesNotMeTitle),
+        content: Text(loc.doublesNotMeBody),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(loc.cancel),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(
+              loc.confirm,
+              style: const TextStyle(color: Colors.red),
+            ),
+          ),
+        ],
+      ),
+    );
+    if (confirm != true) return;
+
+    final ref = FirebaseFirestore.instance.collection('matches').doc(matchId);
+    final snap = await ref.get();
+    final linked =
+        (snap.data()?['linkedPlayers'] as Map<String, dynamic>?) ?? {};
+    final update = <String, dynamic>{
+      'players': FieldValue.arrayRemove([uid]),
+    };
+    linked.forEach((slot, value) {
+      if (value == uid) update['linkedPlayers.$slot'] = FieldValue.delete();
+    });
+    await ref.update(update);
+
+    if (!context.mounted) return;
+    Navigator.pop(context, 'removed');
   }
 
   @override
@@ -361,17 +419,23 @@ class DoublesMatchDetailsScreen extends StatelessWidget {
 
               const SizedBox(height: 32),
 
-              // ── Delete button ──
+              // ── Delete button (creator) / "This wasn't me" (linked) ──
               SizedBox(
                 width: double.infinity,
-                child: ElevatedButton.icon(
-                  icon: const Icon(Icons.delete),
-                  label: Text(loc.deleteMatch),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red,
-                  ),
-                  onPressed: () => _deleteMatch(context, loc),
-                ),
+                child: isCreator
+                    ? ElevatedButton.icon(
+                        icon: const Icon(Icons.delete),
+                        label: Text(loc.deleteMatch),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.red,
+                        ),
+                        onPressed: () => _deleteMatch(context, loc),
+                      )
+                    : OutlinedButton.icon(
+                        icon: const Icon(Icons.person_remove_outlined),
+                        label: Text(loc.doublesNotMe),
+                        onPressed: () => _removeMe(context, loc),
+                      ),
               ),
 
               const SizedBox(height: 24),

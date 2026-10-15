@@ -35,6 +35,9 @@ const strings = {
       `Tu solicitud de partido a ${name} expiró después de 2 días`,
     rateOpponentTitle: "🎾 ¡Partido finalizado!",
     rateOpponentBody: "Califica a tu rival antes de que se te olvide",
+    doublesLinkedTitle: "🎾 Partido de dobles agregado",
+    doublesLinkedBody: (name) =>
+      `${name} te agregó a un partido de dobles. Míralo en tu historial.`,
   },
   en: {
     matchRequestTitle: "🎾 New Match Request",
@@ -53,6 +56,9 @@ const strings = {
       `Your match request to ${name} has expired after 2 days`,
     rateOpponentTitle: "🎾 Match complete!",
     rateOpponentBody: "Rate your opponent before you forget",
+    doublesLinkedTitle: "🎾 Doubles match added",
+    doublesLinkedBody: (name) =>
+      `${name} added you to a doubles match. Check your history.`,
   },
 };
 
@@ -501,6 +507,24 @@ exports.onMatchRequestExpiry = onSchedule("every 24 hours", async () => {
 // ─────────────────────────────────────────────────────
 
 /**
+ * Which team (1 or 2) a registered player was on in a doubles match. The
+ * creator is team 1; linked players are looked up in match.linkedPlayers
+ * (slot names team1Player2 / team2Player1 / team2Player2). Mirrors
+ * lib/utils/doubles_utils.dart's doublesViewerTeam().
+ * @param {object} match The match document data.
+ * @param {string} uid The player's UID.
+ * @return {number} 1 or 2.
+ */
+function doublesTeamForUid(match, uid) {
+  if (match.createdBy === uid) return 1;
+  const linked = match.linkedPlayers || {};
+  for (const slot of Object.keys(linked)) {
+    if (linked[slot] === uid) return slot.startsWith("team2") ? 2 : 1;
+  }
+  return 1;
+}
+
+/**
  * Applies stats updates for a completed match to both relevant players.
  * Shared logic used by both the onCreate and onUpdate triggers below.
  * @param {object} match The match document data.
@@ -512,24 +536,28 @@ async function applyMatchStats(match) {
   const isTie = match.isTie === true;
 
   if (type === "doubles_guest") {
-    // Only the creator is a registered account in doubles matches —
-    // partner/opponents are plain name strings, not linked UIDs.
-    const creatorUid = match.createdBy;
-    if (!creatorUid) return;
+    // The creator is always registered; the other three slots may be
+    // linked registered players (match.linkedPlayers → uid), the rest are
+    // plain name strings. Everyone in `players` gets stats from THEIR
+    // team's perspective.
+    const uids = (match.players && match.players.length > 0) ?
+      match.players : (match.createdBy ? [match.createdBy] : []);
 
-    const winnerTeam = match.winnerTeam;
-    // Creator is always team1 in the doubles logging flow
-    const creatorWon = !isTie && winnerTeam === 1;
-    const creatorLost = !isTie && winnerTeam === 2;
+    for (const uid of uids) {
+      if (!uid) continue;
+      const team = doublesTeamForUid(match, uid);
+      const won = !isTie && match.winnerTeam === team;
+      const lost = !isTie && match.winnerTeam !== team;
 
-    const update = {
-      matchesPlayed: admin.firestore.FieldValue.increment(1),
-      totalDuration: admin.firestore.FieldValue.increment(duration),
-    };
-    if (creatorWon) update.wins = admin.firestore.FieldValue.increment(1);
-    if (creatorLost) update.losses = admin.firestore.FieldValue.increment(1);
+      const update = {
+        matchesPlayed: admin.firestore.FieldValue.increment(1),
+        totalDuration: admin.firestore.FieldValue.increment(duration),
+      };
+      if (won) update.wins = admin.firestore.FieldValue.increment(1);
+      if (lost) update.losses = admin.firestore.FieldValue.increment(1);
 
-    await db.collection("users").doc(creatorUid).update(update);
+      await db.collection("users").doc(uid).update(update);
+    }
     return;
   }
 
@@ -617,6 +645,7 @@ exports.onMatchCreatedCompleted = onDocumentCreated(
       await applyMatchStats(match);
       await applyEloRatings(match);
       await recordLocationUsage(match);
+      await notifyLinkedDoublesPlayers(event.params.matchId, match);
     },
 );
 
@@ -636,6 +665,88 @@ exports.onMatchUpdatedCompleted = onDocumentUpdated(
       await applyEloRatings(after);
       await recordLocationUsage(after);
       await notifyPlayersToRate(event.params.matchId, after);
+    },
+);
+
+/**
+ * Pushes a "you were added to a doubles match" notification to every
+ * linked registered player (everyone in `players` except the creator).
+ * @param {string} matchId
+ * @param {object} match
+ * @return {Promise<void>}
+ */
+async function notifyLinkedDoublesPlayers(matchId, match) {
+  if ((match.type || "regular") !== "doubles_guest") return;
+  const players = match.players || [];
+  const creatorUid = match.createdBy;
+  const linked = players.filter((u) => u && u !== creatorUid);
+  if (linked.length === 0) return;
+
+  const creatorSnap = await db.collection("users").doc(creatorUid).get();
+  const creatorName = (creatorSnap.exists && creatorSnap.data().name) ||
+    (match.team1 && match.team1.player1) || "Someone";
+
+  for (const uid of linked) {
+    const userSnap = await db.collection("users").doc(uid).get();
+    if (!userSnap.exists) continue;
+
+    const t = getStrings(userSnap.data().locale || "en");
+    await sendPushToUser(uid, {
+      notification: {
+        title: t.doublesLinkedTitle,
+        body: t.doublesLinkedBody(creatorName),
+      },
+      android: {
+        notification: {
+          channelId: "default",
+        },
+      },
+      data: {
+        type: "doubles_linked",
+        matchId: matchId,
+      },
+    });
+  }
+}
+
+// A linked player tapped "This wasn't me" (client removes their uid from
+// `players`): reverse the stats applyMatchStats credited to them, from
+// THEIR team's perspective (looked up in the BEFORE data's linkedPlayers).
+exports.onDoublesPlayerRemoved = onDocumentUpdated(
+    "matches/{matchId}",
+    async (event) => {
+      const before = event.data.before.data();
+      const after = event.data.after.data();
+      if ((before.type || "regular") !== "doubles_guest") return;
+      if (before.status !== "completed") return;
+
+      const beforePlayers = before.players || [];
+      const afterPlayers = after.players || [];
+      const removed = beforePlayers.filter(
+          (u) => u && !afterPlayers.includes(u) && u !== before.createdBy,
+      );
+      if (removed.length === 0) return;
+
+      const duration = (before.result && before.result.durationMinutes) || 0;
+      const isTie = before.isTie === true;
+
+      for (const uid of removed) {
+        const team = doublesTeamForUid(before, uid);
+        const won = !isTie && before.winnerTeam === team;
+        const lost = !isTie && before.winnerTeam !== team;
+        const update = {
+          matchesPlayed: admin.firestore.FieldValue.increment(-1),
+          totalDuration: admin.firestore.FieldValue.increment(-duration),
+        };
+        if (won) update.wins = admin.firestore.FieldValue.increment(-1);
+        if (lost) update.losses = admin.firestore.FieldValue.increment(-1);
+
+        console.log(`Reversing doubles stats for ${uid} on ` +
+          `${event.params.matchId} (removed themselves).`);
+        await db.collection("users").doc(uid).update(update).catch(() => {
+          // Profile already gone — nothing to reverse
+        });
+      }
     },
 );
 
@@ -874,7 +985,8 @@ exports.deleteMyAccount = onCall(async (request) => {
   // ── 2. Delete guest/doubles matches this user created. Safe to
   // remove entirely — a guest/doubles match only ever has ONE real
   // registered account on it (the creator) until a guest later claims
-  // it, so this can never remove data another still-active real user
+  // it (or, for doubles, other players are linked — those are skipped
+  // below), so this can never remove data another still-active real user
   // depends on. Regular matches, and guest matches this user merely
   // CLAIMED (created by someone else), are deliberately left alone.
   const createdMatchesSnap = await db.collection("matches")
@@ -884,6 +996,13 @@ exports.deleteMyAccount = onCall(async (request) => {
   for (const doc of createdMatchesSnap.docs) {
     const match = doc.data();
     if (match.type !== "guest" && match.type !== "doubles_guest") continue;
+
+    // A doubles match with linked registered players also lives in THEIR
+    // history — leave it alone (it keeps the typed names).
+    if (match.type === "doubles_guest" &&
+        (match.players || []).some((u) => u && u !== uid)) {
+      continue;
+    }
 
     // Clean up the phoneIndex lookup entry so it doesn't dangle
     const phone = match.guestOpponent && match.guestOpponent.phone;

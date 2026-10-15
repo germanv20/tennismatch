@@ -460,6 +460,39 @@ class AppLocalizationsEn extends AppLocalizations {
   String get recapShareFailed => 'Couldn\'t share the image';
 
   @override
+  String get linkPlayerSearch => 'Find a registered player';
+
+  @override
+  String get linkPlayerHint => 'Search by name';
+
+  @override
+  String get linkPlayerNoResults => 'No players found';
+
+  @override
+  String get linkPlayerRemove => 'Unlink player';
+
+  @override
+  String get linkPlayersHint =>
+      'Tip: link registered players so the match also appears in their history.';
+
+  @override
+  String get doublesNotMe => 'This wasn\'t me';
+
+  @override
+  String get doublesNotMeTitle => 'Remove yourself from this match?';
+
+  @override
+  String get doublesNotMeBody =>
+      'It will disappear from your history and stats. The other players keep it.';
+
+  @override
+  String get doublesNotMeDone => 'You were removed from this match';
+
+  @override
+  String get deleteLinkedDoublesWarning =>
+      'This match is also in the history of players you linked. Deleting it removes it for everyone.';
+
+  @override
   String get rematchIncomingPending =>
       'This player already sent you a request. Check Match Requests to respond.';
 

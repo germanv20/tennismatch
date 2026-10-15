@@ -461,6 +461,39 @@ class AppLocalizationsEs extends AppLocalizations {
   String get recapShareFailed => 'No se pudo compartir la imagen';
 
   @override
+  String get linkPlayerSearch => 'Buscar jugador registrado';
+
+  @override
+  String get linkPlayerHint => 'Buscar por nombre';
+
+  @override
+  String get linkPlayerNoResults => 'No se encontraron jugadores';
+
+  @override
+  String get linkPlayerRemove => 'Desvincular jugador';
+
+  @override
+  String get linkPlayersHint =>
+      'Tip: vincula jugadores registrados para que el partido también aparezca en su historial.';
+
+  @override
+  String get doublesNotMe => 'Este no era yo';
+
+  @override
+  String get doublesNotMeTitle => '¿Quitarte de este partido?';
+
+  @override
+  String get doublesNotMeBody =>
+      'Desaparecerá de tu historial y estadísticas. Los demás jugadores lo conservan.';
+
+  @override
+  String get doublesNotMeDone => 'Te quitaste de este partido';
+
+  @override
+  String get deleteLinkedDoublesWarning =>
+      'Este partido también está en el historial de los jugadores que vinculaste. Al eliminarlo se borra para todos.';
+
+  @override
   String get rematchIncomingPending =>
       'Este jugador ya te envió una solicitud. Revisa Solicitudes de partido para responder.';
 

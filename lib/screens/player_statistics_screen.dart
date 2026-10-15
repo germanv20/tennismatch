@@ -1,3 +1,4 @@
+import '../utils/doubles_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fl_chart/fl_chart.dart';
@@ -136,8 +137,8 @@ class _StatsTabState extends State<_StatsTab>
           if (widget.isDoubles) {
             // doubles_guest only ever has the creator as a real
             // account, so no claimant-perspective issue here.
-            final winnerTeam = match['winnerTeam'] as int? ?? 0;
-            userWon = winnerTeam == 1;
+            // Linked doubles: the viewer may be on team 2.
+            userWon = doublesViewerWon(match, uid);
           } else if (type == 'guest') {
             // winnerUid is the creator's real UID when they won, or
             // the literal 'guest' placeholder when the (then
@@ -165,7 +166,9 @@ class _StatsTabState extends State<_StatsTab>
 
         final sets = result['sets'] as List? ?? [];
         final String? player1Uid = match['player1Uid'] as String?;
-        final bool userIsP1 = widget.isDoubles ? true : (player1Uid == uid);
+        final bool userIsP1 = widget.isDoubles
+            ? doublesViewerTeam(match, uid) == 1
+            : (player1Uid == uid);
 
         for (var set in sets) {
           final setMap = set as Map<String, dynamic>? ?? {};

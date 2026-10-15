@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../utils/doubles_utils.dart';
 import '../utils/monthly_recap_utils.dart';
 import 'achievements_service.dart';
 
@@ -47,7 +48,7 @@ class MonthlyRecapService {
     if (!isTie) {
       bool won;
       if (type == 'doubles_guest') {
-        won = (m['winnerTeam'] as int? ?? 0) == 1;
+        won = doublesViewerWon(m, uid);
       } else if (type == 'guest') {
         final createdBy = m['createdBy'] as String? ?? '';
         final creatorWon = m['winnerUid'] == createdBy;
@@ -66,7 +67,7 @@ class MonthlyRecapService {
 
     bool userIsP1;
     if (type == 'doubles_guest') {
-      userIsP1 = true;
+      userIsP1 = doublesViewerTeam(m, uid) == 1;
     } else if (type == 'guest') {
       userIsP1 = (m['createdBy'] as String? ?? '') == uid;
     } else {
