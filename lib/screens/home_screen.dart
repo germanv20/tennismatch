@@ -1,10 +1,12 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'dart:io';
 import '../services/theme_service.dart';
+import '../utils/name_utils.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'available_players_screen.dart';
 import 'match_history_screen.dart';
@@ -81,13 +83,17 @@ class NotificationBadge extends StatelessWidget {
 /// pending request awaiting the viewer's response, or an outgoing request
 /// the viewer sent that was just accepted or rejected (not yet seen).
 class _BellNotificationItem {
-  final DocumentReference requestRef;
-  final String type; // 'incoming_pending' | 'accepted' | 'rejected'
+  /// Null for 'doubles_linked' items (they come from a match, and "seen" is
+  /// stored on the phone, not on a Firestore doc).
+  final DocumentReference? requestRef;
+  final String type; // 'incoming_pending' | 'accepted' | 'rejected' | 'doubles_linked'
+  final String? matchId;
   final String otherName;
   final Timestamp? timestamp;
 
   const _BellNotificationItem({
-    required this.requestRef,
+    this.requestRef,
+    this.matchId,
     required this.type,
     required this.otherName,
     required this.timestamp,
@@ -113,6 +119,57 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int? outgoingOverrideCount;
   final GlobalKey _bellKey = GlobalKey();
+
+  // Doubles matches someone else logged with me linked (bell notification).
+  // "Seen" ids live in SharedPreferences (per uid) — no Firestore changes.
+  static const int _linkedWindowDays = 7;
+  Set<String> _seenLinked = {};
+  late final Stream<QuerySnapshot> _linkedStream;
+
+  String get _seenLinkedKey => 'seen_doubles_linked_${widget.currentUser.uid}';
+
+  @override
+  void initState() {
+    super.initState();
+    _linkedStream = FirebaseFirestore.instance
+        .collection('matches')
+        .where('players', arrayContains: widget.currentUser.uid)
+        .where('status', isEqualTo: 'completed')
+        .snapshots();
+    _loadSeenLinked();
+  }
+
+  Future<void> _loadSeenLinked() async {
+    final prefs = await SharedPreferences.getInstance();
+    final list = prefs.getStringList(_seenLinkedKey) ?? const <String>[];
+    if (!mounted) return;
+    setState(() => _seenLinked = list.toSet());
+  }
+
+  Future<void> _markLinkedSeen(String matchId) async {
+    final prefs = await SharedPreferences.getInstance();
+    final next = {..._seenLinked, matchId};
+    await prefs.setStringList(_seenLinkedKey, next.toList());
+    if (!mounted) return;
+    setState(() => _seenLinked = next);
+  }
+
+  /// Doubles matches created by someone else, with me in `players`, from the
+  /// last week, that I haven't opened from the bell yet.
+  List<QueryDocumentSnapshot> _unseenLinkedDocs(QuerySnapshot? snap) {
+    if (snap == null) return const [];
+    final me = widget.currentUser.uid;
+    final cutoff =
+        DateTime.now().subtract(const Duration(days: _linkedWindowDays));
+    return snap.docs.where((d) {
+      final m = d.data() as Map<String, dynamic>;
+      if (m['type'] != 'doubles_guest') return false;
+      if (m['createdBy'] == me) return false;
+      if (_seenLinked.contains(d.id)) return false;
+      final ts = (m['completedAt'] ?? m['createdAt']) as Timestamp?;
+      return ts != null && ts.toDate().isAfter(cutoff);
+    }).toList();
+  }
  
   String translateLevel(String level, AppLocalizations loc) {
     switch (level) {
@@ -672,15 +729,25 @@ class _HomeScreenState extends State<HomeScreen> {
                   .snapshots(),
               builder: (context, rejectedSnap) {
                 final rejectedCount = rejectedSnap.data?.docs.length ?? 0;
-                final total = incomingCount + acceptedCount + rejectedCount;
-                return NotificationBadge(
-                  count: total,
-                  child: IconButton(
-                    key: _bellKey,
-                    icon: const Icon(Icons.notifications_outlined),
-                    tooltip: loc.notificationsTooltip,
-                    onPressed: () => _showNotificationsDropdown(loc),
-                  ),
+                return StreamBuilder<QuerySnapshot>(
+                  stream: _linkedStream,
+                  builder: (context, linkedSnap) {
+                    final linkedCount =
+                        _unseenLinkedDocs(linkedSnap.data).length;
+                    final total = incomingCount +
+                        acceptedCount +
+                        rejectedCount +
+                        linkedCount;
+                    return NotificationBadge(
+                      count: total,
+                      child: IconButton(
+                        key: _bellKey,
+                        icon: const Icon(Icons.notifications_outlined),
+                        tooltip: loc.notificationsTooltip,
+                        onPressed: () => _showNotificationsDropdown(loc),
+                      ),
+                    );
+                  },
                 );
               },
             );
@@ -773,6 +840,31 @@ class _HomeScreenState extends State<HomeScreen> {
       (_) => 'respondedAt',
     );
 
+    // Doubles matches I was linked into by someone else (unseen, last week).
+    final linkedSnap = await firestore
+        .collection('matches')
+        .where('players', arrayContains: uid)
+        .where('status', isEqualTo: 'completed')
+        .get();
+    for (final doc in _unseenLinkedDocs(linkedSnap)) {
+      final data = doc.data() as Map<String, dynamic>;
+      final creatorUid = data['createdBy'] as String? ?? '';
+      String name = '';
+      if (creatorUid.isNotEmpty) {
+        final u = await firestore.collection('users').doc(creatorUid).get();
+        name = (u.data()?['name'] as String?) ?? '';
+      }
+      if (name.isEmpty) {
+        name = ((data['team1'] as Map?)?['player1'] as String?) ?? '';
+      }
+      results.add(_BellNotificationItem(
+        matchId: doc.id,
+        type: 'doubles_linked',
+        otherName: name,
+        timestamp: (data['completedAt'] ?? data['createdAt']) as Timestamp?,
+      ));
+    }
+
     results.sort((a, b) {
       final at = a.timestamp?.millisecondsSinceEpoch ?? 0;
       final bt = b.timestamp?.millisecondsSinceEpoch ?? 0;
@@ -801,6 +893,11 @@ class _HomeScreenState extends State<HomeScreen> {
         icon = Icons.check_circle;
         color = Colors.green;
         text = loc.notificationRequestAccepted(item.otherName);
+        break;
+      case 'doubles_linked':
+        icon = Icons.sports_tennis;
+        color = Colors.green;
+        text = loc.notificationDoublesLinked(formatNameDisplay(item.otherName));
         break;
       case 'rejected':
         icon = Icons.cancel;
@@ -847,7 +944,17 @@ class _HomeScreenState extends State<HomeScreen> {
       return;
     }
 
-    await item.requestRef.update({'seenBySender': true});
+    if (item.type == 'doubles_linked') {
+      if (item.matchId != null) await _markLinkedSeen(item.matchId!);
+      if (!mounted) return;
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const MatchHistoryScreen()),
+      );
+      return;
+    }
+
+    await item.requestRef!.update({'seenBySender': true});
 
     if (item.type == 'accepted') {
       if (!mounted) return;

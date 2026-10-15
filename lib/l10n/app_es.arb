@@ -237,6 +237,12 @@
       "name": {}
     }
   },
+  "notificationDoublesLinked": "{name} te agregó a un partido de dobles",
+  "@notificationDoublesLinked": {
+    "placeholders": {
+      "name": {}
+    }
+  },
   "notificationRequestAccepted": "{name} aceptó tu solicitud de partido",
   "@notificationRequestAccepted": {
     "placeholders": {

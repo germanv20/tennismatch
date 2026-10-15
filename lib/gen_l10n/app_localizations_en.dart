@@ -662,6 +662,11 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String notificationDoublesLinked(Object name) {
+    return '$name added you to a doubles match';
+  }
+
+  @override
   String notificationRequestAccepted(Object name) {
     return '$name accepted your match request';
   }

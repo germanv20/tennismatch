@@ -666,6 +666,11 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
+  String notificationDoublesLinked(Object name) {
+    return '$name te agregó a un partido de dobles';
+  }
+
+  @override
   String notificationRequestAccepted(Object name) {
     return '$name aceptó tu solicitud de partido';
   }

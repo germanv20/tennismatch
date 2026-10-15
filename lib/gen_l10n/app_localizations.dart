@@ -1268,6 +1268,12 @@ abstract class AppLocalizations {
   /// **'{name} wants to play a match'**
   String notificationIncomingRequest(Object name);
 
+  /// No description provided for @notificationDoublesLinked.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} added you to a doubles match'**
+  String notificationDoublesLinked(Object name);
+
   /// No description provided for @notificationRequestAccepted.
   ///
   /// In en, this message translates to:

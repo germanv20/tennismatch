@@ -237,6 +237,12 @@
       "name": {}
     }
   },
+  "notificationDoublesLinked": "{name} added you to a doubles match",
+  "@notificationDoublesLinked": {
+    "placeholders": {
+      "name": {}
+    }
+  },
   "notificationRequestAccepted": "{name} accepted your match request",
   "@notificationRequestAccepted": {
     "placeholders": {
