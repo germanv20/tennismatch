@@ -6,6 +6,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../gen_l10n/app_localizations.dart';
 import '../main.dart' show rootScaffoldMessengerKey;
 import '../services/h2h_service.dart';
+import '../services/profile_photo_service.dart';
 
 class CompleteProfileScreen extends StatefulWidget {
   const CompleteProfileScreen({super.key});
@@ -338,9 +339,25 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
     return 'Your past match results have been linked to your account 🎾';
   }
 
+  // Profile photo (optional). Starts as the Google photo if there is one;
+  // uploaded immediately when picked (the user doc already exists by now).
+  String? _photoUrl;
+  bool _photoUploading = false;
+
+  Future<void> _pickPhoto() async {
+    final url = await ProfilePhotoService.pickAndUpload(
+      context,
+      onUploadingChanged: (u) {
+        if (mounted) setState(() => _photoUploading = u);
+      },
+    );
+    if (url != null && mounted) setState(() => _photoUrl = url);
+  }
+
   @override
   void initState() {
     super.initState();
+    _photoUrl = FirebaseAuth.instance.currentUser?.photoURL;
     // Pre-fill name from Google Sign-In if available
     final googleName = FirebaseAuth.instance.currentUser?.displayName;
     if (googleName != null && googleName.isNotEmpty) {
@@ -426,6 +443,64 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
           key: _formKey,
           child: ListView(
             children: [
+
+              // Optional profile photo — players are more likely to accept
+              // requests from people they can see.
+              Center(
+                child: GestureDetector(
+                  onTap: _photoUploading ? null : _pickPhoto,
+                  child: Stack(
+                    children: [
+                      CircleAvatar(
+                        radius: 48,
+                        backgroundColor: Colors.grey[300],
+                        backgroundImage:
+                            ProfilePhotoService.isMissing(_photoUrl)
+                                ? null
+                                : NetworkImage(_photoUrl!),
+                        child: _photoUploading
+                            ? const CircularProgressIndicator()
+                            : (ProfilePhotoService.isMissing(_photoUrl)
+                                ? Icon(Icons.person,
+                                    size: 48, color: Colors.grey[600])
+                                : null),
+                      ),
+                      Positioned(
+                        bottom: 0,
+                        right: 0,
+                        child: Container(
+                          padding: const EdgeInsets.all(6),
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).colorScheme.primary,
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(Icons.camera_alt,
+                              size: 16, color: Colors.white),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Center(
+                child: Text(
+                  loc.addProfilePhoto,
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 2),
+              Center(
+                child: Text(
+                  loc.profilePhotoHint,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                ),
+              ),
+              const SizedBox(height: 20),
 
               // Name field — pre-filled from Google, editable
               TextFormField(
