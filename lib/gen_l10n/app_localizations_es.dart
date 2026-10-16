@@ -671,6 +671,43 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
+  String get addProfilePhoto => 'Agrega una foto de perfil';
+
+  @override
+  String get profilePhotoHint =>
+      'Los jugadores aceptan más solicitudes de personas a quienes pueden ver.';
+
+  @override
+  String get photoReminderTitle => 'Agrega tu foto de perfil';
+
+  @override
+  String get photoReminderBody =>
+      'Es más probable que acepten tu solicitud si pueden ver tu cara.';
+
+  @override
+  String get photoReminderAdd => 'Agregar foto';
+
+  @override
+  String get photoReminderLater => 'Más tarde';
+
+  @override
+  String get photoReminderHasPhoto => 'Mi foto actual está bien';
+
+  @override
+  String get staleDidYouPlay => '¿Jugaste este partido?';
+
+  @override
+  String get staleLogResult => 'Registrar resultado';
+
+  @override
+  String get staleCancelMatch => 'Cancelar partido';
+
+  @override
+  String staleAutoCancelNotice(Object name) {
+    return 'Tu partido con $name se canceló por inactividad';
+  }
+
+  @override
   String notificationRequestAccepted(Object name) {
     return '$name aceptó tu solicitud de partido';
   }

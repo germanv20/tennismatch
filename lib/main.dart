@@ -207,7 +207,8 @@ Future<void> handleNotificationTap(Map<String, dynamic> data) async {
   }
   if (navigatorKey.currentState == null) return;
 
-  if (type == 'match_reminder' && matchId != null) {
+  if ((type == 'match_reminder' || type == 'match_stale_prompt') &&
+      matchId != null) {
     await navigateToMatchDetail(matchId);
   } else if (type == 'match_request') {
     // Navigate to Incoming Requests screen so user can accept/reject
@@ -215,6 +216,8 @@ Future<void> handleNotificationTap(Map<String, dynamic> data) async {
       MaterialPageRoute(builder: (_) => const IncomingRequestsScreen()),
       (route) => route.isFirst,
     );
+  } else if (type == 'match_auto_cancelled') {
+    // Nothing to open: the match is cancelled. The app just comes forward.
   } else if (type == 'doubles_linked') {
     // Someone added you to a doubles match → show it in History, where the
     // "This wasn't me" option lives.

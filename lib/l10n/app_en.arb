@@ -243,6 +243,22 @@
       "name": {}
     }
   },
+  "addProfilePhoto": "Add a profile photo",
+  "profilePhotoHint": "Players are more likely to accept requests from people they can see.",
+  "photoReminderTitle": "Add your profile photo",
+  "photoReminderBody": "Players are more likely to accept a request when they can see your face.",
+  "photoReminderAdd": "Add photo",
+  "photoReminderLater": "Later",
+  "photoReminderHasPhoto": "My current photo is fine",
+  "staleDidYouPlay": "Did you play this match?",
+  "staleLogResult": "Log result",
+  "staleCancelMatch": "Cancel match",
+  "staleAutoCancelNotice": "Your match with {name} was cancelled due to inactivity",
+  "@staleAutoCancelNotice": {
+    "placeholders": {
+      "name": {}
+    }
+  },
   "notificationRequestAccepted": "{name} accepted your match request",
   "@notificationRequestAccepted": {
     "placeholders": {

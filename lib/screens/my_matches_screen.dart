@@ -6,6 +6,9 @@ import 'package:tennismatch/gen_l10n/app_localizations.dart';
 import 'match_detail_screen.dart';
 import '../widgets/empty_state.dart';
 import '../main.dart';
+import '../services/h2h_service.dart';
+import '../utils/stale_match_utils.dart';
+import 'add_match_result_screen.dart';
 
 class MyMatchesScreen extends StatefulWidget {
   final User currentUser;
@@ -47,6 +50,93 @@ class _MyMatchesScreenState extends State<MyMatchesScreen> {
     await batch.commit();
   }
   
+
+  /// "Did you play this match?" shown on a card once the scheduled time (or,
+  /// for undated matches, 7 days after acceptance) has passed. The server
+  /// auto-cancels the match later (see utils/stale_match_utils.dart).
+  Widget _buildStaleBanner(AppLocalizations loc, DocumentSnapshot match,
+      Map<String, dynamic> data, Map<String, dynamic> opponentData) {
+    final myUid = widget.currentUser.uid;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(16, 8, 8, 8),
+      decoration: BoxDecoration(
+        color: Colors.amber[50],
+        borderRadius: const BorderRadius.vertical(bottom: Radius.circular(12)),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.help_outline, size: 18, color: Colors.amber[800]),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              loc.staleDidYouPlay,
+              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+            ),
+          ),
+          TextButton(
+            onPressed: () async {
+              final result = await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => AddMatchResultScreen(
+                    matchId: match.id,
+                    matchData: data,
+                  ),
+                ),
+              );
+              if (result == true && mounted) {
+                setState(() => showCompletedSnackbar = true);
+              }
+            },
+            child: Text(loc.staleLogResult),
+          ),
+          TextButton(
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            onPressed: () async {
+              final confirm = await showDialog<bool>(
+                context: context,
+                builder: (ctx) => AlertDialog(
+                  title: Text(loc.staleCancelMatch),
+                  content: Text(loc.unmatchConfirmation),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(ctx, false),
+                      child: Text(loc.cancel),
+                    ),
+                    TextButton(
+                      onPressed: () => Navigator.pop(ctx, true),
+                      child: Text(loc.staleCancelMatch),
+                    ),
+                  ],
+                ),
+              );
+              if (confirm != true) return;
+              await FirebaseFirestore.instance
+                  .collection('matches')
+                  .doc(match.id)
+                  .update({'status': 'cancelled'});
+              final players = List<String>.from(data['players'] ?? []);
+              final other =
+                  players.firstWhere((u) => u != myUid, orElse: () => '');
+              if (other.isNotEmpty) {
+                await H2HService.recalculateHeadToHead(
+                    userA: myUid, userB: other);
+              }
+              rootScaffoldMessengerKey.currentState?.clearSnackBars();
+              rootScaffoldMessengerKey.currentState?.showSnackBar(
+                SnackBar(
+                  backgroundColor: Colors.red,
+                  content: Text(loc.matchCancelled),
+                ),
+              );
+            },
+            child: Text(loc.staleCancelMatch),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -143,7 +233,10 @@ class _MyMatchesScreenState extends State<MyMatchesScreen> {
                     return Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                       child: Card(
-                        child: ListTile(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                        ListTile(
                           leading: CircleAvatar(
                             backgroundImage: (userData['photoUrl'] != null &&
                                     userData['photoUrl'].toString().isNotEmpty)
@@ -241,6 +334,10 @@ class _MyMatchesScreenState extends State<MyMatchesScreen> {
                               );
                             }
                           },
+                        ),
+                        if (isStalePromptDue(data))
+                          _buildStaleBanner(loc, match, data, userData),
+                          ],
                         ),
                       ),
                     );

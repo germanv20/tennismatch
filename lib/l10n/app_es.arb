@@ -243,6 +243,22 @@
       "name": {}
     }
   },
+  "addProfilePhoto": "Agrega una foto de perfil",
+  "profilePhotoHint": "Los jugadores aceptan más solicitudes de personas a quienes pueden ver.",
+  "photoReminderTitle": "Agrega tu foto de perfil",
+  "photoReminderBody": "Es más probable que acepten tu solicitud si pueden ver tu cara.",
+  "photoReminderAdd": "Agregar foto",
+  "photoReminderLater": "Más tarde",
+  "photoReminderHasPhoto": "Mi foto actual está bien",
+  "staleDidYouPlay": "¿Jugaste este partido?",
+  "staleLogResult": "Registrar resultado",
+  "staleCancelMatch": "Cancelar partido",
+  "staleAutoCancelNotice": "Tu partido con {name} se canceló por inactividad",
+  "@staleAutoCancelNotice": {
+    "placeholders": {
+      "name": {}
+    }
+  },
   "notificationRequestAccepted": "{name} aceptó tu solicitud de partido",
   "@notificationRequestAccepted": {
     "placeholders": {

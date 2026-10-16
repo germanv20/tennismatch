@@ -667,6 +667,43 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get addProfilePhoto => 'Add a profile photo';
+
+  @override
+  String get profilePhotoHint =>
+      'Players are more likely to accept requests from people they can see.';
+
+  @override
+  String get photoReminderTitle => 'Add your profile photo';
+
+  @override
+  String get photoReminderBody =>
+      'Players are more likely to accept a request when they can see your face.';
+
+  @override
+  String get photoReminderAdd => 'Add photo';
+
+  @override
+  String get photoReminderLater => 'Later';
+
+  @override
+  String get photoReminderHasPhoto => 'My current photo is fine';
+
+  @override
+  String get staleDidYouPlay => 'Did you play this match?';
+
+  @override
+  String get staleLogResult => 'Log result';
+
+  @override
+  String get staleCancelMatch => 'Cancel match';
+
+  @override
+  String staleAutoCancelNotice(Object name) {
+    return 'Your match with $name was cancelled due to inactivity';
+  }
+
+  @override
   String notificationRequestAccepted(Object name) {
     return '$name accepted your match request';
   }

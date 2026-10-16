@@ -35,6 +35,12 @@ const strings = {
       `Tu solicitud de partido a ${name} expiró después de 2 días`,
     rateOpponentTitle: "🎾 ¡Partido finalizado!",
     rateOpponentBody: "Califica a tu rival antes de que se te olvide",
+    matchStalePromptTitle: "🎾 ¿Jugaste tu partido?",
+    matchStalePromptBody: (name) =>
+      `¿Ya jugaste con ${name}? Registra el resultado o cancela el partido. Si no, se cancelará automáticamente por inactividad.`,
+    matchAutoCancelledTitle: "🎾 Partido cancelado",
+    matchAutoCancelledBody: (name) =>
+      `Tu partido con ${name} se canceló por inactividad.`,
     doublesLinkedTitle: "🎾 Partido de dobles agregado",
     doublesLinkedBody: (name) =>
       `${name} te agregó a un partido de dobles. Míralo en tu historial.`,
@@ -56,6 +62,12 @@ const strings = {
       `Your match request to ${name} has expired after 2 days`,
     rateOpponentTitle: "🎾 Match complete!",
     rateOpponentBody: "Rate your opponent before you forget",
+    matchStalePromptTitle: "🎾 Did you play your match?",
+    matchStalePromptBody: (name) =>
+      `Did you play with ${name}? Log the result or cancel the match. Otherwise it will be cancelled automatically for inactivity.`,
+    matchAutoCancelledTitle: "🎾 Match cancelled",
+    matchAutoCancelledBody: (name) =>
+      `Your match with ${name} was cancelled due to inactivity.`,
     doublesLinkedTitle: "🎾 Doubles match added",
     doublesLinkedBody: (name) =>
       `${name} added you to a doubles match. Check your history.`,
@@ -633,6 +645,139 @@ async function recordLocationUsage(match) {
     lastUsedAt: admin.firestore.FieldValue.serverTimestamp(),
   }, {merge: true});
 }
+
+// ─────────────────────────────────────────────────────
+// STALE SCHEDULED MATCHES
+//    Runs daily over active (pending/confirmed) matches that were
+//    accepted but never played/logged.
+//    - With a scheduledDate: prompt "Did you play it?" 1 day after it,
+//      auto-cancel 7 days after it.
+//    - Without one: prompt 7 days after acceptance (match createdAt),
+//      auto-cancel 10 days after acceptance.
+//    Cancelled (not deleted): status "cancelled", cancelReason
+//    "inactivity", cancelledAt. Matches already overdue by more than
+//    STALE_SILENT_DAYS (the first run's backlog) are cancelled silently
+//    (cancelSilent: true) so nobody gets a flood of notifications.
+//    Keep these numbers in sync with lib/utils/stale_match_utils.dart.
+// ─────────────────────────────────────────────────────
+const STALE_DAY_MS = 24 * 60 * 60 * 1000;
+const STALE_PROMPT_AFTER_SCHEDULE_DAYS = 1;
+const STALE_CANCEL_AFTER_SCHEDULE_DAYS = 7;
+const STALE_PROMPT_AFTER_ACCEPT_DAYS = 7;
+const STALE_CANCEL_AFTER_ACCEPT_DAYS = 10;
+const STALE_SILENT_DAYS = 3;
+
+/**
+ * Computes when a still-active match should be prompted / cancelled.
+ * @param {object} match - The match document data.
+ * @return {{promptAt: Date, cancelAt: Date}|null} Null if no reference time.
+ */
+function staleMatchTimes(match) {
+  const scheduled = match.scheduledDate && match.scheduledDate.toDate ?
+      match.scheduledDate.toDate() : null;
+  const created = match.createdAt && match.createdAt.toDate ?
+      match.createdAt.toDate() : null;
+  if (scheduled) {
+    return {
+      promptAt: new Date(scheduled.getTime() +
+          STALE_PROMPT_AFTER_SCHEDULE_DAYS * STALE_DAY_MS),
+      cancelAt: new Date(scheduled.getTime() +
+          STALE_CANCEL_AFTER_SCHEDULE_DAYS * STALE_DAY_MS),
+    };
+  }
+  if (created) {
+    return {
+      promptAt: new Date(created.getTime() +
+          STALE_PROMPT_AFTER_ACCEPT_DAYS * STALE_DAY_MS),
+      cancelAt: new Date(created.getTime() +
+          STALE_CANCEL_AFTER_ACCEPT_DAYS * STALE_DAY_MS),
+    };
+  }
+  return null;
+}
+
+exports.onStaleMatchCleanup = onSchedule("every 24 hours", async () => {
+  const now = new Date();
+  const snapshot = await db.collection("matches")
+      .where("status", "in", ["pending", "confirmed"])
+      .get();
+
+  for (const doc of snapshot.docs) {
+    const match = doc.data();
+    // Regular 1v1 matches only (guest/doubles are created completed).
+    if ((match.type || "regular") !== "regular") continue;
+    const players = match.players || [];
+    if (players.length < 2) continue;
+
+    const times = staleMatchTimes(match);
+    if (!times) continue;
+
+    const names = {};
+    const locales = {};
+    const loadUsers = async () => {
+      for (const uid of players) {
+        const s = await db.collection("users").doc(uid).get();
+        names[uid] = (s.exists && s.data().name) || "your opponent";
+        locales[uid] = (s.exists && s.data().locale) || "en";
+      }
+    };
+
+    if (now >= times.cancelAt) {
+      const silent =
+          now.getTime() - times.cancelAt.getTime() >
+          STALE_SILENT_DAYS * STALE_DAY_MS;
+      await doc.ref.update({
+        status: "cancelled",
+        cancelReason: "inactivity",
+        cancelSilent: silent,
+        cancelledAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+      console.log(`🧹 Auto-cancelled stale match ${doc.id}` +
+          `${silent ? " (silent backlog)" : ""}`);
+      if (silent) continue;
+
+      await loadUsers();
+      for (const uid of players) {
+        const other = players.find((u) => u !== uid);
+        const t = getStrings(locales[uid]);
+        await sendPushToUser(uid, {
+          notification: {
+            title: t.matchAutoCancelledTitle,
+            body: t.matchAutoCancelledBody(names[other]),
+          },
+          android: {notification: {channelId: "default"}},
+          data: {type: "match_auto_cancelled", matchId: doc.id},
+        });
+      }
+      continue;
+    }
+
+    if (now >= times.promptAt) {
+      const sent = match.stalePromptSentAt && match.stalePromptSentAt.toDate ?
+          match.stalePromptSentAt.toDate() : null;
+      // Send once per prompt time (re-sends if the match was rescheduled).
+      if (sent && sent >= times.promptAt) continue;
+
+      await doc.ref.update({
+        stalePromptSentAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+      await loadUsers();
+      for (const uid of players) {
+        const other = players.find((u) => u !== uid);
+        const t = getStrings(locales[uid]);
+        await sendPushToUser(uid, {
+          notification: {
+            title: t.matchStalePromptTitle,
+            body: t.matchStalePromptBody(names[other]),
+          },
+          android: {notification: {channelId: "default"}},
+          data: {type: "match_stale_prompt", matchId: doc.id},
+        });
+      }
+      console.log(`❓ Stale-match prompt sent for ${doc.id}`);
+    }
+  }
+});
 
 // Case A: match created already completed (guest matches, doubles matches)
 exports.onMatchCreatedCompleted = onDocumentCreated(

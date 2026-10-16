@@ -1274,6 +1274,72 @@ abstract class AppLocalizations {
   /// **'{name} added you to a doubles match'**
   String notificationDoublesLinked(Object name);
 
+  /// No description provided for @addProfilePhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a profile photo'**
+  String get addProfilePhoto;
+
+  /// No description provided for @profilePhotoHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Players are more likely to accept requests from people they can see.'**
+  String get profilePhotoHint;
+
+  /// No description provided for @photoReminderTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add your profile photo'**
+  String get photoReminderTitle;
+
+  /// No description provided for @photoReminderBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Players are more likely to accept a request when they can see your face.'**
+  String get photoReminderBody;
+
+  /// No description provided for @photoReminderAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add photo'**
+  String get photoReminderAdd;
+
+  /// No description provided for @photoReminderLater.
+  ///
+  /// In en, this message translates to:
+  /// **'Later'**
+  String get photoReminderLater;
+
+  /// No description provided for @photoReminderHasPhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'My current photo is fine'**
+  String get photoReminderHasPhoto;
+
+  /// No description provided for @staleDidYouPlay.
+  ///
+  /// In en, this message translates to:
+  /// **'Did you play this match?'**
+  String get staleDidYouPlay;
+
+  /// No description provided for @staleLogResult.
+  ///
+  /// In en, this message translates to:
+  /// **'Log result'**
+  String get staleLogResult;
+
+  /// No description provided for @staleCancelMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel match'**
+  String get staleCancelMatch;
+
+  /// No description provided for @staleAutoCancelNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'Your match with {name} was cancelled due to inactivity'**
+  String staleAutoCancelNotice(Object name);
+
   /// No description provided for @notificationRequestAccepted.
   ///
   /// In en, this message translates to:

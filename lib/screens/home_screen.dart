@@ -17,6 +17,8 @@ import 'my_profile_screen.dart';
 import 'about_screen.dart';
 import 'achievements_screen.dart';
 import '../widgets/achievements_strip.dart';
+import '../widgets/profile_photo_reminder.dart';
+import '../services/profile_photo_service.dart';
 import '../widgets/monthly_recap_card.dart';
 import 'log_guest_match_screen.dart'; // NEW
 import 'log_doubles_match_screen.dart'; // NEW
@@ -125,6 +127,7 @@ class _HomeScreenState extends State<HomeScreen> {
   static const int _linkedWindowDays = 7;
   Set<String> _seenLinked = {};
   late final Stream<QuerySnapshot> _linkedStream;
+  late final Stream<QuerySnapshot> _cancelledStream;
 
   String get _seenLinkedKey => 'seen_doubles_linked_${widget.currentUser.uid}';
 
@@ -135,6 +138,12 @@ class _HomeScreenState extends State<HomeScreen> {
         .collection('matches')
         .where('players', arrayContains: widget.currentUser.uid)
         .where('status', isEqualTo: 'completed')
+        .snapshots();
+    // Matches the server auto-cancelled for inactivity (bell notice).
+    _cancelledStream = FirebaseFirestore.instance
+        .collection('matches')
+        .where('players', arrayContains: widget.currentUser.uid)
+        .where('status', isEqualTo: 'cancelled')
         .snapshots();
     _loadSeenLinked();
   }
@@ -152,6 +161,22 @@ class _HomeScreenState extends State<HomeScreen> {
     await prefs.setStringList(_seenLinkedKey, next.toList());
     if (!mounted) return;
     setState(() => _seenLinked = next);
+  }
+
+  /// Matches auto-cancelled for inactivity in the last week that I haven't
+  /// dismissed from the bell (silent backlog cancellations are skipped).
+  List<QueryDocumentSnapshot> _unseenCancelledDocs(QuerySnapshot? snap) {
+    if (snap == null) return const [];
+    final cutoff =
+        DateTime.now().subtract(const Duration(days: _linkedWindowDays));
+    return snap.docs.where((d) {
+      final m = d.data() as Map<String, dynamic>;
+      if (m['cancelReason'] != 'inactivity') return false;
+      if (m['cancelSilent'] == true) return false;
+      if (_seenLinked.contains(d.id)) return false;
+      final ts = m['cancelledAt'] as Timestamp?;
+      return ts != null && ts.toDate().isAfter(cutoff);
+    }).toList();
   }
 
   /// Doubles matches created by someone else, with me in `players`, from the
@@ -253,11 +278,13 @@ class _HomeScreenState extends State<HomeScreen> {
                   backgroundColor: Colors.white,
                   child: CircleAvatar(
                     radius: 29,
-                    backgroundImage: (widget.userData['photoUrl'] != null &&
-                            widget.userData['photoUrl'].toString().isNotEmpty)
-                        ? NetworkImage(widget.userData['photoUrl'])
-                        : null,
-                    child: widget.userData['photoUrl'] == null
+                    backgroundImage:
+                        !ProfilePhotoService.isMissing(
+                                widget.userData['photoUrl'])
+                            ? NetworkImage(widget.userData['photoUrl'])
+                            : null,
+                    child: ProfilePhotoService.isMissing(
+                            widget.userData['photoUrl'])
                         ? const Icon(Icons.person, size: 30)
                         : null,
                   ),
@@ -734,18 +761,26 @@ class _HomeScreenState extends State<HomeScreen> {
                   builder: (context, linkedSnap) {
                     final linkedCount =
                         _unseenLinkedDocs(linkedSnap.data).length;
-                    final total = incomingCount +
-                        acceptedCount +
-                        rejectedCount +
-                        linkedCount;
-                    return NotificationBadge(
-                      count: total,
-                      child: IconButton(
-                        key: _bellKey,
-                        icon: const Icon(Icons.notifications_outlined),
-                        tooltip: loc.notificationsTooltip,
-                        onPressed: () => _showNotificationsDropdown(loc),
-                      ),
+                    return StreamBuilder<QuerySnapshot>(
+                      stream: _cancelledStream,
+                      builder: (context, cancelledSnap) {
+                        final cancelledCount =
+                            _unseenCancelledDocs(cancelledSnap.data).length;
+                        final total = incomingCount +
+                            acceptedCount +
+                            rejectedCount +
+                            linkedCount +
+                            cancelledCount;
+                        return NotificationBadge(
+                          count: total,
+                          child: IconButton(
+                            key: _bellKey,
+                            icon: const Icon(Icons.notifications_outlined),
+                            tooltip: loc.notificationsTooltip,
+                            onPressed: () => _showNotificationsDropdown(loc),
+                          ),
+                        );
+                      },
                     );
                   },
                 );
@@ -865,6 +900,29 @@ class _HomeScreenState extends State<HomeScreen> {
       ));
     }
 
+    // Matches the server auto-cancelled for inactivity.
+    final cancelledSnap = await firestore
+        .collection('matches')
+        .where('players', arrayContains: uid)
+        .where('status', isEqualTo: 'cancelled')
+        .get();
+    for (final doc in _unseenCancelledDocs(cancelledSnap)) {
+      final data = doc.data() as Map<String, dynamic>;
+      final players = List<String>.from(data['players'] ?? []);
+      final otherUid = players.firstWhere((u) => u != uid, orElse: () => '');
+      String name = '';
+      if (otherUid.isNotEmpty) {
+        final u = await firestore.collection('users').doc(otherUid).get();
+        name = (u.data()?['name'] as String?) ?? '';
+      }
+      results.add(_BellNotificationItem(
+        matchId: doc.id,
+        type: 'match_auto_cancelled',
+        otherName: name,
+        timestamp: data['cancelledAt'] as Timestamp?,
+      ));
+    }
+
     results.sort((a, b) {
       final at = a.timestamp?.millisecondsSinceEpoch ?? 0;
       final bt = b.timestamp?.millisecondsSinceEpoch ?? 0;
@@ -893,6 +951,11 @@ class _HomeScreenState extends State<HomeScreen> {
         icon = Icons.check_circle;
         color = Colors.green;
         text = loc.notificationRequestAccepted(item.otherName);
+        break;
+      case 'match_auto_cancelled':
+        icon = Icons.event_busy;
+        color = Colors.orange;
+        text = loc.staleAutoCancelNotice(formatNameDisplay(item.otherName));
         break;
       case 'doubles_linked':
         icon = Icons.sports_tennis;
@@ -941,6 +1004,12 @@ class _HomeScreenState extends State<HomeScreen> {
         context,
         MaterialPageRoute(builder: (_) => const IncomingRequestsScreen()),
       );
+      return;
+    }
+
+    if (item.type == 'match_auto_cancelled') {
+      // Nothing to open (the match is cancelled): just dismiss the notice.
+      if (item.matchId != null) await _markLinkedSeen(item.matchId!);
       return;
     }
 
@@ -1214,6 +1283,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 buildProfileCard(loc),
 
                 const SizedBox(height: spaceM),
+
+                // Reminder while there's no profile photo (snoozes 3 days).
+                ProfilePhotoReminder(photoUrl: widget.userData['photoUrl']),
 
                 // ── Recent Activity teaser — Idea 1, city activity feed ──
                 const RecentActivityCard(),
