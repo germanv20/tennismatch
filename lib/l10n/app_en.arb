@@ -259,6 +259,10 @@
       "name": {}
     }
   },
+  "profileCardSetAvailability": "Tap to set your availability",
+  "profileCardTipTitle": "Edit your level and availability",
+  "profileCardTipBody": "Tap your profile card any time to change your level or the days you can play.",
+  "profileCardTipGotIt": "Got it",
   "notificationRequestAccepted": "{name} accepted your match request",
   "@notificationRequestAccepted": {
     "placeholders": {

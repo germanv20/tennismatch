@@ -1340,6 +1340,30 @@ abstract class AppLocalizations {
   /// **'Your match with {name} was cancelled due to inactivity'**
   String staleAutoCancelNotice(Object name);
 
+  /// No description provided for @profileCardSetAvailability.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to set your availability'**
+  String get profileCardSetAvailability;
+
+  /// No description provided for @profileCardTipTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit your level and availability'**
+  String get profileCardTipTitle;
+
+  /// No description provided for @profileCardTipBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap your profile card any time to change your level or the days you can play.'**
+  String get profileCardTipBody;
+
+  /// No description provided for @profileCardTipGotIt.
+  ///
+  /// In en, this message translates to:
+  /// **'Got it'**
+  String get profileCardTipGotIt;
+
   /// No description provided for @notificationRequestAccepted.
   ///
   /// In en, this message translates to:

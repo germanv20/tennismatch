@@ -14,6 +14,7 @@ import 'my_matches_screen.dart';
 import 'incoming_requests_screen.dart';
 import 'player_statistics_screen.dart';
 import 'my_profile_screen.dart';
+import 'edit_profile_screen.dart';
 import 'about_screen.dart';
 import 'achievements_screen.dart';
 import '../widgets/achievements_strip.dart';
@@ -128,6 +129,104 @@ class _HomeScreenState extends State<HomeScreen> {
   Set<String> _seenLinked = {};
   late final Stream<QuerySnapshot> _linkedStream;
   late final Stream<QuerySnapshot> _cancelledStream;
+  final GlobalKey _profileCardKey = GlobalKey();
+  OverlayEntry? _tipEntry;
+
+  /// Tapping the profile card opens Edit Profile (level, availability, etc.).
+  void _openEditProfile() {
+    _dismissTip();
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => EditProfileScreen(userData: widget.userData),
+      ),
+    );
+  }
+
+  String get _tipSeenKey => 'profile_card_tip_seen_${widget.currentUser.uid}';
+
+  void _dismissTip() {
+    final entry = _tipEntry;
+    if (entry == null) return;
+    entry.remove();
+    _tipEntry = null;
+    SharedPreferences.getInstance().then((p) => p.setBool(_tipSeenKey, true));
+  }
+
+  /// One-time spotlight on the profile card: it now holds the level and
+  /// availability that used to be selectors on Home. Shown once per user
+  /// (phone-local flag), including existing users after this update.
+  Future<void> _maybeShowProfileCardTip() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (prefs.getBool(_tipSeenKey) == true) return;
+    await Future.delayed(const Duration(milliseconds: 900));
+    if (!mounted || _tipEntry != null) return;
+    if (ModalRoute.of(context)?.isCurrent != true) return;
+    final box = _profileCardKey.currentContext?.findRenderObject();
+    if (box is! RenderBox || !box.attached) return;
+    final rect = box.localToGlobal(Offset.zero) & box.size;
+    final loc = AppLocalizations.of(context)!;
+
+    _tipEntry = OverlayEntry(
+      builder: (ctx) => Stack(
+        children: [
+          Positioned.fill(
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: _dismissTip,
+              child: CustomPaint(painter: _SpotlightPainter(rect)),
+            ),
+          ),
+          Positioned(
+            left: 16,
+            right: 16,
+            top: rect.bottom + 14,
+            child: Material(
+              color: Colors.transparent,
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(Icons.edit_outlined, size: 18),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            loc.profileCardTipTitle,
+                            style: const TextStyle(
+                                fontWeight: FontWeight.bold, fontSize: 16),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      loc.profileCardTipBody,
+                      style: TextStyle(color: Colors.grey[800]),
+                    ),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: TextButton(
+                        onPressed: _dismissTip,
+                        child: Text(loc.profileCardTipGotIt),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+    Overlay.of(context, rootOverlay: true).insert(_tipEntry!);
+  }
 
   String get _seenLinkedKey => 'seen_doubles_linked_${widget.currentUser.uid}';
 
@@ -146,6 +245,15 @@ class _HomeScreenState extends State<HomeScreen> {
         .where('status', isEqualTo: 'cancelled')
         .snapshots();
     _loadSeenLinked();
+    WidgetsBinding.instance
+        .addPostFrameCallback((_) => _maybeShowProfileCardTip());
+  }
+
+  @override
+  void dispose() {
+    _tipEntry?.remove();
+    _tipEntry = null;
+    super.dispose();
   }
 
   Future<void> _loadSeenLinked() async {
@@ -249,7 +357,10 @@ class _HomeScreenState extends State<HomeScreen> {
     final cardColor = context.read<ThemeNotifier>().current.playerCardColor;
     final cardColorLight = Color.lerp(cardColor, Colors.white, 0.3) ?? cardColor;
  
-    return Container(
+    return GestureDetector(
+      onTap: _openEditProfile,
+      child: Container(
+      key: _profileCardKey,
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [cardColor, cardColorLight],
@@ -336,6 +447,12 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
                 const SizedBox(height: spaceS),
+                if (sortedAvailability.isEmpty)
+                  Text(
+                    loc.profileCardSetAvailability,
+                    style: const TextStyle(
+                        color: Colors.white70, fontSize: 12),
+                  ),
                 Wrap(
                   spacing: 6,
                   runSpacing: 6,
@@ -358,8 +475,12 @@ class _HomeScreenState extends State<HomeScreen> {
               ],
             ),
           ),
+          // Hint that the whole card opens Edit Profile.
+          const SizedBox(width: 8),
+          const Icon(Icons.edit_outlined, color: Colors.white70, size: 20),
         ],
       ),
+    ),
     );
   }
  
@@ -1295,173 +1416,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 const AchievementsStrip(),
                 const MonthlyRecapCard(),
 
-                const SizedBox(height: spaceL),
-
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    loc.yourTennisLevel,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
- 
-                const SizedBox(height: spaceS),
- 
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(spaceM),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
-                        blurRadius: 8,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Wrap(
-                    spacing: 10,
-                    runSpacing: 10,
-                    children: levelMap.entries.map((entry) {
-                      final isSelected = tennisLevel == entry.key;
-                      return GestureDetector(
-                        onTap: () async =>
-                            await updateTennisLevel(entry.key),
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 200),
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 12),
-                          decoration: BoxDecoration(
-                            color: isSelected
-                                ? context.read<ThemeNotifier>().current.selectionColor
-                                : Colors.grey.shade200,
-                            borderRadius: BorderRadius.circular(30),
-                            boxShadow: isSelected
-                                ? [
-                                    BoxShadow(
-                                      color: context.read<ThemeNotifier>()
-                                          .current.selectionColor
-                                          .withValues(alpha: 0.3),
-                                      blurRadius: 8,
-                                      offset: const Offset(0, 3),
-                                    )
-                                  ]
-                                : [],
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              if (isSelected)
-                                const Icon(Icons.check,
-                                    color: Colors.white, size: 16),
-                              if (isSelected) const SizedBox(width: 6),
-                              Text(
-                                entry.value,
-                                style: TextStyle(
-                                  color: isSelected
-                                      ? Colors.white
-                                      : Colors.black87,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                ),
- 
-                const SizedBox(height: spaceXL),
- 
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(spaceM),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
-                        blurRadius: 8,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          const Icon(Icons.calendar_today, size: 18),
-                          const SizedBox(width: spaceS),
-                          Text(
-                            loc.availability,
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: spaceXS),
-                      Text(
-                        loc.availabilityHint,
-                        style: TextStyle(
-                          color: Colors.grey.shade600,
-                          fontSize: 13,
-                        ),
-                      ),
-                      const SizedBox(height: spaceM),
-                      Wrap(
-                        spacing: spaceS,
-                        runSpacing: spaceS,
-                        children: dayMap.entries.map((entry) {
-                          final key = entry.key;
-                          final label = entry.value;
-                          final isSelected = availability.contains(key);
- 
-                          return GestureDetector(
-                            onTap: () async {
-                              final updated =
-                                  List<String>.from(availability);
-                              isSelected
-                                  ? updated.remove(key)
-                                  : updated.add(key);
-                              await updateAvailability(updated);
-                            },
-                            child: AnimatedContainer(
-                              duration: const Duration(milliseconds: 200),
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 14, vertical: 10),
-                              decoration: BoxDecoration(
-                                color: isSelected
-                                    ? context.read<ThemeNotifier>().current.selectionColor
-                                    : Colors.grey.shade200,
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: Text(
-                                label,
-                                style: TextStyle(
-                                  color: isSelected
-                                      ? Colors.white
-                                      : Colors.black87,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                          );
-                        }).toList(),
-                      ),
-                    ],
-                  ),
-                ),
- 
+                // Level + availability selectors moved into Edit Profile: the
+                // profile card above is now tappable (see buildProfileCard).
                 const SizedBox(height: spaceL),
  
                 GridView.count(
@@ -1642,4 +1598,25 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
+}
+
+/// Dark scrim with a rounded cut-out around [hole] (the profile card).
+class _SpotlightPainter extends CustomPainter {
+  final Rect hole;
+  const _SpotlightPainter(this.hole);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final full = Path()..addRect(Offset.zero & size);
+    final cut = Path()
+      ..addRRect(RRect.fromRectAndRadius(
+          hole.inflate(6), const Radius.circular(24)));
+    canvas.drawPath(
+      Path.combine(PathOperation.difference, full, cut),
+      Paint()..color = Colors.black.withValues(alpha: 0.72),
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant _SpotlightPainter old) => old.hole != hole;
 }

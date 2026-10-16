@@ -708,6 +708,20 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
+  String get profileCardSetAvailability =>
+      'Toca para definir tu disponibilidad';
+
+  @override
+  String get profileCardTipTitle => 'Edita tu nivel y disponibilidad';
+
+  @override
+  String get profileCardTipBody =>
+      'Toca tu tarjeta de perfil cuando quieras para cambiar tu nivel o los días en que puedes jugar.';
+
+  @override
+  String get profileCardTipGotIt => 'Entendido';
+
+  @override
   String notificationRequestAccepted(Object name) {
     return '$name aceptó tu solicitud de partido';
   }

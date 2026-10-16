@@ -704,6 +704,19 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get profileCardSetAvailability => 'Tap to set your availability';
+
+  @override
+  String get profileCardTipTitle => 'Edit your level and availability';
+
+  @override
+  String get profileCardTipBody =>
+      'Tap your profile card any time to change your level or the days you can play.';
+
+  @override
+  String get profileCardTipGotIt => 'Got it';
+
+  @override
   String notificationRequestAccepted(Object name) {
     return '$name accepted your match request';
   }

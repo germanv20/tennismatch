@@ -259,6 +259,10 @@
       "name": {}
     }
   },
+  "profileCardSetAvailability": "Toca para definir tu disponibilidad",
+  "profileCardTipTitle": "Edita tu nivel y disponibilidad",
+  "profileCardTipBody": "Toca tu tarjeta de perfil cuando quieras para cambiar tu nivel o los días en que puedes jugar.",
+  "profileCardTipGotIt": "Entendido",
   "notificationRequestAccepted": "{name} aceptó tu solicitud de partido",
   "@notificationRequestAccepted": {
     "placeholders": {
