@@ -254,7 +254,9 @@ class _ActivityCard extends StatelessWidget {
           ),
           const SizedBox(width: 8),
           Text(
-            '${_relativeDate()} · ${_formattedTime()}',
+            match.hasTime
+                ? '${_relativeDate()} · ${_formattedTime()}'
+                : _relativeDate(),
             style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
           ),
         ],

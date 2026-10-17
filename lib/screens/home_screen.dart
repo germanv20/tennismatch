@@ -340,7 +340,13 @@ class _HomeScreenState extends State<HomeScreen> {
   }
  
   Widget buildProfileCard(AppLocalizations loc) {
-    final String name = widget.currentUser.displayName ?? 'Player';
+    // Prefer the Firestore name (what Edit Profile saves); the Firebase Auth
+    // displayName is just the Google account name and never updates.
+    final String firestoreName =
+        (widget.userData['name'] as String?)?.trim() ?? '';
+    final String name = firestoreName.isNotEmpty
+        ? firestoreName
+        : (widget.currentUser.displayName ?? 'Player');
     final String rawLevel = widget.userData['tennisLevel'] ?? '';
     final String level =
         rawLevel.isEmpty ? loc.notSet : translateLevel(rawLevel, loc);

@@ -13,7 +13,14 @@ const int cityActivityWindowDays = 7;
 class CityActivityMatch {
   final String id;
   final String type; // 'regular' | 'guest' | 'doubles_guest'
+  /// When the match was *played* (not when it was logged): the user-picked
+  /// match date when it differs from the logging day, else the logging moment.
+  /// Named completedAt for historical reasons.
   final DateTime completedAt;
+
+  /// False when only the calendar day is known (backdated match), so the UI
+  /// must not show a clock time.
+  final bool hasTime;
   final String player1Label;
   final String player2Label;
   final bool isTie;
@@ -25,6 +32,7 @@ class CityActivityMatch {
     required this.id,
     required this.type,
     required this.completedAt,
+    this.hasTime = true,
     required this.player1Label,
     required this.player2Label,
     required this.isTie,
@@ -32,6 +40,26 @@ class CityActivityMatch {
     required this.scoreText,
     required this.scoringMode,
   });
+}
+
+/// Resolves when a match was actually played. Matches can be logged days
+/// later with a user-picked date (`result.matchDate`/`summary.matchDate`);
+/// `completedAt` is just the server time of logging.
+({DateTime at, bool hasTime}) resolvePlayedAt(
+    Map<String, dynamic> data, DateTime completedAt) {
+  final result = data['result'] as Map<String, dynamic>?;
+  final summary = data['summary'] as Map<String, dynamic>?;
+  final picked =
+      ((result?['matchDate'] ?? summary?['matchDate']) as Timestamp?)
+          ?.toDate();
+  if (picked == null) return (at: completedAt, hasTime: true);
+  final pickedDay = DateTime(picked.year, picked.month, picked.day);
+  final loggedDay =
+      DateTime(completedAt.year, completedAt.month, completedAt.day);
+  if (!pickedDay.isBefore(loggedDay)) {
+    return (at: completedAt, hasTime: true);
+  }
+  return (at: pickedDay, hasTime: false);
 }
 
 /// Formats a match's per-set score as a compact "6-4, 6-3" string, the same
@@ -78,6 +106,9 @@ List<CityActivityMatch> buildCityActivityFeed({
     }
   }
 
+  final now = DateTime.now();
+  final cutoffDay = DateTime(now.year, now.month, now.day)
+      .subtract(const Duration(days: cityActivityWindowDays));
   final feed = <CityActivityMatch>[];
 
   for (final doc in regularMatches) {
@@ -90,6 +121,8 @@ List<CityActivityMatch> buildCityActivityFeed({
     final completedAt = (data['completedAt'] as Timestamp?)?.toDate();
     final summary = data['summary'] as Map<String, dynamic>?;
     if (completedAt == null || summary == null) continue;
+    final played = resolvePlayedAt(data, completedAt);
+    if (played.at.isBefore(cutoffDay)) continue;
 
     final isTie = data['isTie'] == true;
     final winnerUid = data['winnerUid'] as String?;
@@ -100,7 +133,8 @@ List<CityActivityMatch> buildCityActivityFeed({
     feed.add(CityActivityMatch(
       id: doc.id,
       type: 'regular',
-      completedAt: completedAt,
+      completedAt: played.at,
+      hasTime: played.hasTime,
       player1Label: (summary['p1Name'] as String?) ?? '',
       player2Label: (summary['p2Name'] as String?) ?? '',
       isTie: isTie,
@@ -119,6 +153,8 @@ List<CityActivityMatch> buildCityActivityFeed({
 
     final completedAt = (data['completedAt'] as Timestamp?)?.toDate();
     if (completedAt == null) continue;
+    final played = resolvePlayedAt(data, completedAt);
+    if (played.at.isBefore(cutoffDay)) continue;
 
     final type = data['type'] as String? ?? 'guest';
     final isTie = data['isTie'] == true;
@@ -133,7 +169,8 @@ List<CityActivityMatch> buildCityActivityFeed({
       feed.add(CityActivityMatch(
         id: doc.id,
         type: 'doubles_guest',
-        completedAt: completedAt,
+        completedAt: played.at,
+        hasTime: played.hasTime,
         player1Label:
             '${team1['player1'] ?? ''} / ${team1['player2'] ?? ''}',
         player2Label:
@@ -152,7 +189,8 @@ List<CityActivityMatch> buildCityActivityFeed({
       feed.add(CityActivityMatch(
         id: doc.id,
         type: 'guest',
-        completedAt: completedAt,
+        completedAt: played.at,
+        hasTime: played.hasTime,
         player1Label: (summary?['p1Name'] as String?) ?? '',
         player2Label: (summary?['p2Name'] as String?) ?? '',
         isTie: isTie,
