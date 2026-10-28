@@ -8,6 +8,7 @@
 
   "loginTitle": "Inicio de sesión",
   "signInWithGoogle": "Iniciar sesión con Google",
+  "signInWithApple": "Iniciar sesión con Apple",
   "userProfileNotFound": "Perfil de usuario no encontrado",
   "signOutConfirmation": "¿Estás seguro de que quieres cerrar sesión?",
 

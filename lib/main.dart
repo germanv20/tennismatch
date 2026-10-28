@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:ui' show PlatformDispatcher;
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart'
+    show defaultTargetPlatform, TargetPlatform, kDebugMode;
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:tennismatch/gen_l10n/app_localizations.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -15,6 +17,9 @@ import 'package:country_picker/country_picker.dart';
 import 'screens/match_chat_screen.dart';
 import 'screens/incoming_requests_screen.dart';
 import 'services/theme_service.dart';
+import 'services/apple_auth_service.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart'
+    show SignInWithAppleButton, SignInWithAppleButtonStyle;
 import 'screens/match_detail_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/match_history_screen.dart';
@@ -37,6 +42,11 @@ void main() async {
 
   await FirebaseAppCheck.instance.activate(
     androidProvider: AndroidProvider.debug,
+    // iOS: App Attest (DeviceCheck fallback) in release builds; the debug
+    // provider in debug builds so the simulator/dev devices work.
+    appleProvider: kDebugMode
+        ? AppleProvider.debug
+        : AppleProvider.appAttestWithDeviceCheckFallback,
   );
 
   // 🔔 Request notification permission (Android 13+)
@@ -48,6 +58,17 @@ void main() async {
   );
 
   debugPrint("🔔 Permission status: ${settings.authorizationStatus}");
+
+  // iOS only: show banners/sounds for pushes that arrive while the app is
+  // open (iOS hides them by default).
+  if (defaultTargetPlatform == TargetPlatform.iOS) {
+    await FirebaseMessaging.instance
+        .setForegroundNotificationPresentationOptions(
+      alert: true,
+      badge: true,
+      sound: true,
+    );
+  }
 
   // Load saved theme before first frame
   final themeNotifier = ThemeNotifier();
@@ -388,6 +409,12 @@ class _AuthTestState extends State<AuthTest> with WidgetsBindingObserver {
           '619706153138-vbhd2pmm4desced8n8n63trhq3s1glfg.apps.googleusercontent.com';
 
       final GoogleSignIn googleSignIn = GoogleSignIn(
+        // iOS needs its own OAuth client ID (from the iOS app registered in
+        // Firebase); null on Android, and on iOS falls back to the value in
+        // GoogleService-Info.plist if firebase_options.dart doesn't have it.
+        clientId: defaultTargetPlatform == TargetPlatform.iOS
+            ? DefaultFirebaseOptions.currentPlatform.iosClientId
+            : null,
         serverClientId: webClientId,
       );
 
@@ -413,6 +440,25 @@ class _AuthTestState extends State<AuthTest> with WidgetsBindingObserver {
       }
     } catch (e) {
       debugPrint('❌ Google sign-in failed: $e');
+    } finally {
+      if (mounted) setState(() => _isSigningIn = false);
+    }
+  }
+
+  /// Sign in with Apple (iPhone only — the button is hidden on Android).
+  /// Shares the _isSigningIn guard with the Google button so the two can't
+  /// run at once.
+  Future<void> signInWithApple() async {
+    if (_isSigningIn) return;
+    setState(() => _isSigningIn = true);
+    try {
+      final userCredential = await AppleAuthService.signIn();
+      final user = userCredential?.user;
+      if (user != null) {
+        await ensureUserDocument(user);
+      }
+    } catch (e) {
+      debugPrint('❌ Apple sign-in failed: $e');
     } finally {
       if (mounted) setState(() => _isSigningIn = false);
     }
@@ -498,12 +544,33 @@ class _AuthTestState extends State<AuthTest> with WidgetsBindingObserver {
       debugPrint('FCM deleteToken error (non-fatal): $e');
     }
 
-    // Now request a fresh token from FCM servers
-    final token = await messaging.getToken();
+    // iOS: the FCM token can only be issued once Apple has handed the app
+    // its APNs token, which may arrive a moment after launch (and never
+    // does on the simulator). Wait for it briefly instead of letting
+    // getToken() throw 'apns-token-not-set'.
+    if (defaultTargetPlatform == TargetPlatform.iOS) {
+      String? apnsToken;
+      for (var i = 0; i < 10 && apnsToken == null; i++) {
+        apnsToken = await messaging.getAPNSToken();
+        if (apnsToken == null) {
+          await Future.delayed(const Duration(seconds: 1));
+        }
+      }
+      if (apnsToken == null) {
+        debugPrint('⚠️ APNs token not available (simulator or push not set up)');
+      }
+    }
 
-    if (token != null) {
-      await saveFcmToken(token);
-      debugPrint('✅ Fresh FCM token saved');
+    // Now request a fresh token from FCM servers
+    try {
+      final token = await messaging.getToken();
+
+      if (token != null) {
+        await saveFcmToken(token);
+        debugPrint('✅ Fresh FCM token saved');
+      }
+    } catch (e) {
+      debugPrint('FCM getToken error (non-fatal): $e');
     }
 
     // Listen for future token refreshes
@@ -758,6 +825,19 @@ class _AuthTestState extends State<AuthTest> with WidgetsBindingObserver {
                             ),
                           ),
                         ),
+
+                        // ── Sign in with Apple (iPhone only) ──
+                        if (AppleAuthService.isSupported) ...[
+                          const SizedBox(height: 12),
+                          SignInWithAppleButton(
+                            onPressed:
+                                _isSigningIn ? () {} : signInWithApple,
+                            text: loc.signInWithApple,
+                            height: 52,
+                            style: SignInWithAppleButtonStyle.black,
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                        ],
 
                         const SizedBox(height: 14),
 

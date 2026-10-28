@@ -33,6 +33,9 @@ dependencies:
   package_info_plus: ^8.1.1
   share_plus: ^10.1.4
   path_provider: ^2.1.4
+  # iOS: Sign in with Apple (App Store guideline 4.8) + SHA-256 for its nonce
+  sign_in_with_apple: ^6.1.4
+  crypto: ^3.0.3
 
 dev_dependencies:
   flutter_test:

@@ -8,6 +8,7 @@
 
   "loginTitle": "Tennis Match Login",
   "signInWithGoogle": "Sign in with Google",
+  "signInWithApple": "Sign in with Apple",
   "userProfileNotFound": "User profile not found",
   "signOutConfirmation": "Are you sure you want to sign out?",
 

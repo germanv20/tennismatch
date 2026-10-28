@@ -111,6 +111,9 @@ async function sendPushToUser(recipientUid, payload) {
 
   const response = await getMessaging().sendEachForMulticast({
     tokens,
+    // iOS: play the default sound. Android tokens ignore this block, and
+    // a payload that sets its own `apns` still wins (spread below).
+    apns: {payload: {aps: {sound: "default"}}},
     ...payload,
   });
 
