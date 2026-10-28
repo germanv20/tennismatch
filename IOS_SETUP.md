@@ -64,7 +64,8 @@ git switch ios-support
 flutter pub get
 ```
 
-### B3. Firebase config (replace placeholders)
+### B3. Firebase config
+**Steps 2 and 3 are already done on Windows** (real values are in `Info.plist` and the `ios` block of `lib/firebase_options.dart`). Only step 1 (adding the plist through Xcode) remains on the Mac. Original instructions, for reference:
 1. Copy `GoogleService-Info.plist` into `ios/Runner/` **through Xcode**: open
    `ios/Runner.xcworkspace`, File → Add Files to "Runner…", tick "Copy items if needed" and
    the Runner target.
