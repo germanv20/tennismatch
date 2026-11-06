@@ -59,12 +59,12 @@ class DefaultFirebaseOptions {
   );
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyCCiez0x3I15NsFNS2NSW2L1rQktAPcs8o',
-    appId: '1:619706153138:ios:7a0e29c45d27b2653331ab',
+    appId: '1:619706153138:ios:6a43590ec1fbf0a53331ab',
     messagingSenderId: '619706153138',
     projectId: 'tennismatch-3c79c',
     storageBucket: 'tennismatch-3c79c.firebasestorage.app',
-    iosClientId: '619706153138-428ia87sm8960rkl88nuni9sth9i8dcu.apps.googleusercontent.com',
-    iosBundleId: 'com.tennismatch.app',
+    iosClientId: '619706153138-0e9frf2ohq2523mb6fdjmidm895ek23m.apps.googleusercontent.com',
+    iosBundleId: 'com.germanv20.tennismatch',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(

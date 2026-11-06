@@ -3,9 +3,9 @@
 <plist version="1.0">
 <dict>
 	<key>CLIENT_ID</key>
-	<string>619706153138-428ia87sm8960rkl88nuni9sth9i8dcu.apps.googleusercontent.com</string>
+	<string>619706153138-0e9frf2ohq2523mb6fdjmidm895ek23m.apps.googleusercontent.com</string>
 	<key>REVERSED_CLIENT_ID</key>
-	<string>com.googleusercontent.apps.619706153138-428ia87sm8960rkl88nuni9sth9i8dcu</string>
+	<string>com.googleusercontent.apps.619706153138-0e9frf2ohq2523mb6fdjmidm895ek23m</string>
 	<key>ANDROID_CLIENT_ID</key>
 	<string>619706153138-7723sr7rlvvldj9m7ssso5i4b4j8fq99.apps.googleusercontent.com</string>
 	<key>API_KEY</key>
@@ -15,7 +15,7 @@
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
-	<string>com.tennismatch.app</string>
+	<string>com.germanv20.tennismatch</string>
 	<key>PROJECT_ID</key>
 	<string>tennismatch-3c79c</string>
 	<key>STORAGE_BUCKET</key>
@@ -31,6 +31,6 @@
 	<key>IS_SIGNIN_ENABLED</key>
 	<true></true>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:619706153138:ios:7a0e29c45d27b2653331ab</string>
+	<string>1:619706153138:ios:6a43590ec1fbf0a53331ab</string>
 </dict>
 </plist>

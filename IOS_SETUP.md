@@ -7,7 +7,7 @@ Firestore rules also deploy from whatever branch is checked out.
 Everything below marked "code" was already prepared on Windows **without being compiled**
 (no Mac/Xcode available). Expect small compile fixes on the Mac. Run `flutter analyze` first.
 
-Bundle ID: `com.tennismatch.app` · iPhone only · minimum iOS 15.0 · Sign in with Apple +
+Bundle ID: `com.germanv20.tennismatch` (`com.tennismatch.app` was already taken on Apple's side; Android keeps `com.tennismatch.app`) · iPhone only · minimum iOS 15.0 · Sign in with Apple +
 Google · push via APNs/FCM.
 
 ---
@@ -21,7 +21,7 @@ Approval can take from hours to days.
 
 ### A2. Firebase: register the iOS app
 Firebase console → Project settings → Your apps → Add app → iOS.
-- Apple bundle ID: `com.tennismatch.app` (the old iOS app in `firebase_options.dart` used
+- Apple bundle ID: `com.germanv20.tennismatch` (the old iOS app in `firebase_options.dart` used
   `com.example.tennismatch`; register a NEW app, don't reuse it).
 - Download `GoogleService-Info.plist` and keep it (needed on the Mac, see B3).
 
@@ -33,7 +33,7 @@ native iPhone flow; no Services ID.)
 App Check → Apps → register the iOS app with **App Attest**. Leave enforcement OFF.
 
 ### A5. Apple Developer portal (after enrollment)
-1. Identifiers → `+` → App IDs → App → bundle ID `com.tennismatch.app`; enable
+1. Identifiers → `+` → App IDs → App → bundle ID `com.germanv20.tennismatch`; enable
    **Push Notifications** and **Sign in with Apple**. (Xcode's automatic signing can also
    do this later.)
 2. Keys → `+` → check **Apple Push Notifications service (APNs)** → download the `.p8`
@@ -43,7 +43,7 @@ App Check → Apps → register the iOS app with **App Attest**. Leave enforceme
 
 ### A6. App Store Connect
 My Apps → `+` → New App: platform iOS, name "Tennis Match" (if taken, pick a variant for
-the store listing only), primary language, bundle ID `com.tennismatch.app`, any SKU.
+the store listing only), primary language, bundle ID `com.germanv20.tennismatch`, any SKU.
 
 ---
 
@@ -76,7 +76,7 @@ flutter pub get
    `flutterfire configure` rewrite the whole file):
    `apiKey` ← API_KEY, `appId` ← GOOGLE_APP_ID, `messagingSenderId` ← GCM_SENDER_ID,
    `projectId`, `storageBucket` ← STORAGE_BUCKET, `iosClientId` ← CLIENT_ID,
-   `iosBundleId: 'com.tennismatch.app'`. (The `macos` block is unused; leave it.)
+   `iosBundleId: 'com.germanv20.tennismatch'`. (The `macos` block is unused; leave it.)
 
 ### B4. Pods
 The repo has no `Podfile`; Flutter creates it on the first iOS build:
@@ -91,7 +91,7 @@ Always open `ios/Runner.xcworkspace` (not `.xcodeproj`).
 
 ### B5. Xcode signing & capabilities
 Runner target → Signing & Capabilities: Team = your paid team, "Automatically manage
-signing", bundle ID `com.tennismatch.app`. Check these exist (add with `+ Capability` if
+signing", bundle ID `com.germanv20.tennismatch`. Check these exist (add with `+ Capability` if
 not): **Push Notifications**, **Sign in with Apple**, **Background Modes → Remote
 notifications**. `Runner/Runner.entitlements` is already referenced by the project; if Xcode
 can't see it, drag it into the Runner group.
