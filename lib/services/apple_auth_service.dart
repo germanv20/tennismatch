@@ -91,12 +91,13 @@ class AppleAuthService {
         scopes: const [],
         nonce: _sha256(rawNonce),
       );
-      // NOTE: called dynamically on purpose — written without being able to
-      // compile it (no Mac/Flutter at that time). On the Mac, replace with
-      // the typed call FirebaseAuth.instance.revokeTokenWithAuthorizationCode(
-      // apple.authorizationCode) once `flutter analyze` confirms the name.
-      await (FirebaseAuth.instance as dynamic)
+      // Firebase exchanges this code for Apple's refresh token and revokes
+      // it. This only works once the Apple provider in Firebase Console →
+      // Authentication → Sign-in method has the OAuth code flow configured
+      // (Apple Team ID, Key ID and the Sign in with Apple private key).
+      await FirebaseAuth.instance
           .revokeTokenWithAuthorizationCode(apple.authorizationCode);
+      debugPrint('Apple token revoked');
     } catch (e) {
       debugPrint('Apple token revocation failed (non-fatal): $e');
     }
