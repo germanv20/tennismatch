@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_functions/cloud_functions.dart';
+import '../services/apple_auth_service.dart';
 import 'package:tennismatch/gen_l10n/app_localizations.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -263,6 +264,9 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
                 errorMessage = null;
               });
               try {
+                // Apple requires revoking the Sign in with Apple token
+                // before the account is deleted (no-op for Google users).
+                await AppleAuthService.revokeAppleTokenIfNeeded();
                 await FirebaseFunctions.instance
                     .httpsCallable('deleteMyAccount')
                     .call();

@@ -30,6 +30,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get signInWithGoogle => 'Iniciar sesión con Google';
 
   @override
+  String get signInWithApple => 'Iniciar sesión con Apple';
+
+  @override
   String get userProfileNotFound => 'Perfil de usuario no encontrado';
 
   @override
