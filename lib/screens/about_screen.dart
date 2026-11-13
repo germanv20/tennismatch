@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../gen_l10n/app_localizations.dart';
+import '../utils/store_links.dart';
 
 /// "About the app" screen, reached from the home screen's ⋮ overflow menu.
 /// Shows the app icon/name/tagline, the version/build number (read
@@ -22,8 +23,6 @@ class AboutScreen extends StatefulWidget {
 class _AboutScreenState extends State<AboutScreen> {
   static const String _privacyPolicyUrl =
       'https://sites.google.com/view/tennismatch-privacy';
-  static const String _playStoreUrl =
-      'https://play.google.com/store/apps/details?id=com.tennismatch.app';
 
   PackageInfo? _packageInfo;
 
@@ -98,9 +97,11 @@ class _AboutScreenState extends State<AboutScreen> {
             const Divider(),
             ListTile(
               leading: const Icon(Icons.star_outline),
-              title: Text(loc.rateUsOnGooglePlay),
+              title: Text(StoreLinks.isIOS
+                  ? loc.rateUsOnAppStore
+                  : loc.rateUsOnGooglePlay),
               trailing: const Icon(Icons.open_in_new, size: 18),
-              onTap: () => _openUrl(_playStoreUrl),
+              onTap: () => _openUrl(StoreLinks.ownStore),
             ),
             ListTile(
               leading: const Icon(Icons.privacy_tip_outlined),

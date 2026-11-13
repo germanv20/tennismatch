@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:tennismatch/gen_l10n/app_localizations.dart';
 import '../utils/scoring_mode_utils.dart';
+import '../utils/store_links.dart';
 
 class GuestMatchDetailsScreen extends StatelessWidget {
   final String matchId;
@@ -62,7 +63,7 @@ class GuestMatchDetailsScreen extends StatelessWidget {
       _formatScore(),
       location,
       '${matchDate.day}/${matchDate.month}/${matchDate.year}',
-      'https://play.google.com/store/apps/details?id=com.tennismatch.app',
+      StoreLinks.inviteLinks,
     );
 
     final encodedMessage = Uri.encodeComponent(message);

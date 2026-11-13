@@ -31,6 +31,7 @@
   "aboutVersionLabel": "Version {version} ({buildNumber})",
   "@aboutVersionLabel": {"placeholders": {"version": {"type": "String"}, "buildNumber": {"type": "String"}}},
   "rateUsOnGooglePlay": "Rate us on Google Play",
+  "rateUsOnAppStore": "Rate us on the App Store",
   "loggedOutSuccessfully": "Logged out successfully",
   "loginDisclaimer": "We never post anything without your permission.",
 

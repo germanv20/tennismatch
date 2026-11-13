@@ -266,6 +266,12 @@ abstract class AppLocalizations {
   /// **'Rate us on Google Play'**
   String get rateUsOnGooglePlay;
 
+  /// No description provided for @rateUsOnAppStore.
+  ///
+  /// In en, this message translates to:
+  /// **'Rate us on the App Store'**
+  String get rateUsOnAppStore;
+
   /// No description provided for @loggedOutSuccessfully.
   ///
   /// In en, this message translates to:

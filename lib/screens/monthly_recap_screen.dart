@@ -10,10 +10,8 @@ import 'package:tennismatch/gen_l10n/app_localizations.dart';
 
 import '../services/monthly_recap_service.dart';
 import '../utils/monthly_recap_utils.dart';
+import '../utils/store_links.dart';
 import 'available_players_screen.dart';
-
-const String _playStoreUrl =
-    'https://play.google.com/store/apps/details?id=com.tennismatch.app';
 
 String monthName(AppLocalizations loc, int year, int month) {
   final s = DateFormat.MMMM(loc.localeName).format(DateTime(year, month));
@@ -68,7 +66,7 @@ class _MonthlyRecapScreenState extends State<MonthlyRecapScreen> {
       await file.writeAsBytes(data!.buffer.asUint8List());
       await Share.shareXFiles(
         [XFile(file.path)],
-        text: loc.recapShareText(_playStoreUrl),
+        text: loc.recapShareText(StoreLinks.inviteLinks),
       );
     } catch (_) {
       messenger.showSnackBar(SnackBar(content: Text(loc.recapShareFailed)));

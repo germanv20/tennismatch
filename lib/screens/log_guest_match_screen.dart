@@ -6,6 +6,7 @@ import 'package:country_picker/country_picker.dart';
 import 'package:tennismatch/gen_l10n/app_localizations.dart';
 import '../main.dart' show navigatorKey;
 import '../widgets/set_score_row.dart';
+import '../utils/store_links.dart';
 
 class LogGuestMatchScreen extends StatefulWidget {
   const LogGuestMatchScreen({super.key});
@@ -373,7 +374,7 @@ class _LogGuestMatchScreenState extends State<LogGuestMatchScreen> {
       score,
       location,
       date,
-      'https://play.google.com/store/apps/details?id=com.tennismatch.app',
+      StoreLinks.inviteLinks,
     );
   }
 

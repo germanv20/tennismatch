@@ -95,6 +95,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get rateUsOnGooglePlay => 'Rate us on Google Play';
 
   @override
+  String get rateUsOnAppStore => 'Rate us on the App Store';
+
+  @override
   String get loggedOutSuccessfully => 'Logged out successfully';
 
   @override

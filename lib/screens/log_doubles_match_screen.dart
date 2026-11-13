@@ -7,6 +7,7 @@ import '../main.dart' show navigatorKey;
 import '../widgets/set_score_row.dart';
 import '../widgets/linkable_player_field.dart';
 import '../utils/doubles_utils.dart';
+import '../utils/store_links.dart';
 
 class LogDoublesMatchScreen extends StatefulWidget {
   const LogDoublesMatchScreen({super.key});
@@ -371,7 +372,7 @@ class _LogDoublesMatchScreenState extends State<LogDoublesMatchScreen> {
       score,
       location,
       date,
-      'https://play.google.com/store/apps/details?id=com.tennismatch.app',
+      StoreLinks.inviteLinks,
     );
   }
 
