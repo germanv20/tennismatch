@@ -1,0 +1,43 @@
+workflows:
+  ios-release:
+    name: iOS Release (TestFlight)
+    instance_type: mac_mini_m2
+    max_build_duration: 60
+    integrations:
+      # Name must match the App Store Connect API key you add in Codemagic
+      # (Team integrations > Developer Portal > Manage keys).
+      app_store_connect: Codemagic
+    environment:
+      flutter: 3.35.7
+      xcode: latest
+      cocoapods: default
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.germanv20.tennismatch
+      vars:
+        APP_STORE_APPLE_ID: 6831438177
+    scripts:
+      - name: Get Flutter packages
+        script: flutter pub get
+      - name: Install CocoaPods dependencies
+        script: |
+          cd ios
+          pod install
+      - name: Set up code signing
+        script: xcode-project use-profiles
+      - name: Build iOS IPA
+        script: |
+          # Build name comes from pubspec.yaml; build number = latest on TestFlight + 1
+          LATEST=$(app-store-connect get-latest-testflight-build-number "$APP_STORE_APPLE_ID" || echo 0)
+          NEXT=$((LATEST + 1))
+          flutter build ipa --release --build-number=$NEXT \
+            --export-options-plist=/Users/builder/export_options.plist
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true
+        # Review submission stays manual in App Store Connect.
+        submit_to_app_store: false
