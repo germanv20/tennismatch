@@ -11,11 +11,13 @@ workflows:
       flutter: 3.35.7
       xcode: latest
       cocoapods: default
-      ios_signing:
-        distribution_type: app_store
-        bundle_identifier: com.germanv20.tennismatch
+      groups:
+        # Contains CERTIFICATE_PRIVATE_KEY (secure), used to create the
+        # Apple Distribution certificate through the API key.
+        - signing
       vars:
         APP_STORE_APPLE_ID: 6831438177
+        BUNDLE_ID: com.germanv20.tennismatch
     scripts:
       - name: Get Flutter packages
         script: flutter pub get
@@ -24,7 +26,13 @@ workflows:
           cd ios
           pod install
       - name: Set up code signing
-        script: xcode-project use-profiles
+        script: |
+          keychain initialize
+          app-store-connect fetch-signing-files "$BUNDLE_ID" \
+            --type IOS_APP_STORE \
+            --create
+          keychain add-certificates
+          xcode-project use-profiles
       - name: Build iOS IPA
         script: |
           # Build name comes from pubspec.yaml; build number = latest on TestFlight + 1
