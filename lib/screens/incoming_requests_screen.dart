@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:tennismatch/gen_l10n/app_localizations.dart';
 import 'player_profile_view_screen.dart';
 import '../widgets/empty_state.dart';
+import '../utils/name_utils.dart';
 import '../main.dart';
 
 /// Thin Scaffold+AppBar wrapper around [IncomingRequestsList] — kept as its
@@ -245,7 +246,7 @@ class IncomingRequestsList extends StatelessWidget {
                                   : null,
                             ),
                             title: Text(
-                              userData['name'] ?? loc.unknown,
+                              formatNameDisplay(userData['name'] ?? loc.unknown),
                               style: const TextStyle(fontWeight: FontWeight.bold),
                             ), // Unknown
                             subtitle: Text(loc.wantsToPlayMatch), // 'Wants to play a match'

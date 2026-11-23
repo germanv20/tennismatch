@@ -8,6 +8,7 @@ import '../widgets/empty_state.dart';
 import '../main.dart';
 import '../services/h2h_service.dart';
 import '../utils/stale_match_utils.dart';
+import '../utils/name_utils.dart';
 import 'add_match_result_screen.dart';
 
 class MyMatchesScreen extends StatefulWidget {
@@ -247,7 +248,7 @@ class _MyMatchesScreenState extends State<MyMatchesScreen> {
                                 : null,
                           ),
                           title: Text(
-                            userData['name'] ?? loc.unknown,
+                            formatNameDisplay(userData['name'] ?? loc.unknown),
                             style: const TextStyle(fontWeight: FontWeight.bold),
                           ), // 'Unknown'
                           subtitle: Text(loc.matchActive), // 'Match active'

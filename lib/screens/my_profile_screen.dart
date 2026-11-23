@@ -13,6 +13,7 @@ import 'dart:io';
 import '../services/theme_service.dart';
 import '../utils/day_utils.dart';
 import '../utils/city_utils.dart';
+import '../utils/name_utils.dart';
 import '../utils/ranking_utils.dart';
 import '../widgets/profile_stat_grid.dart';
 import 'edit_profile_screen.dart';
@@ -173,9 +174,9 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
     final picker = ImagePicker();
     final XFile? image = await picker.pickImage(
       source: ImageSource.gallery,
-      imageQuality: 75,
-      maxWidth: 512,
-      maxHeight: 512,
+      imageQuality: 85,
+      maxWidth: 1024, // sharp enough for the full-screen photo viewer
+      maxHeight: 1024,
     );
 
     if (image == null) return;
@@ -416,7 +417,8 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
           }
           final userData = rawData as Map<String, dynamic>;
 
-          final String name = userData['name'] ?? loc.unknown;
+          // Display-time title-casing (names are stored exactly as typed).
+          final String name = formatNameDisplay(userData['name'] ?? loc.unknown);
           final String email = userData['email'] ?? '';
           final String rawLevel = userData['tennisLevel'] ?? '';
           final String tennisLevel = rawLevel.isEmpty

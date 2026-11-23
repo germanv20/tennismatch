@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../utils/h2h_utils.dart';
 
 class H2HService {
   static Future<void> recalculateHeadToHead({
@@ -24,6 +25,8 @@ class H2HService {
       final players = List<String>.from(data['players'] ?? []);
 
       if (!(players.contains(userA) && players.contains(userB))) continue;
+      // 1v1 only: doubles matches have no winnerUid (see h2h_utils.dart).
+      if (!countsForHeadToHead(data)) continue;
 
       matches++;
 

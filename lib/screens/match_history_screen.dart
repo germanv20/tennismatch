@@ -9,6 +9,7 @@ import 'match_details_screen.dart';
 import 'guest_match_details_screen.dart';
 import 'doubles_match_details_screen.dart';
 import '../utils/scoring_mode_utils.dart';
+import '../utils/name_utils.dart';
 
 class MatchHistoryScreen extends StatefulWidget {
   const MatchHistoryScreen({super.key});
@@ -60,7 +61,8 @@ class _MatchHistoryScreenState extends State<MatchHistoryScreen> {
           .get();
       if (!mounted) return;
       setState(() {
-        currentUserName = doc['name'] ?? '';
+        // Display-time title-casing (names are stored as typed).
+        currentUserName = formatNameDisplay(doc['name'] ?? '');
       });
     } catch (e) {
       debugPrint('❌ Failed to load user name: $e');
@@ -97,7 +99,8 @@ class _MatchHistoryScreenState extends State<MatchHistoryScreen> {
     final playerNames = match['playerNames'] ?? {};
     final opponentUid =
         players.firstWhere((uid) => uid != currentUid, orElse: () => '');
-    final opponentName = playerNames[opponentUid] ?? loc.unknown;
+    final opponentName =
+        formatNameDisplay((playerNames[opponentUid] ?? loc.unknown).toString());
 
     final summary = match['summary'] as Map<String, dynamic>? ?? {};
     final player1Uid = match['player1Uid'];
@@ -207,11 +210,13 @@ class _MatchHistoryScreenState extends State<MatchHistoryScreen> {
     final String opponentName;
     final String opponentPhone;
     if (userIsCreator) {
-      opponentName = guest['name'] ?? loc.guestOpponent;
+      opponentName =
+          formatNameDisplay((guest['name'] ?? loc.guestOpponent).toString());
       opponentPhone = guest['phone'] ?? '';
     } else {
       final playerNames = match['playerNames'] as Map<String, dynamic>? ?? {};
-      opponentName = playerNames[createdBy] as String? ?? loc.guestOpponent;
+      opponentName = formatNameDisplay(
+          playerNames[createdBy] as String? ?? loc.guestOpponent);
       opponentPhone = '';
     }
 
@@ -338,8 +343,10 @@ class _MatchHistoryScreenState extends State<MatchHistoryScreen> {
     final DateTime matchDate =
         matchDateTs != null ? matchDateTs.toDate() : DateTime.now();
 
-    final team1Label = '${team1['player1'] ?? ''} / ${team1['player2'] ?? ''}';
-    final team2Label = '${team2['player1'] ?? ''} / ${team2['player2'] ?? ''}';
+    // Display-time title-casing for every doubles name (stored as typed).
+    String nm(dynamic v) => formatNameDisplay((v ?? '').toString());
+    final team1Label = '${nm(team1['player1'])} / ${nm(team1['player2'])}';
+    final team2Label = '${nm(team2['player1'])} / ${nm(team2['player2'])}';
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -350,10 +357,10 @@ class _MatchHistoryScreenState extends State<MatchHistoryScreen> {
             MaterialPageRoute(
               builder: (_) => DoublesMatchDetailsScreen(
                 matchId: matchDoc.id,
-                team1Player1: team1['player1'] ?? '',
-                team1Player2: team1['player2'] ?? '',
-                team2Player1: team2['player1'] ?? '',
-                team2Player2: team2['player2'] ?? '',
+                team1Player1: nm(team1['player1']),
+                team1Player2: nm(team1['player2']),
+                team2Player1: nm(team2['player1']),
+                team2Player2: nm(team2['player2']),
                 winnerTeam: winnerTeam,
                 isTie: isTie,
                 sets: List.from(rawSets),

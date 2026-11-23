@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:tennismatch/gen_l10n/app_localizations.dart';
 import '../widgets/empty_state.dart';
 import '../widgets/error_state.dart';
+import '../utils/name_utils.dart';
 import 'player_profile_view_screen.dart';
 
 /// Thin Scaffold+AppBar wrapper around [OutgoingRequestsList]. See
@@ -177,7 +178,7 @@ class OutgoingRequestsList extends StatelessWidget {
                               : null,
                         ),
                         title: Text(
-                          userData['name'] ?? loc.unknown,
+                          formatNameDisplay(userData['name'] ?? loc.unknown),
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
                             color: isExpired ? Colors.grey[600] : null,

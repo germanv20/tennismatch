@@ -9,6 +9,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../widgets/rate_opponent_dialog.dart';
 import '../widgets/head_to_head_card.dart';
 import '../utils/scoring_mode_utils.dart';
+import '../utils/name_utils.dart';
 
 class MatchDetailScreen extends StatefulWidget {
   final DocumentSnapshot matchDoc;
@@ -189,7 +190,7 @@ class _MatchDetailScreenState extends State<MatchDetailScreen> {
             : derivedOpponentUid;
 
     final String otherPlayerName =
-        opponentData['name'] as String? ?? loc.unknown;
+        formatNameDisplay(opponentData['name'] as String? ?? loc.unknown);
     final String otherPlayerPhotoUrl =
         opponentData['photoUrl'] as String? ?? '';
 

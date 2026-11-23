@@ -5,6 +5,7 @@ import 'package:tennismatch/gen_l10n/app_localizations.dart';
 import 'package:tennismatch/services/h2h_service.dart';
 import '../widgets/rate_opponent_dialog.dart';
 import '../widgets/play_again_button.dart';
+import '../utils/h2h_utils.dart';
 import '../utils/scoring_mode_utils.dart';
 
 class MatchDetailsScreen extends StatefulWidget {
@@ -171,14 +172,19 @@ class _MatchDetailsScreenState extends State<MatchDetailsScreen> {
       final data = doc.data();
       final players = List<String>.from(data['players'] ?? []);
       if (!players.contains(opponentUid)) continue;
+      // 1v1 only (doubles have no winnerUid; see utils/h2h_utils.dart).
+      if (!countsForHeadToHead(data)) continue;
       matches++;
       final bool isTie = data['isTie'] == true;
       if (isTie) {
         ties++;
-      } else if (data['winnerUid'] == uid) {
-        wins++;
       } else {
-        losses++;
+        final winner = headToHeadWinner(data, players);
+        if (winner == uid) {
+          wins++;
+        } else if (winner == opponentUid) {
+          losses++;
+        }
       }
 
       final result = data['result'] ?? {};

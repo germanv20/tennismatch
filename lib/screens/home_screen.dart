@@ -525,9 +525,9 @@ class _HomeScreenState extends State<HomeScreen> {
     final picker = ImagePicker();
     final XFile? image = await picker.pickImage(
       source: ImageSource.gallery,
-      imageQuality: 75,       // compress to reduce upload size
-      maxWidth: 512,
-      maxHeight: 512,
+      imageQuality: 85,       // compress to reduce upload size
+      maxWidth: 1024,         // 1024px so the full-screen photo viewer is sharp
+      maxHeight: 1024,
     );
  
     if (image == null) return; // user cancelled

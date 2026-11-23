@@ -48,9 +48,12 @@ class ProfilePhotoService {
 
     final XFile? image = await ImagePicker().pickImage(
       source: ImageSource.gallery,
-      imageQuality: 75, // compress to reduce upload size
-      maxWidth: 512,
-      maxHeight: 512,
+      // 1024px / 85% (was 512 / 75): other players can now tap a profile
+      // photo to view it full screen, and 512px looked blurry enlarged. Still
+      // only ~100-250 KB per photo.
+      imageQuality: 85,
+      maxWidth: 1024,
+      maxHeight: 1024,
     );
     if (image == null) return null; // user cancelled
 

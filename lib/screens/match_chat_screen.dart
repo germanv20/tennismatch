@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:tennismatch/gen_l10n/app_localizations.dart';
 import 'dart:async';
+import '../utils/name_utils.dart';
 
 class MatchChatScreen extends StatefulWidget {
   final String matchId;
@@ -28,6 +29,9 @@ class _MatchChatScreenState extends State<MatchChatScreen>
   final TextEditingController _messageController = TextEditingController();
   final String currentUid = FirebaseAuth.instance.currentUser!.uid;
   late final ScrollController _scrollController = ScrollController();
+
+  /// Other player's name, title-cased for display (names are stored as typed).
+  String get _otherName => formatNameDisplay(widget.otherPlayerName);
 
   Timer? _typingTimer;
 
@@ -203,7 +207,7 @@ class _MatchChatScreenState extends State<MatchChatScreen>
                   : null,
             ),
             const SizedBox(width: 8),
-            Text(widget.otherPlayerName,
+            Text(_otherName,
                 style: const TextStyle(fontSize: 16)),
           ],
         ),
@@ -232,7 +236,7 @@ class _MatchChatScreenState extends State<MatchChatScreen>
                   children: [
                     const SizedBox(width: 40),
                     Text(
-                      loc.isTyping(widget.otherPlayerName),
+                      loc.isTyping(_otherName),
                       style: const TextStyle(
                         fontSize: 13,
                         color: Colors.grey,
@@ -372,7 +376,7 @@ class _MatchChatScreenState extends State<MatchChatScreen>
                                       padding: const EdgeInsets.only(
                                           bottom: 2),
                                       child: Text(
-                                        widget.otherPlayerName,
+                                        _otherName,
                                         style: const TextStyle(
                                           fontSize: 12,
                                           fontWeight: FontWeight.w500,

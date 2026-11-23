@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:tennismatch/gen_l10n/app_localizations.dart';
+import '../utils/h2h_utils.dart';
 import '../utils/name_utils.dart';
 
 /// Compact head-to-head record between the signed-in user and
@@ -73,6 +74,9 @@ class _HeadToHeadCardState extends State<HeadToHeadCard> {
       final data = doc.data();
       final players = List<String>.from(data['players'] ?? const []);
       if (!players.contains(opponent)) continue;
+      // 1v1 only: a doubles match that lists both users in `players` has no
+      // winnerUid and would count as played without a win/loss/tie.
+      if (!countsForHeadToHead(data)) continue;
 
       matches++;
       if (data['isTie'] == true) {
@@ -80,14 +84,8 @@ class _HeadToHeadCardState extends State<HeadToHeadCard> {
         continue;
       }
 
-      String? winner = data['winnerUid'] as String?;
-      if (winner == 'guest') {
-        // Claimed guest match won by the non-creator: 'guest' is a
-        // placeholder, so attribute the win via createdBy (same handling
-        // as h2h_service.dart / match_history_screen.dart).
-        final createdBy = data['createdBy'] as String?;
-        winner = players.firstWhere((u) => u != createdBy, orElse: () => '');
-      }
+      // 'guest' placeholder handled inside the helper (via createdBy).
+      final winner = headToHeadWinner(data, players);
 
       if (winner == me) {
         wins++;

@@ -4,9 +4,12 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:tennismatch/gen_l10n/app_localizations.dart';
 import 'package:country_picker/country_picker.dart';
 import '../utils/city_utils.dart';
+import '../utils/name_utils.dart';
 import '../utils/ranking_utils.dart';
 import '../widgets/profile_stat_grid.dart';
 import '../widgets/head_to_head_card.dart';
+import '../widgets/photo_viewer.dart';
+import '../services/profile_photo_service.dart';
 
 const weekOrder = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
@@ -218,7 +221,8 @@ class _PlayerProfileViewScreenState extends State<PlayerProfileViewScreen> {
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context)!;
     final userData = widget.userData;
-    final String name = userData['name'] ?? loc.unknown;
+    // Display-time title-casing (names are stored exactly as typed).
+    final String name = formatNameDisplay(userData['name'] ?? loc.unknown);
     final rawLevel = userData['tennisLevel'] ?? '';
     final String level =
         rawLevel.isEmpty ? loc.notSet : translateLevel(rawLevel, loc);
@@ -253,15 +257,24 @@ class _PlayerProfileViewScreenState extends State<PlayerProfileViewScreen> {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
 
-                  CircleAvatar(
-                    radius: 50,
-                    backgroundImage: (userData['photoUrl'] != null &&
-                            userData['photoUrl'].toString().isNotEmpty)
-                        ? NetworkImage(userData['photoUrl'])
-                        : null,
-                    child: userData['photoUrl'] == null
-                        ? const Icon(Icons.person, size: 50)
-                        : null,
+                  // Tap the photo to see it full screen with pinch-to-zoom
+                  // (only when the player really has a photo — enlarging
+                  // Google's generated letter avatar would be pointless).
+                  GestureDetector(
+                    onTap: ProfilePhotoService.isMissing(userData['photoUrl'])
+                        ? null
+                        : () => showPhotoViewer(
+                            context, userData['photoUrl'].toString()),
+                    child: CircleAvatar(
+                      radius: 50,
+                      backgroundImage: (userData['photoUrl'] != null &&
+                              userData['photoUrl'].toString().isNotEmpty)
+                          ? NetworkImage(userData['photoUrl'])
+                          : null,
+                      child: userData['photoUrl'] == null
+                          ? const Icon(Icons.person, size: 50)
+                          : null,
+                    ),
                   ),
 
                   const SizedBox(height: 16),
