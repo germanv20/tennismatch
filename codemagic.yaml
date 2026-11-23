@@ -46,6 +46,11 @@ workflows:
     publishing:
       app_store_connect:
         auth: integration
-        submit_to_testflight: true
+        # The build is always uploaded to App Store Connect and is available to
+        # internal TestFlight testers. `true` would also submit it to Apple's
+        # beta review for EXTERNAL testers, which needs test contact info in
+        # App Store Connect and fails without it (not needed: we only use
+        # internal testing).
+        submit_to_testflight: false
         # Review submission stays manual in App Store Connect.
         submit_to_app_store: false
