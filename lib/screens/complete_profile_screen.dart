@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:country_picker/country_picker.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../gen_l10n/app_localizations.dart';
 import '../main.dart' show rootScaffoldMessengerKey;
@@ -101,6 +102,35 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
     final trimmed = input.trim();
     if (trimmed.isEmpty) return trimmed;
     return trimmed[0].toUpperCase() + trimmed.substring(1);
+  }
+
+  /// "Not you?" escape hatch: confirm, then sign out. This screen is rendered
+  /// in place by main.dart's auth listener, so signing out swaps it back to
+  /// the login screen on its own.
+  Future<void> _confirmSwitchAccount() async {
+    final loc = AppLocalizations.of(context)!;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(loc.switchAccountTitle),
+        content: Text(loc.switchAccountBody),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(loc.cancel),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(loc.signOut),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    try {
+      await GoogleSignIn().signOut();
+    } catch (_) {}
+    await FirebaseAuth.instance.signOut();
   }
 
   Future<void> saveProfile() async {
@@ -826,6 +856,20 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                         ),
                       )
                     : Text(loc.save),
+              ),
+
+              if (FirebaseAuth.instance.currentUser?.email != null) ...[
+                const SizedBox(height: 12),
+                Text(
+                  loc.switchAccountSignedInAs(
+                      FirebaseAuth.instance.currentUser!.email!),
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                ),
+              ],
+              TextButton(
+                onPressed: isSaving ? null : _confirmSwitchAccount,
+                child: Text(loc.notYouSwitchAccount),
               ),
             ],
           ),

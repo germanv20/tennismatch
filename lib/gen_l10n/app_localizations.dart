@@ -3035,6 +3035,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count, plural, =1{1 day ago} other{{count} days ago}}'**
   String daysAgoCount(int count);
+
+  /// No description provided for @playersCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 player} other{{count} players}}'**
+  String playersCount(int count);
+
+  /// No description provided for @notificationDeletionRequest.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} asked to delete a match'**
+  String notificationDeletionRequest(String name);
+
+  /// No description provided for @statsByFormatTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Matches by scoring format'**
+  String get statsByFormatTitle;
+
+  /// No description provided for @notYouSwitchAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Not you? Use a different account'**
+  String get notYouSwitchAccount;
+
+  /// No description provided for @switchAccountTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch account?'**
+  String get switchAccountTitle;
+
+  /// No description provided for @switchAccountBody.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ll be signed out and taken back to the login screen so you can choose another account.'**
+  String get switchAccountBody;
+
+  /// No description provided for @switchAccountSignedInAs.
+  ///
+  /// In en, this message translates to:
+  /// **'Signed in as {email}'**
+  String switchAccountSignedInAs(String email);
 }
 
 class _AppLocalizationsDelegate

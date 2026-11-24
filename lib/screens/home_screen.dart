@@ -10,6 +10,7 @@ import '../utils/name_utils.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'available_players_screen.dart';
 import 'match_history_screen.dart';
+import 'match_details_screen.dart';
 import 'my_matches_screen.dart';
 import 'incoming_requests_screen.dart';
 import 'player_statistics_screen.dart';
@@ -284,6 +285,22 @@ class _HomeScreenState extends State<HomeScreen> {
       if (_seenLinked.contains(d.id)) return false;
       final ts = m['cancelledAt'] as Timestamp?;
       return ts != null && ts.toDate().isAfter(cutoff);
+    }).toList();
+  }
+
+  /// Regular matches where the other player asked to delete the match and I
+  /// haven't opened it yet. No local "seen" set needed: match_details_screen
+  /// adds me to `deletionRequest.seenBy` when I open it, which clears this.
+  List<QueryDocumentSnapshot> _pendingDeletionDocs(QuerySnapshot? snap) {
+    if (snap == null) return const [];
+    final me = widget.currentUser.uid;
+    return snap.docs.where((d) {
+      final m = d.data() as Map<String, dynamic>;
+      if ((m['type'] as String? ?? 'regular') != 'regular') return false;
+      final dr = m['deletionRequest'] as Map<String, dynamic>?;
+      if (dr == null || dr['status'] != 'pending') return false;
+      if (dr['requestedBy'] == me) return false;
+      return !((dr['seenBy'] as List?) ?? const []).contains(me);
     }).toList();
   }
 
@@ -887,7 +904,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   stream: _linkedStream,
                   builder: (context, linkedSnap) {
                     final linkedCount =
-                        _unseenLinkedDocs(linkedSnap.data).length;
+                        _unseenLinkedDocs(linkedSnap.data).length +
+                            _pendingDeletionDocs(linkedSnap.data).length;
                     return StreamBuilder<QuerySnapshot>(
                       stream: _cancelledStream,
                       builder: (context, cancelledSnap) {
@@ -1027,6 +1045,24 @@ class _HomeScreenState extends State<HomeScreen> {
       ));
     }
 
+    // Other player asked to delete a completed match (pending, unseen).
+    for (final doc in _pendingDeletionDocs(linkedSnap)) {
+      final data = doc.data() as Map<String, dynamic>;
+      final dr = data['deletionRequest'] as Map<String, dynamic>;
+      final requesterUid = dr['requestedBy'] as String? ?? '';
+      String name = '';
+      if (requesterUid.isNotEmpty) {
+        final u = await firestore.collection('users').doc(requesterUid).get();
+        name = (u.data()?['name'] as String?) ?? '';
+      }
+      results.add(_BellNotificationItem(
+        matchId: doc.id,
+        type: 'deletion_request',
+        otherName: name,
+        timestamp: (dr['createdAt'] ?? data['completedAt']) as Timestamp?,
+      ));
+    }
+
     // Matches the server auto-cancelled for inactivity.
     final cancelledSnap = await firestore
         .collection('matches')
@@ -1084,6 +1120,11 @@ class _HomeScreenState extends State<HomeScreen> {
         color = Colors.orange;
         text = loc.staleAutoCancelNotice(formatNameDisplay(item.otherName));
         break;
+      case 'deletion_request':
+        icon = Icons.delete_outline;
+        color = Colors.red;
+        text = loc.notificationDeletionRequest(formatNameDisplay(item.otherName));
+        break;
       case 'doubles_linked':
         icon = Icons.sports_tennis;
         color = Colors.green;
@@ -1121,6 +1162,66 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  /// Opens the Match Details screen for a completed regular match (same
+  /// arguments match_history_screen.dart builds), used by deletion-request
+  /// bell items so the user lands where they can accept/reject.
+  Future<void> _openMatchDetailsFromBell(String? matchId) async {
+    if (matchId == null) return;
+    final me = widget.currentUser.uid;
+    final doc = await FirebaseFirestore.instance
+        .collection('matches')
+        .doc(matchId)
+        .get();
+    final match = doc.data();
+    if (match == null || !mounted) return;
+
+    final List players = match['players'] ?? [];
+    final playerNames = (match['playerNames'] as Map?) ?? {};
+    final opponentUid = players.firstWhere((u) => u != me, orElse: () => '');
+    final opponentName =
+        formatNameDisplay((playerNames[opponentUid] ?? '').toString());
+    final myName = formatNameDisplay(
+        (playerNames[me] ?? widget.userData['name'] ?? '').toString());
+    final summary = match['summary'] as Map<String, dynamic>? ?? {};
+    final result = match['result'] as Map<String, dynamic>? ?? {};
+    final Timestamp? dateTs =
+        summary['matchDate'] as Timestamp? ?? result['matchDate'] as Timestamp?;
+
+    // Sets are stored from player 1's side; flip so "me" is always p1.
+    final bool meIsP1 = match['player1Uid'] == me;
+    final List rawSets = result['sets'] ?? [];
+    final List sets = meIsP1
+        ? rawSets
+        : rawSets.map((s) {
+            final f = <String, dynamic>{'p1': s['p2'], 'p2': s['p1']};
+            if (s['tb1'] != null && s['tb2'] != null) {
+              f['tb1'] = s['tb2'];
+              f['tb2'] = s['tb1'];
+            }
+            return f;
+          }).toList();
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => MatchDetailsScreen(
+          matchId: matchId,
+          players: players,
+          playerName: myName,
+          opponentName: opponentName,
+          opponentUid: opponentUid,
+          sets: sets,
+          location: (result['location'] ?? '').toString(),
+          duration: ((result['durationMinutes'] ?? 0) as num).toInt(),
+          matchDate: dateTs?.toDate() ?? DateTime.now(),
+          notes: result['notes']?.toString(),
+          scoringMode: result['scoringMode'] as String?,
+          superTiebreakDecider: result['superTiebreakDecider'] == true,
+        ),
+      ),
+    );
+  }
+
   /// Incoming pending -> Incoming Requests screen. Accepted -> marks seen
   /// then opens My Scheduled Matches. Rejected -> marks seen and dismisses
   /// only, since there's no natural destination screen for it.
@@ -1137,6 +1238,11 @@ class _HomeScreenState extends State<HomeScreen> {
     if (item.type == 'match_auto_cancelled') {
       // Nothing to open (the match is cancelled): just dismiss the notice.
       if (item.matchId != null) await _markLinkedSeen(item.matchId!);
+      return;
+    }
+
+    if (item.type == 'deletion_request') {
+      await _openMatchDetailsFromBell(item.matchId);
       return;
     }
 

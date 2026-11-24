@@ -1692,4 +1692,38 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String playersCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count players',
+      one: '1 player',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String notificationDeletionRequest(String name) {
+    return '$name asked to delete a match';
+  }
+
+  @override
+  String get statsByFormatTitle => 'Matches by scoring format';
+
+  @override
+  String get notYouSwitchAccount => 'Not you? Use a different account';
+
+  @override
+  String get switchAccountTitle => 'Switch account?';
+
+  @override
+  String get switchAccountBody =>
+      'You\'ll be signed out and taken back to the login screen so you can choose another account.';
+
+  @override
+  String switchAccountSignedInAs(String email) {
+    return 'Signed in as $email';
+  }
 }

@@ -925,10 +925,22 @@ class _MatchHistoryScreenState extends State<MatchHistoryScreen> {
           );
         }
 
+        // Pin matches with a pending deletion request first (partition,
+        // so each group keeps its newest-first order).
+        bool hasPendingDeletion(QueryDocumentSnapshot d) {
+          final dr = (d.data() as Map<String, dynamic>)['deletionRequest']
+              as Map<String, dynamic>?;
+          return dr != null && dr['status'] == 'pending';
+        }
+        final orderedDocs = [
+          ...docs.where(hasPendingDeletion),
+          ...docs.where((d) => !hasPendingDeletion(d)),
+        ];
+
         return ListView.builder(
-          itemCount: docs.length,
+          itemCount: orderedDocs.length,
           itemBuilder: (context, index) {
-            final matchDoc = docs[index];
+            final matchDoc = orderedDocs[index];
             final match = matchDoc.data() as Map<String, dynamic>;
             final type = match['type'] as String? ?? 'regular';
 

@@ -867,9 +867,7 @@ class _AvailablePlayersScreenState extends State<AvailablePlayersScreen> {
           const SizedBox(width: 10),
           // Player count indicator
           Text(
-            _filterByCity
-                ? '$cityCount ${cityCount == 1 ? "jugador" : "jugadores"}'
-                : '$totalCount ${totalCount == 1 ? "jugador" : "jugadores"}',
+            loc.playersCount(_filterByCity ? cityCount : totalCount),
             style: TextStyle(
               fontSize: 12,
               color: Colors.grey[600],

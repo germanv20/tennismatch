@@ -5,6 +5,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart' as intl;
 import 'package:tennismatch/gen_l10n/app_localizations.dart';
 import '../widgets/empty_state.dart';
+import '../utils/scoring_mode_utils.dart';
 
 class PlayerStatisticsScreen extends StatelessWidget {
   final String userId;
@@ -82,6 +83,9 @@ class _StatsTabState extends State<_StatsTab>
   final List<int> monthlyCounts = List.filled(6, 0);
   final List<DateTime> monthlyLabels = [];
 
+  // Matches per scoring format (official/proSet/shortSet/tiebreakOnly/open).
+  final Map<String, int> formatCounts = {};
+
   bool loading = true;
 
   @override
@@ -112,6 +116,7 @@ class _StatsTabState extends State<_StatsTab>
       setsLost = 0;
       tiebreaksWon = 0;
       tiebreaksLost = 0;
+      formatCounts.clear();
 
       // (matchDate, outcome) per match of this tab's type, outcome is
       // 1 = win, -1 = loss, 0 = tie — used below for the streak and
@@ -161,6 +166,14 @@ class _StatsTabState extends State<_StatsTab>
         }
 
         final result = match['result'] as Map<String, dynamic>? ?? {};
+        // Missing/unknown scoringMode = Official (same default as
+        // scoringModeDisplayLabel).
+        final String modeKey = const {
+          'official', 'proSet', 'shortSet', 'tiebreakOnly', 'open'
+        }.contains(result['scoringMode'])
+            ? result['scoringMode'] as String
+            : 'official';
+        formatCounts[modeKey] = (formatCounts[modeKey] ?? 0) + 1;
         final duration = (result['durationMinutes'] ?? 0) as num;
         totalDuration += duration.toInt();
 
@@ -367,6 +380,11 @@ class _StatsTabState extends State<_StatsTab>
                     : loc.totalTiebreaksLost,
               ),
             ],
+
+            const SizedBox(height: 24),
+            _SectionTitle(loc.statsByFormatTitle),
+            const SizedBox(height: 8),
+            _FormatBreakdown(counts: formatCounts, loc: loc),
 
             const SizedBox(height: 24),
             _SectionTitle(loc.statsActivityTitle,
@@ -809,6 +827,67 @@ class _WonLostBarChart extends StatelessWidget {
               barTouchData: BarTouchData(enabled: false),
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Matches per scoring format: label, proportional bar and count per row.
+/// Formats with no matches are hidden.
+class _FormatBreakdown extends StatelessWidget {
+  final Map<String, int> counts;
+  final AppLocalizations loc;
+  const _FormatBreakdown({required this.counts, required this.loc});
+
+  @override
+  Widget build(BuildContext context) {
+    const order = ['official', 'proSet', 'shortSet', 'tiebreakOnly', 'open'];
+    final rows = order.where((k) => (counts[k] ?? 0) > 0).toList();
+    final maxCount = rows.isEmpty
+        ? 1
+        : rows.map((k) => counts[k]!).reduce((a, b) => a > b ? a : b);
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            for (final k in rows)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 6),
+                child: Row(
+                  children: [
+                    Expanded(
+                      flex: 4,
+                      child: Text(scoringModeDisplayLabel(k, loc),
+                          style: const TextStyle(fontSize: 13)),
+                    ),
+                    Expanded(
+                      flex: 5,
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(4),
+                        child: LinearProgressIndicator(
+                          value: counts[k]! / maxCount,
+                          minHeight: 10,
+                          backgroundColor: Colors.grey.shade200,
+                          color: Colors.green.shade600,
+                        ),
+                      ),
+                    ),
+                    SizedBox(
+                      width: 32,
+                      child: Text(
+                        '${counts[k]}',
+                        textAlign: TextAlign.right,
+                        style: const TextStyle(
+                            fontSize: 13, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+          ],
         ),
       ),
     );

@@ -635,5 +635,15 @@
   "recentActivityTieLine": "{player1} y {player2} empataron",
   "@recentActivityTieLine": {"placeholders": {"player1": {"type": "String"}, "player2": {"type": "String"}}},
   "daysAgoCount": "{count, plural, =1{Hace 1 día} other{Hace {count} días}}",
-  "@daysAgoCount": {"placeholders": {"count": {"type": "int"}}}
+  "@daysAgoCount": {"placeholders": {"count": {"type": "int"}}},
+  "playersCount": "{count, plural, =1{1 jugador} other{{count} jugadores}}",
+  "@playersCount": {"placeholders": {"count": {"type": "int"}}},
+  "notificationDeletionRequest": "{name} solicitó eliminar un partido",
+  "@notificationDeletionRequest": {"placeholders": {"name": {"type": "String"}}},
+  "statsByFormatTitle": "Partidos por formato de puntuación",
+  "notYouSwitchAccount": "¿No eres tú? Usa otra cuenta",
+  "switchAccountTitle": "¿Cambiar de cuenta?",
+  "switchAccountBody": "Se cerrará tu sesión y volverás a la pantalla de inicio para elegir otra cuenta.",
+  "switchAccountSignedInAs": "Sesión iniciada como {email}",
+  "@switchAccountSignedInAs": {"placeholders": {"email": {"type": "String"}}}
 }

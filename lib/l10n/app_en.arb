@@ -635,5 +635,15 @@
   "recentActivityTieLine": "{player1} and {player2} tied",
   "@recentActivityTieLine": {"placeholders": {"player1": {"type": "String"}, "player2": {"type": "String"}}},
   "daysAgoCount": "{count, plural, =1{1 day ago} other{{count} days ago}}",
-  "@daysAgoCount": {"placeholders": {"count": {"type": "int"}}}
+  "@daysAgoCount": {"placeholders": {"count": {"type": "int"}}},
+  "playersCount": "{count, plural, =1{1 player} other{{count} players}}",
+  "@playersCount": {"placeholders": {"count": {"type": "int"}}},
+  "notificationDeletionRequest": "{name} asked to delete a match",
+  "@notificationDeletionRequest": {"placeholders": {"name": {"type": "String"}}},
+  "statsByFormatTitle": "Matches by scoring format",
+  "notYouSwitchAccount": "Not you? Use a different account",
+  "switchAccountTitle": "Switch account?",
+  "switchAccountBody": "You'll be signed out and taken back to the login screen so you can choose another account.",
+  "switchAccountSignedInAs": "Signed in as {email}",
+  "@switchAccountSignedInAs": {"placeholders": {"email": {"type": "String"}}}
 }

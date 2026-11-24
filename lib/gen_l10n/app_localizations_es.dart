@@ -1711,4 +1711,38 @@ class AppLocalizationsEs extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String playersCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count jugadores',
+      one: '1 jugador',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String notificationDeletionRequest(String name) {
+    return '$name solicitó eliminar un partido';
+  }
+
+  @override
+  String get statsByFormatTitle => 'Partidos por formato de puntuación';
+
+  @override
+  String get notYouSwitchAccount => '¿No eres tú? Usa otra cuenta';
+
+  @override
+  String get switchAccountTitle => '¿Cambiar de cuenta?';
+
+  @override
+  String get switchAccountBody =>
+      'Se cerrará tu sesión y volverás a la pantalla de inicio para elegir otra cuenta.';
+
+  @override
+  String switchAccountSignedInAs(String email) {
+    return 'Sesión iniciada como $email';
+  }
 }
