@@ -29,10 +29,10 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
   DateTime? birthdate;
   String? name; // collected here as safety net if Google doesn't provide it
   String? city;
-  // Defaults to Colombia since that's the only country the app currently
-  // operates in — still fully changeable via the picker below for anyone
-  // outside it. Set in initState (see below) alongside the matching phone
-  // calling-code prefill, same as if the user had picked it themselves.
+  // Defaults to the phone's region (Colombia if unknown) — still fully
+  // changeable via the picker below. Set in initState (see below) alongside
+  // the matching phone calling-code prefill, same as if the user had picked
+  // it themselves.
   String? country;
   String? countryCode;
   String? tennisLevel;
@@ -365,13 +365,15 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
       name = googleName;
     }
 
-    // Default the country to Colombia — the app currently only operates
-    // there, so most users would just pick this anyway. Still fully
-    // editable via the country picker below. Mirrors the same phone
-    // calling-code prefill the picker's onSelect already does.
-    country = 'Colombia';
-    countryCode = 'CO';
-    final prefix = _phoneCodePrefix('CO');
+    // Default the country from the phone's own region setting (e.g. en_US ->
+    // United States, es_CO -> Colombia), falling back to Colombia when the
+    // region is missing or unrecognized. Still fully editable via the
+    // country picker below. Mirrors the same phone calling-code prefill the
+    // picker's onSelect already does.
+    final defaultCountry = _defaultCountryFromDevice();
+    country = defaultCountry.name;
+    countryCode = defaultCountry.countryCode;
+    final prefix = _phoneCodePrefix(defaultCountry.countryCode);
     if (prefix != null) {
       _phoneController.text = prefix;
       phoneNumber = prefix;
@@ -383,6 +385,20 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
     _nameController.dispose();
     _phoneController.dispose();
     super.dispose();
+  }
+
+  /// The country to pre-select: the region of the phone's locale when it
+  /// matches a known country, else Colombia. Uses the device locale (not the
+  /// app's resolved en/es locale, which has no region).
+  Country _defaultCountryFromDevice() {
+    final fallback = CountryService().findByCode('CO')!;
+    try {
+      final region = WidgetsBinding.instance.platformDispatcher.locale.countryCode;
+      if (region == null || region.isEmpty) return fallback;
+      return CountryService().findByCode(region.toUpperCase()) ?? fallback;
+    } catch (_) {
+      return fallback;
+    }
   }
 
   /// Returns "+<callingCode> " for the given ISO country code (e.g. "CO"
