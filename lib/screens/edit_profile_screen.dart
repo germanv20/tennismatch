@@ -3,6 +3,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:country_picker/country_picker.dart';
 import '../gen_l10n/app_localizations.dart';
+import '../utils/skill_level.dart';
+import '../widgets/skill_level_picker.dart';
 
 class EditProfileScreen extends StatefulWidget {
   final Map<String, dynamic> userData;
@@ -23,14 +25,17 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   String? city;
   String? country;
   String? countryCode;
-  String? tennisLevel;
+  // Skill level value within the country's system (see utils/skill_level.dart).
+  num? levelValue;
+  // Suggestion from the old Beginner/Intermediate/Advanced choice, shown
+  // while the user hasn't picked a new-style level yet.
+  num? _suggestedLevel;
   List<String> availability = [];
 
   // Track whether the user attempted to save, so date/country
   // validation messages only show after a failed submit attempt
   bool _attemptedSave = false;
 
-  final List<String> levels = ['Beginner', 'Intermediate', 'Advanced'];
   final List<String> days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
   String _translateDay(String day, AppLocalizations loc) {
@@ -79,7 +84,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     city = data['city'];
     country = data['country'];
     countryCode = data['countryCode'];
-    tennisLevel = data['tennisLevel'];
+    final stored = SkillLevel.fromUserData(data);
+    final system = SkillLevel.systemForCountryCode(countryCode);
+    if (stored != null && stored.system == system) {
+      levelValue = stored.value;
+    } else {
+      _suggestedLevel =
+          SkillLevel.suggestionFromLegacy(system, data['tennisLevel'] as String?);
+    }
     availability = List<String>.from(data['availability'] ?? []);
     _nameController.text = name ?? '';
     _cityController.text = city ?? '';
@@ -116,7 +128,12 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     final isFormValid = _formKey.currentState!.validate();
     final isDateValid = birthdate != null;
     final isCountryValid = country != null && country!.isNotEmpty;
-    final isLevelValid = tennisLevel != null;
+    // Existing users who haven't chosen a new-style level yet can still save
+    // other changes (the Home prompt asks them softly) — only require it
+    // when there is no legacy level either.
+    final hasLegacyLevel =
+        (widget.userData['tennisLevel'] as String?)?.isNotEmpty == true;
+    final isLevelValid = levelValue != null || hasLegacyLevel;
     final isNameValid = name != null && name!.trim().isNotEmpty;
 
     if (!isFormValid ||
@@ -140,7 +157,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         'city': _formatCity(city ?? ''),
         'country': country,
         'countryCode': countryCode,
-        'tennisLevel': tennisLevel,
+        if (levelValue != null)
+          ...SkillLevel.toFirestore(
+              SkillLevel.systemForCountryCode(countryCode), levelValue!),
         'availability': availability,
         'birthDate': Timestamp.fromDate(birthdate!),
         'age': getAge(birthdate!),
@@ -271,8 +290,20 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     showPhoneCode: false,
                     onSelect: (Country selectedCountry) {
                       setState(() {
+                        final oldSystem =
+                            SkillLevel.systemForCountryCode(countryCode);
                         country = selectedCountry.name;
                         countryCode = selectedCountry.countryCode;
+                        // Different level system (Colombia vs NTRP): the
+                        // current level no longer applies, ask again.
+                        final newSystem =
+                            SkillLevel.systemForCountryCode(countryCode);
+                        if (newSystem != oldSystem) {
+                          levelValue = null;
+                          _suggestedLevel = SkillLevel.suggestionFromLegacy(
+                              newSystem,
+                              widget.userData['tennisLevel'] as String?);
+                        }
                       });
                     },
                   );
@@ -325,26 +356,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
               const SizedBox(height: 12),
 
-              DropdownButtonFormField<String>(
-                initialValue: tennisLevel,
-                decoration: InputDecoration(
-                  labelText: loc.level,
-                  border: const OutlineInputBorder(),
-                ),
-                items: levels.map((level) {
-                  final localizedLevel = level == 'Beginner'
-                      ? loc.levelBeginner
-                      : level == 'Intermediate'
-                          ? loc.levelIntermediate
-                          : loc.levelAdvanced;
-                  return DropdownMenuItem(
-                    value: level,
-                    child: Text(localizedLevel),
-                  );
-                }).toList(),
-                onChanged: (value) => setState(() => tennisLevel = value),
-                validator: (value) =>
-                    value == null ? loc.requiredField : null,
+              SkillLevelField(
+                system: SkillLevel.systemForCountryCode(countryCode),
+                value: levelValue,
+                suggested: _suggestedLevel,
+                showError: _attemptedSave &&
+                    (widget.userData['tennisLevel'] as String?)?.isNotEmpty !=
+                        true,
+                onChanged: (v) => setState(() => levelValue = v),
               ),
 
               const SizedBox(height: 16),

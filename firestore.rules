@@ -28,6 +28,8 @@ service cloud.firestore {
             .hasOnly([
               'name',
               'tennisLevel',
+              'levelSystem',
+              'levelValue',
               'availability',
               'birthDate',
               'age',

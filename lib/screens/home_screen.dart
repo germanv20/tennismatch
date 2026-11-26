@@ -7,6 +7,8 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'dart:io';
 import '../services/theme_service.dart';
 import '../utils/name_utils.dart';
+import '../utils/skill_level.dart';
+import '../widgets/skill_level_prompt.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'available_players_screen.dart';
 import 'match_history_screen.dart';
@@ -365,9 +367,9 @@ class _HomeScreenState extends State<HomeScreen> {
         ? firestoreName
         : (widget.currentUser.displayName ?? 'Player');
     final String rawLevel = widget.userData['tennisLevel'] ?? '';
-    final String level =
-        rawLevel.isEmpty ? loc.notSet : translateLevel(rawLevel, loc);
- 
+    final String level = SkillLevel.displayFromUserData(loc, widget.userData) ??
+        (rawLevel.isEmpty ? loc.notSet : translateLevel(rawLevel, loc));
+
     final List availabilityRaw =
         normalizeDays(widget.userData['availability'] ?? []);
  
@@ -1516,6 +1518,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 buildProfileCard(loc),
 
                 const SizedBox(height: spaceM),
+
+                // Soft prompt to pick the new-style skill level (snoozes 3 days).
+                SkillLevelPrompt(userData: widget.userData),
 
                 // Reminder while there's no profile photo (snoozes 3 days).
                 ProfilePhotoReminder(photoUrl: widget.userData['photoUrl']),

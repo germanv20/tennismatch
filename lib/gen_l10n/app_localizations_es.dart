@@ -1745,4 +1745,118 @@ class AppLocalizationsEs extends AppLocalizations {
   String switchAccountSignedInAs(String email) {
     return 'Sesión iniciada como $email';
   }
+
+  @override
+  String get levelCo6 => '6ta categoría';
+
+  @override
+  String get levelCo5 => '5ta categoría';
+
+  @override
+  String get levelCo4 => '4ta categoría';
+
+  @override
+  String get levelCo3 => '3ra categoría';
+
+  @override
+  String get levelCo2 => '2da categoría';
+
+  @override
+  String get levelCo6Desc =>
+      'Iniciación. Apenas estás aprendiendo a pelotear y sacar.';
+
+  @override
+  String get levelCo5Desc =>
+      'Conoces las reglas, mantienes el juego básico y estás jugando tus primeros torneos.';
+
+  @override
+  String get levelCo4Desc =>
+      'Intermedio. Mantienes peloteos consistentes, sacas con regularidad y estás iniciando en competencias.';
+
+  @override
+  String get levelCo3Desc =>
+      'Intermedio-alto. Dominas todos los golpes, tienes buena táctica y juegas torneos con frecuencia.';
+
+  @override
+  String get levelCo2Desc =>
+      'Jugador avanzado de club. La categoría más alta del tenis aficionado.';
+
+  @override
+  String get levelNtrpLow => '1.5 o menos';
+
+  @override
+  String get levelNtrpHigh => '5.5 o más';
+
+  @override
+  String get levelNtrpDesc15 =>
+      'Estás empezando. Trabajas en lograr que la bola entre en juego.';
+
+  @override
+  String get levelNtrpDesc20 =>
+      'Tienes algo de experiencia en cancha pero aún te falta consistencia y juego de partido.';
+
+  @override
+  String get levelNtrpDesc25 =>
+      'Puedes mantener un peloteo corto a ritmo lento.';
+
+  @override
+  String get levelNtrpDesc30 =>
+      'Bastante consistente a ritmo medio, con poco control de dirección, profundidad y potencia.';
+
+  @override
+  String get levelNtrpDesc35 =>
+      'Golpes más confiables y algo de control de dirección, pero todavía cometes errores no forzados.';
+
+  @override
+  String get levelNtrpDesc40 =>
+      'Golpes confiables, colocas la bola y empiezas a usar efectos y variedad.';
+
+  @override
+  String get levelNtrpDesc45 =>
+      'Empiezas a controlar ritmo y efecto y te mantienes consistente bajo presión.';
+
+  @override
+  String get levelNtrpDesc50 =>
+      'Golpes fuertes y confiables con buena táctica. Jugador de torneos con experiencia.';
+
+  @override
+  String get levelNtrpDesc55 => 'Jugador competitivo de nivel de torneo.';
+
+  @override
+  String get levelPickerHint => '¿No estás seguro? Elige el más bajo.';
+
+  @override
+  String get levelSuggestedTag => 'Sugerido';
+
+  @override
+  String get levelPromptTitle => 'Elige tu nivel de juego';
+
+  @override
+  String get levelPromptBody =>
+      'Mejoramos los niveles de juego para que encuentres jugadores más parecidos a ti. Elige el que mejor te describe.';
+
+  @override
+  String get levelPromptChoose => 'Elegir nivel';
+
+  @override
+  String get levelFilterTitle => 'Nivel de juego';
+
+  @override
+  String get levelFilterAll => 'Todos los niveles';
+
+  @override
+  String get levelFilterFrom => 'Desde';
+
+  @override
+  String get levelFilterTo => 'Hasta';
+
+  @override
+  String get levelFilterClear => 'Quitar filtro';
+
+  @override
+  String get levelFilterHiddenNote =>
+      'Los jugadores sin nivel se ocultan mientras el filtro está activo.';
+
+  @override
+  String get levelFilterApply => 'Aplicar';
 }

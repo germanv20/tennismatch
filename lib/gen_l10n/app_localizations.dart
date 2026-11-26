@@ -3077,6 +3077,204 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Signed in as {email}'**
   String switchAccountSignedInAs(String email);
+
+  /// No description provided for @levelCo6.
+  ///
+  /// In en, this message translates to:
+  /// **'6th category'**
+  String get levelCo6;
+
+  /// No description provided for @levelCo5.
+  ///
+  /// In en, this message translates to:
+  /// **'5th category'**
+  String get levelCo5;
+
+  /// No description provided for @levelCo4.
+  ///
+  /// In en, this message translates to:
+  /// **'4th category'**
+  String get levelCo4;
+
+  /// No description provided for @levelCo3.
+  ///
+  /// In en, this message translates to:
+  /// **'3rd category'**
+  String get levelCo3;
+
+  /// No description provided for @levelCo2.
+  ///
+  /// In en, this message translates to:
+  /// **'2nd category'**
+  String get levelCo2;
+
+  /// No description provided for @levelCo6Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Beginner. Just learning to rally and serve.'**
+  String get levelCo6Desc;
+
+  /// No description provided for @levelCo5Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'You know the rules, keep a basic game going and are playing your first tournaments.'**
+  String get levelCo5Desc;
+
+  /// No description provided for @levelCo4Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Intermediate. You keep consistent rallies, serve regularly and are starting to compete.'**
+  String get levelCo4Desc;
+
+  /// No description provided for @levelCo3Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Upper-intermediate. You handle all the strokes, have good tactics and play tournaments often.'**
+  String get levelCo3Desc;
+
+  /// No description provided for @levelCo2Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Advanced club player. The highest amateur category.'**
+  String get levelCo2Desc;
+
+  /// No description provided for @levelNtrpLow.
+  ///
+  /// In en, this message translates to:
+  /// **'1.5 or below'**
+  String get levelNtrpLow;
+
+  /// No description provided for @levelNtrpHigh.
+  ///
+  /// In en, this message translates to:
+  /// **'5.5 or above'**
+  String get levelNtrpHigh;
+
+  /// No description provided for @levelNtrpDesc15.
+  ///
+  /// In en, this message translates to:
+  /// **'Just starting. You are working on getting the ball in play.'**
+  String get levelNtrpDesc15;
+
+  /// No description provided for @levelNtrpDesc20.
+  ///
+  /// In en, this message translates to:
+  /// **'You have some on-court experience but still lack consistency and match play.'**
+  String get levelNtrpDesc20;
+
+  /// No description provided for @levelNtrpDesc25.
+  ///
+  /// In en, this message translates to:
+  /// **'You can sustain a short rally at a slow pace.'**
+  String get levelNtrpDesc25;
+
+  /// No description provided for @levelNtrpDesc30.
+  ///
+  /// In en, this message translates to:
+  /// **'Fairly consistent at medium pace, with little control of direction, depth and power.'**
+  String get levelNtrpDesc30;
+
+  /// No description provided for @levelNtrpDesc35.
+  ///
+  /// In en, this message translates to:
+  /// **'More dependable strokes and some direction control, but still make unforced errors.'**
+  String get levelNtrpDesc35;
+
+  /// No description provided for @levelNtrpDesc40.
+  ///
+  /// In en, this message translates to:
+  /// **'Dependable strokes, you place the ball and start using spin and variety.'**
+  String get levelNtrpDesc40;
+
+  /// No description provided for @levelNtrpDesc45.
+  ///
+  /// In en, this message translates to:
+  /// **'You are starting to control pace and spin and stay consistent under pressure.'**
+  String get levelNtrpDesc45;
+
+  /// No description provided for @levelNtrpDesc50.
+  ///
+  /// In en, this message translates to:
+  /// **'Strong, reliable shots and good tactics. Experienced tournament player.'**
+  String get levelNtrpDesc50;
+
+  /// No description provided for @levelNtrpDesc55.
+  ///
+  /// In en, this message translates to:
+  /// **'Competitive, tournament-level player.'**
+  String get levelNtrpDesc55;
+
+  /// No description provided for @levelPickerHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Not sure? Choose the lower one.'**
+  String get levelPickerHint;
+
+  /// No description provided for @levelSuggestedTag.
+  ///
+  /// In en, this message translates to:
+  /// **'Suggested'**
+  String get levelSuggestedTag;
+
+  /// No description provided for @levelPromptTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose your skill level'**
+  String get levelPromptTitle;
+
+  /// No description provided for @levelPromptBody.
+  ///
+  /// In en, this message translates to:
+  /// **'We\'ve improved skill levels so you can find players closer to your game. Pick the one that fits you best.'**
+  String get levelPromptBody;
+
+  /// No description provided for @levelPromptChoose.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose level'**
+  String get levelPromptChoose;
+
+  /// No description provided for @levelFilterTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Skill level'**
+  String get levelFilterTitle;
+
+  /// No description provided for @levelFilterAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All levels'**
+  String get levelFilterAll;
+
+  /// No description provided for @levelFilterFrom.
+  ///
+  /// In en, this message translates to:
+  /// **'From'**
+  String get levelFilterFrom;
+
+  /// No description provided for @levelFilterTo.
+  ///
+  /// In en, this message translates to:
+  /// **'To'**
+  String get levelFilterTo;
+
+  /// No description provided for @levelFilterClear.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear filter'**
+  String get levelFilterClear;
+
+  /// No description provided for @levelFilterHiddenNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Players without a level are hidden while this filter is on.'**
+  String get levelFilterHiddenNote;
+
+  /// No description provided for @levelFilterApply.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply'**
+  String get levelFilterApply;
 }
 
 class _AppLocalizationsDelegate

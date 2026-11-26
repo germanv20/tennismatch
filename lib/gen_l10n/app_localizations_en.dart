@@ -1726,4 +1726,116 @@ class AppLocalizationsEn extends AppLocalizations {
   String switchAccountSignedInAs(String email) {
     return 'Signed in as $email';
   }
+
+  @override
+  String get levelCo6 => '6th category';
+
+  @override
+  String get levelCo5 => '5th category';
+
+  @override
+  String get levelCo4 => '4th category';
+
+  @override
+  String get levelCo3 => '3rd category';
+
+  @override
+  String get levelCo2 => '2nd category';
+
+  @override
+  String get levelCo6Desc => 'Beginner. Just learning to rally and serve.';
+
+  @override
+  String get levelCo5Desc =>
+      'You know the rules, keep a basic game going and are playing your first tournaments.';
+
+  @override
+  String get levelCo4Desc =>
+      'Intermediate. You keep consistent rallies, serve regularly and are starting to compete.';
+
+  @override
+  String get levelCo3Desc =>
+      'Upper-intermediate. You handle all the strokes, have good tactics and play tournaments often.';
+
+  @override
+  String get levelCo2Desc =>
+      'Advanced club player. The highest amateur category.';
+
+  @override
+  String get levelNtrpLow => '1.5 or below';
+
+  @override
+  String get levelNtrpHigh => '5.5 or above';
+
+  @override
+  String get levelNtrpDesc15 =>
+      'Just starting. You are working on getting the ball in play.';
+
+  @override
+  String get levelNtrpDesc20 =>
+      'You have some on-court experience but still lack consistency and match play.';
+
+  @override
+  String get levelNtrpDesc25 => 'You can sustain a short rally at a slow pace.';
+
+  @override
+  String get levelNtrpDesc30 =>
+      'Fairly consistent at medium pace, with little control of direction, depth and power.';
+
+  @override
+  String get levelNtrpDesc35 =>
+      'More dependable strokes and some direction control, but still make unforced errors.';
+
+  @override
+  String get levelNtrpDesc40 =>
+      'Dependable strokes, you place the ball and start using spin and variety.';
+
+  @override
+  String get levelNtrpDesc45 =>
+      'You are starting to control pace and spin and stay consistent under pressure.';
+
+  @override
+  String get levelNtrpDesc50 =>
+      'Strong, reliable shots and good tactics. Experienced tournament player.';
+
+  @override
+  String get levelNtrpDesc55 => 'Competitive, tournament-level player.';
+
+  @override
+  String get levelPickerHint => 'Not sure? Choose the lower one.';
+
+  @override
+  String get levelSuggestedTag => 'Suggested';
+
+  @override
+  String get levelPromptTitle => 'Choose your skill level';
+
+  @override
+  String get levelPromptBody =>
+      'We\'ve improved skill levels so you can find players closer to your game. Pick the one that fits you best.';
+
+  @override
+  String get levelPromptChoose => 'Choose level';
+
+  @override
+  String get levelFilterTitle => 'Skill level';
+
+  @override
+  String get levelFilterAll => 'All levels';
+
+  @override
+  String get levelFilterFrom => 'From';
+
+  @override
+  String get levelFilterTo => 'To';
+
+  @override
+  String get levelFilterClear => 'Clear filter';
+
+  @override
+  String get levelFilterHiddenNote =>
+      'Players without a level are hidden while this filter is on.';
+
+  @override
+  String get levelFilterApply => 'Apply';
 }

@@ -6,6 +6,7 @@ import 'package:country_picker/country_picker.dart';
 import '../utils/city_utils.dart';
 import '../utils/name_utils.dart';
 import '../utils/ranking_utils.dart';
+import '../utils/skill_level.dart';
 import '../widgets/profile_stat_grid.dart';
 import '../widgets/head_to_head_card.dart';
 import '../widgets/photo_viewer.dart';
@@ -224,8 +225,8 @@ class _PlayerProfileViewScreenState extends State<PlayerProfileViewScreen> {
     // Display-time title-casing (names are stored exactly as typed).
     final String name = formatNameDisplay(userData['name'] ?? loc.unknown);
     final rawLevel = userData['tennisLevel'] ?? '';
-    final String level =
-        rawLevel.isEmpty ? loc.notSet : translateLevel(rawLevel, loc);
+    final String level = SkillLevel.displayFromUserData(loc, userData) ??
+        (rawLevel.isEmpty ? loc.notSet : translateLevel(rawLevel, loc));
     final currentUid = FirebaseAuth.instance.currentUser!.uid;
     final viewedUid = (userData['uid'] as String?) ?? '';
     final List availabilityRaw = userData['availability'] ?? [];

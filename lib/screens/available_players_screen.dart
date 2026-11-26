@@ -10,6 +10,8 @@ import '../widgets/error_state.dart';
 import '../widgets/recent_opponents_row.dart';
 import '../utils/city_utils.dart';
 import '../utils/name_utils.dart';
+import '../utils/skill_level.dart';
+import '../widgets/level_filter_sheet.dart';
 
 const weekOrder = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
@@ -55,6 +57,9 @@ class _AvailablePlayersScreenState extends State<AvailablePlayersScreen> {
   // list by name — helps find a specific player once the list grows.
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
+
+  // Skill-level filter (see widgets/level_filter_sheet.dart); all-null = off.
+  LevelFilter _levelFilter = (exact: null, from: null, to: null);
 
   @override
   void dispose() {
@@ -266,7 +271,7 @@ class _AvailablePlayersScreenState extends State<AvailablePlayersScreen> {
                 // "X of Y in <city>" toggle count above still reflects the
                 // city filter alone, not the search text.
                 final searchQuery = _searchQuery.trim().toLowerCase();
-                final searchFilteredMatches = searchQuery.isEmpty
+                final searchOnly = searchQuery.isEmpty
                     ? matches
                     : matches.where((doc) {
                         final data = doc.data() as Map<String, dynamic>;
@@ -274,6 +279,18 @@ class _AvailablePlayersScreenState extends State<AvailablePlayersScreen> {
                             (data['name'] as String? ?? '').toLowerCase();
                         return name.contains(searchQuery);
                       }).toList();
+
+                // Skill-level filter (exact category for Colombia, NTRP
+                // range elsewhere). While it's on, players with no level
+                // yet or on the other system are hidden.
+                final mySystem = SkillLevel.systemForCountryCode(
+                    userData['countryCode'] as String?);
+                final searchFilteredMatches = _levelFilterActive
+                    ? searchOnly.where((doc) {
+                        return _levelMatches(
+                            doc.data() as Map<String, dynamic>, mySystem);
+                      }).toList()
+                    : searchOnly;
 
                 return Column(
                   children: [
@@ -283,6 +300,9 @@ class _AvailablePlayersScreenState extends State<AvailablePlayersScreen> {
 
                     // ── Search box ──
                     if (matches.isNotEmpty) _buildSearchBar(loc),
+
+                    // ── Skill-level filter ──
+                    if (matches.isNotEmpty) _buildLevelFilterRow(loc, mySystem),
 
                     // ── Player list ──
                     Expanded(
@@ -459,8 +479,10 @@ class _AvailablePlayersScreenState extends State<AvailablePlayersScreen> {
                                 }
 
                                         // "Recent opponents" shortcut row on
-                                        // top; hidden while searching.
-                                        if (_searchQuery.trim().isEmpty) {
+                                        // top; hidden while searching or
+                                        // while a level filter is on.
+                                        if (_searchQuery.trim().isEmpty &&
+                                            !_levelFilterActive) {
                                           listItems.insert(
                                             0,
                                             RecentOpponentsRow(
@@ -681,7 +703,8 @@ class _AvailablePlayersScreenState extends State<AvailablePlayersScreen> {
                     [
                       if ((data['tennisLevel'] as String?)?.isNotEmpty ==
                           true)
-                        translateLevel(data['tennisLevel'] as String, loc),
+                        SkillLevel.displayFromUserData(loc, data) ??
+                            translateLevel(data['tennisLevel'] as String, loc),
                       if (age != null) '${loc.age}: $age',
                     ].join(' · '),
                     style: const TextStyle(
@@ -751,6 +774,72 @@ class _AvailablePlayersScreenState extends State<AvailablePlayersScreen> {
             borderRadius: BorderRadius.circular(10),
             borderSide: BorderSide.none,
           ),
+        ),
+      ),
+    );
+  }
+
+  bool get _levelFilterActive =>
+      _levelFilter.exact != null ||
+      _levelFilter.from != null ||
+      _levelFilter.to != null;
+
+  /// Whether a player passes the active level filter. Players with no
+  /// new-style level, or on the other system, never match.
+  bool _levelMatches(Map<String, dynamic> data, String mySystem) {
+    final lvl = SkillLevel.fromUserData(data);
+    if (lvl == null || lvl.system != mySystem) return false;
+    if (mySystem == SkillLevel.co) {
+      return lvl.value == _levelFilter.exact;
+    }
+    final rank = SkillLevel.rankOf(mySystem, lvl.value);
+    final from = _levelFilter.from;
+    final to = _levelFilter.to;
+    if (from != null && rank < SkillLevel.rankOf(mySystem, from)) return false;
+    if (to != null && rank > SkillLevel.rankOf(mySystem, to)) return false;
+    return true;
+  }
+
+  String _levelFilterLabel(AppLocalizations loc, String system) {
+    if (system == SkillLevel.co) {
+      final e = _levelFilter.exact;
+      return e == null
+          ? loc.levelFilterAll
+          : SkillLevel.shortLabel(loc, system, e);
+    }
+    final from = _levelFilter.from;
+    final to = _levelFilter.to;
+    if (from == null && to == null) return loc.levelFilterAll;
+    String n(num v) => v.toStringAsFixed(1);
+    return 'NTRP ${from != null ? n(from) : '…'} – ${to != null ? n(to) : '…'}';
+  }
+
+  /// "Skill level: (current choice)" chip under the search box; tap opens
+  /// the filter sheet, the X clears it.
+  Widget _buildLevelFilterRow(AppLocalizations loc, String system) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: InputChip(
+          avatar: const Icon(Icons.tune, size: 18),
+          label: Text(
+              '${loc.levelFilterTitle}: ${_levelFilterLabel(loc, system)}'),
+          selected: _levelFilterActive,
+          onPressed: () async {
+            final result = await showLevelFilterSheet(
+              context,
+              system: system,
+              current: _levelFilter,
+            );
+            if (result != null && mounted) {
+              setState(() => _levelFilter = result);
+            }
+          },
+          onDeleted: _levelFilterActive
+              ? () => setState(
+                  () => _levelFilter = (exact: null, from: null, to: null))
+              : null,
         ),
       ),
     );

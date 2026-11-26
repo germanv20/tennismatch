@@ -15,6 +15,7 @@ import '../utils/day_utils.dart';
 import '../utils/city_utils.dart';
 import '../utils/name_utils.dart';
 import '../utils/ranking_utils.dart';
+import '../utils/skill_level.dart';
 import '../widgets/profile_stat_grid.dart';
 import 'edit_profile_screen.dart';
 
@@ -421,9 +422,11 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
           final String name = formatNameDisplay(userData['name'] ?? loc.unknown);
           final String email = userData['email'] ?? '';
           final String rawLevel = userData['tennisLevel'] ?? '';
-          final String tennisLevel = rawLevel.isEmpty
-              ? loc.notSet
-              : translateLevel(rawLevel, loc);
+          final String tennisLevel =
+              SkillLevel.displayFromUserData(loc, userData) ??
+                  (rawLevel.isEmpty
+                      ? loc.notSet
+                      : translateLevel(rawLevel, loc));
           final List<String> availability =
               sortDays(userData['availability'] ?? []);
           final String? photoUrl = userData['photoUrl'];

@@ -8,6 +8,8 @@ import '../gen_l10n/app_localizations.dart';
 import '../main.dart' show rootScaffoldMessengerKey;
 import '../services/h2h_service.dart';
 import '../services/profile_photo_service.dart';
+import '../utils/skill_level.dart';
+import '../widgets/skill_level_picker.dart';
 
 class CompleteProfileScreen extends StatefulWidget {
   const CompleteProfileScreen({super.key});
@@ -36,7 +38,9 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
   // it themselves.
   String? country;
   String? countryCode;
-  String? tennisLevel;
+  // Skill level value within the country's system (category number for
+  // Colombia, NTRP number elsewhere) — see utils/skill_level.dart.
+  num? levelValue;
   List<String> availability = [];
   String? phoneNumber;
 
@@ -47,7 +51,6 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
   // mirroring edit_profile_screen.dart's identical pattern.
   bool _attemptedSave = false;
 
-  final List<String> levels = ['Beginner', 'Intermediate', 'Advanced'];
   final List<String> days = [
     'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'
   ];
@@ -145,7 +148,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
     final isFormValid = _formKey.currentState!.validate();
     final isDateValid = birthdate != null;
     final isCountryValid = country != null && country!.isNotEmpty;
-    final isLevelValid = tennisLevel != null;
+    final isLevelValid = levelValue != null;
 
     if (!isFormValid || !isDateValid || !isCountryValid || !isLevelValid) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -175,7 +178,8 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
         'city': _formatCity(city ?? ''),
         'country': country,
         'countryCode': countryCode,
-        'tennisLevel': tennisLevel,
+        ...SkillLevel.toFirestore(
+            SkillLevel.systemForCountryCode(countryCode), levelValue!),
         'availability': availability,
         if (name != null && name!.isNotEmpty) 'name': name,
       };
@@ -658,8 +662,17 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                     ),
                     onSelect: (Country selectedCountry) {
                       setState(() {
+                        final oldSystem =
+                            SkillLevel.systemForCountryCode(countryCode);
                         country = selectedCountry.name;
                         countryCode = selectedCountry.countryCode;
+                        // Colombia uses categories, everywhere else NTRP —
+                        // a level chosen under the other system no longer
+                        // applies, so ask again.
+                        if (SkillLevel.systemForCountryCode(countryCode) !=
+                            oldSystem) {
+                          levelValue = null;
+                        }
                         // Auto-fill the phone field's calling code the
                         // first time a country is picked, so the user
                         // only has to type the rest of their number —
@@ -705,23 +718,13 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
 
               const SizedBox(height: 12),
 
-              // Tennis Level — use localized display names
-              DropdownButtonFormField<String>(
-                decoration: InputDecoration(labelText: loc.level),
-                items: levels.map((level) {
-                  final localizedLevel = level == 'Beginner'
-                      ? loc.levelBeginner
-                      : level == 'Intermediate'
-                          ? loc.levelIntermediate
-                          : loc.levelAdvanced;
-                  return DropdownMenuItem(
-                    value: level,
-                    child: Text(localizedLevel),
-                  );
-                }).toList(),
-                onChanged: (value) => tennisLevel = value,
-                validator: (value) =>
-                    value == null ? loc.requiredField : null,
+              // Skill level — categories (Colombia) or NTRP (everywhere
+              // else), depending on the selected country.
+              SkillLevelField(
+                system: SkillLevel.systemForCountryCode(countryCode),
+                value: levelValue,
+                showError: _attemptedSave,
+                onChanged: (v) => setState(() => levelValue = v),
               ),
 
               const SizedBox(height: 16),
